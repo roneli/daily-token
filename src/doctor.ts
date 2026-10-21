@@ -32,8 +32,8 @@ export async function doctor(root: string, env = process.env): Promise<Finding[]
   }
   for (const { source, config } of sources) add(`source ${source.name}`, await source.doctor(config));
 
-  const claude = Bun.spawnSync(["claude", "--version"], { stdout: "pipe", stderr: "pipe" });
-  add("claude CLI", claude.success ? [] : ["not found; install @anthropic-ai/claude-code, then log in (locally) or set ANTHROPIC_API_KEY (CI)"]);
+  const claude = Bun.which("claude") && Bun.spawnSync(["claude", "--version"], { stdout: "pipe", stderr: "pipe" }).success;
+  add("claude CLI", claude ? [] : ["not found; install @anthropic-ai/claude-code, then log in (locally) or set ANTHROPIC_API_KEY (CI)"]);
 
   // Publishing is optional; half of it set is a mistake.
   const r2 = ["R2_ENDPOINT", "R2_BUCKET", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY"];
