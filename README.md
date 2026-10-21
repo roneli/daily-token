@@ -75,4 +75,4 @@ See [docs/deploy.md](docs/deploy.md).
 
 ## License
 
-[AGPL-3.0](LICENSE). Running a changed engine as a service means publishing its source.
+The engine is [FSL-1.1-ALv2](LICENSE.md): use it, change it and run it for your own projects, at work too; don't offer it to others as a competing commercial product or service. Each release becomes Apache-2.0 two years after it comes out. The starter files `init` copies into your data repo are [MIT](starter/LICENSE).
