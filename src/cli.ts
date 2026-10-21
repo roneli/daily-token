@@ -22,7 +22,7 @@ const HELP = `daily-token <command> [options]
   render    Render issues to out/ (--all, --dates a,b)
   check     Validate an issue (--look measures it in a browser)
   init      Set up a data root here or in DIR, or bring one up to date; --yes takes flags instead of questions:
-            --name --id --sources github --repos a/b,c/d --tz --cutoff --days mon,tue --model --publish none|s3
+            --name --id --sources github --repos a/b,c/d --tz --cutoff --days mon,tue --weekly fri --model --publish none|s3
   migrate   Bring a data root to the current format; the words don't change (--dry-run lists the files)
   doctor    Check that the data root, its sources, the claude CLI and publishing are ready
   publish   Make the issues bucket match the data root and out/ (--announce DATE, --dry-run)
@@ -112,7 +112,7 @@ export async function runInit(argv: string[]) {
       yes: { type: "boolean", default: false },
       install: { type: "boolean", default: true },
       "gh-token": { type: "boolean", default: false },
-      ...Object.fromEntries(["name", "id", "sources", "repos", "tz", "cutoff", "days", "model", "publish"].map((k) => [k, { type: "string" as const }])),
+      ...Object.fromEntries(["name", "id", "sources", "repos", "tz", "cutoff", "days", "weekly", "model", "publish"].map((k) => [k, { type: "string" as const }])),
     },
   });
   const dir = positionals[0] ?? ".";
@@ -122,7 +122,7 @@ export async function runInit(argv: string[]) {
   if (values.yes) {
     const { answering } = await import("./prompter");
     const answers: Record<string, string | boolean> = { migrate: true, "github.useGhToken": values["gh-token"] as boolean };
-    for (const k of ["name", "id", "sources", "tz", "cutoff", "days", "model", "publish"]) if (typeof flags[k] === "string") answers[k] = flags[k];
+    for (const k of ["name", "id", "sources", "tz", "cutoff", "days", "weekly", "model", "publish"]) if (typeof flags[k] === "string") answers[k] = flags[k];
     if (typeof flags.repos === "string") answers["github.repos"] = flags.repos;
     p = answering(answers);
   } else {

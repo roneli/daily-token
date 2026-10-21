@@ -17,7 +17,7 @@ export const collectStage: Stage = {
     const data: Data = {
       format: FORMAT,
       engine: await engineVersion(),
-      edition: weekdayOf(ctx.date) === "thu" ? "thursday" : "daily",
+      edition: weekdayOf(ctx.date) === ctx.project.weekly ? "weekly" : "daily",
       issue: earlier.length + 1,
       date: ctx.date,
       window: window(ctx.date, ctx.cutoff, ctx.tz, ctx.project.days),

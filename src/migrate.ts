@@ -6,6 +6,7 @@ import { type DataV1, engineVersion, FORMAT, issueDates, type Project, readJson,
 // and project.json's repos become sources.github.
 // Format 2 → 3: reels group into threads by their section, in order; a story that had no reel gets one `title`
 // short in its own words; sections lose `reel`.
+// Format 3 → 4: the weekly edition is `weekly`, not `thursday`, and project.json names its day, Thursday as before.
 
 const COMMON = new Set(["format", "engine", "edition", "issue", "date", "window"]);
 
@@ -72,6 +73,7 @@ export async function migrate(root: string, opts: { dryRun?: boolean } = {}) {
   if (repos && !project.sources) await write(projectFile, { ...project, sources: { github: { repos } } });
 
   const engine = await engineVersion();
+  let older = false;
   for (const date of await issueDates(root)) {
     const dir = join(root, "issues", date);
     const file = Bun.file(join(dir, "data.json"));
@@ -89,10 +91,15 @@ export async function migrate(root: string, opts: { dryRun?: boolean } = {}) {
       stories &&= storiesV2(stories);
       reels &&= reelsV2(reels);
     }
-    if (stories && reels) ({ stories, reels } = threadsV3(stories, reels));
+    if (format < 3 && stories && reels) ({ stories, reels } = threadsV3(stories, reels));
+    if (data.edition === "thursday") data = { ...data, edition: "weekly" };
+    older = true;
     await write(join(dir, "data.json"), { ...data, format: FORMAT });
-    if (stories) await write(join(dir, "stories.json"), stories);
-    if (reels) await write(join(dir, "reels.json"), reels);
+    if (format < 3 && stories) await write(join(dir, "stories.json"), stories);
+    if (format < 3 && reels) await write(join(dir, "reels.json"), reels);
   }
-  return changed;
+  // Before format 4, every Thursday was the weekly edition.
+  const now = await readJson<Project>(projectFile);
+  if (older && !now.weekly) await write(projectFile, { ...now, weekly: "thu" });
+  return [...new Set(changed)];
 }

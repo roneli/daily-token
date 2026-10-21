@@ -15,7 +15,7 @@ You get one day of the project as JSON: merged PRs, direct commits, issues opene
 - `rail.check`: one thing a teammate should check or know before the next release, or an empty string. `rail.connects`: one or two sentences that link today to epics and earlier issues.
 - `parts` (optional): for each part that changed, one plain sentence on what changed there today.
 - `headline`: the issue's headline, 10–90 characters, the day in one line.
-- **Thursday edition** (`edition` is `thursday`): also write `recap`, the week from Friday to Thursday, from `data.sources.github.week` and `previous`. `title` frames the week; `dek` says in one sentence what moved; 2–5 `points`, each one thread of the week with its PRs or epic and how far it got (`week.epics` has each epic's progress; a `closedThisWeek` of null means unknown, never zero). Today's sections still cover today only.
+- **Weekly edition** (`edition` is `weekly`): also write `recap`, the seven days ending today, from `data.sources.github.week` and `previous`. `title` frames the week; `dek` says in one sentence what moved; 2–5 `points`, each one thread of the week with its PRs or epic and how far it got (`week.epics` has each epic's progress; a `closedThisWeek` of null means unknown, never zero). Today's sections still cover today only.
 
 ## Rules
 

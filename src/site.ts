@@ -71,7 +71,7 @@ const archive = (project: Project, entries: Entry[]) =>
   page(
     `The Daily Token · ${project.name}`,
     "Every issue, newest first.",
-    entries.map((e) => `<li><a href="/${project.id}/${e.date}/"><span>${e.date}</span>${e.edition === "thursday" ? " <b>Thursday edition</b>" : ""}<br>${escapeHtml(e.headline)}</a></li>`).join(""),
+    entries.map((e) => `<li><a href="/${project.id}/${e.date}/"><span>${e.date}</span>${e.edition === "weekly" ? " <b>Weekly edition</b>" : ""}<br>${escapeHtml(e.headline)}</a></li>`).join(""),
   );
 
 export async function site(req: Request, store: Store): Promise<Response> {

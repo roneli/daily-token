@@ -81,7 +81,7 @@ export async function check(issue: Issue, stage: "stories" | "thread" | "all" = 
     for (const ref of mentions(text, home)) if (!known.has(ref)) warnings.push(`${where} mentions ${refLabel(ref)}, which data.json doesn't know`);
   };
 
-  if (data.edition === "thursday" && !stories.recap) errors.push("a Thursday issue needs a recap of the week");
+  if (data.edition === "weekly" && !stories.recap) errors.push("a weekly issue needs a recap of the week");
   if (stories.recap) refs("recap", [stories.recap.dek, ...stories.recap.points].join(" "));
 
   const carded = new Set<Ref>();

@@ -17,7 +17,7 @@
 <div class="app" data-edition="{{ data.edition }}">
   <div class="top">
     <div class="topline">
-      <div class="masthead"><button class="ed-open" type="button" data-editions="open" aria-controls="editions" aria-label="Editions">☰</button><div class="issue"><b class="nameplate">The Daily Token</b><span>No. {{ no }}</span><span>{{ project.name }}</span><span>{{ day }}</span>{% if data.edition == "thursday" %}<span class="weekly">Weekly edition</span>{% endif %}<span>{{ total.prs }} PRs{% if total.commits > 0 %} · {{ total.commits }} commits{% endif %} · {{ github.tags.size }} tags</span></div></div>
+      <div class="masthead"><button class="ed-open" type="button" data-editions="open" aria-controls="editions" aria-label="Editions">☰</button><div class="issue"><b class="nameplate">The Daily Token</b><span>No. {{ no }}</span><span>{{ project.name }}</span><span>{{ day }}</span>{% if data.edition == "weekly" %}<span class="weekly">Weekly edition</span>{% endif %}<span>{{ total.prs }} PRs{% if total.commits > 0 %} · {{ total.commits }} commits{% endif %} · {{ github.tags.size }} tags</span></div></div>
       <div class="tabs" role="tablist" aria-label="Page">
         <button role="tab" id="tab-reels" type="button" aria-selected="true">Reels</button>
         <button role="tab" id="tab-digest" type="button" aria-selected="false">Digest</button>

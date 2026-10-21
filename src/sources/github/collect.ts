@@ -211,7 +211,7 @@ async function repoState(owner: string, name: string) {
   );
 }
 
-// The week ending on a Thursday: that day plus the archived issues since Friday.
+// The seven days ending on the weekly issue: that day plus the archived issues before it.
 // `refetched` marks a day collected again after the fact: its epic counts are today's, so it can't be a starting point.
 export function weekOf(date: string, earlier: { date: string; headline: string; data: GithubDay; refetched?: boolean }[], today: GithubDay, home: string): Week {
   const from = daysBefore(date, 6);
@@ -336,7 +336,7 @@ async function collectRepo(repo: string, home: string, system: System, win: { fr
 
 export type CollectOpts = { root: string; date: string; cutoff: string; tz: string; project: Project; system: System; repos: string[] };
 
-// withWeek: off when collecting a past day only to count it in Thursday's week.
+// withWeek: off when collecting a past day only to count it in the weekly issue's week.
 export async function collect(opts: CollectOpts, withWeek = true): Promise<GithubDay & { unmatched: string[] }> {
   const { project, system, repos } = opts;
   const home = repos[0];
@@ -357,7 +357,7 @@ export async function collect(opts: CollectOpts, withWeek = true): Promise<Githu
     openPrCount: each.reduce((n, r) => n + r.openCount, 0),
     unmatched: [...new Set(each.flatMap((r) => r.unmatched))].sort(),
   };
-  if (weekdayOf(opts.date) === "thu" && withWeek) {
+  if (weekdayOf(opts.date) === project.weekly && withWeek) {
     const archived = [];
     for (let n = 6; n >= 1; n--) {
       const d = daysBefore(opts.date, n);

@@ -3,7 +3,7 @@ import { cp, mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { check } from "./check";
-import { ENGINE, loadIssue, type Reels, shortsOf } from "./issue";
+import { ENGINE, FORMAT, loadIssue, type Reels, shortsOf } from "./issue";
 import { migrate, threadsV3 } from "./migrate";
 
 // The fixture as format 1 had it: GitHub's fields at the top, cards citing pr, project repos, and flat reels that
@@ -17,7 +17,7 @@ async function v1Root() {
     const dir = join(root, "issues", d);
     const data = await Bun.file(join(dir, "data.json")).json();
     const { sources, format: _f, ...common } = data;
-    await Bun.write(join(dir, "data.json"), JSON.stringify({ ...common, ...sources.github }));
+    await Bun.write(join(dir, "data.json"), JSON.stringify({ ...common, edition: common.edition === "weekly" ? "thursday" : common.edition, ...sources.github }));
     const reels = (await Bun.file(join(dir, "reels.json")).json()) as Reels;
     const flat = shortsOf(reels).map(({ thread, ...s }) => ({ ...s, section: thread === "next" ? "other" : thread }));
     const stories = await Bun.file(join(dir, "stories.json")).json();
@@ -28,15 +28,16 @@ async function v1Root() {
   return root;
 }
 
-test("migrate brings a format 1 root to format 3 with the same words, once", async () => {
+test("migrate brings a format 1 root to the current format with the same words, once", async () => {
   const root = await v1Root();
   expect(await migrate(root, { dryRun: true })).toHaveLength(7);
   expect((await Bun.file(join(root, "project.json")).json()).repos).toBeDefined();
 
   expect(await migrate(root)).toHaveLength(7);
+  expect((await Bun.file(join(root, "project.json")).json()).weekly).toBe("thu");
   for (const d of ["2026-01-14", "2026-01-15"]) {
     const migrated = await loadIssue(root, d);
-    expect(migrated.data.format).toBe(3);
+    expect(migrated.data.format).toBe(FORMAT);
     expect(await check(migrated)).toEqual({ errors: [], warnings: [] });
     for (const f of ["data.json", "stories.json"]) {
       const want = await Bun.file(join(ENGINE, "fixtures", "sample", "issues", d, f)).json();

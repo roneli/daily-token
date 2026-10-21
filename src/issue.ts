@@ -12,6 +12,8 @@ export type Project = {
   // Before sources: the GitHub repos, the first being home
   repos?: string[];
   days?: ("sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat")[];
+  // The day an issue also looks back at the seven days ending on it; none, no weekly
+  weekly?: "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat";
   // Per stage: rounds, budget, and which reviewers and gates run
   brief?: { docs?: string[] };
   pipeline?: Record<string, { enabled?: boolean; rounds?: number; budgetUsd?: number; reviewers?: string[]; gates?: string[]; parallel?: number; maxShorts?: number; voice?: string; voiceover?: boolean; speed?: number; topic?: string }>;
@@ -102,7 +104,7 @@ export type IssueEvent = {
   body: string;
 };
 
-// Thursday's look back, Friday to Thursday, from the week's issues in the archive.
+// The weekly look back at the seven days ending on the issue, from the week's issues in the archive.
 export type Week = {
   from: string;
   to: string;
@@ -116,7 +118,7 @@ export type Week = {
 // and tags the last commit of the old format `format-v<N>`; issues of that format keep rendering with that commit.
 // 2: data.json holds each source's slice under `sources`; cards and reels cite `ref`, not `pr`.
 // 3: reels.json holds threads, one per story, each of 1–5 shorts; a section no longer names its reel.
-export const FORMAT = 3;
+export const FORMAT = 4;
 
 // A day of the project's GitHub repos: data.json's sources.github.
 export type GithubDay = {
@@ -137,7 +139,7 @@ export type GithubDay = {
 };
 
 // What every issue has, whatever its sources.
-type Day = { format?: number; engine?: string; edition: "daily" | "thursday"; issue: number; date: string; window: { from: string; to: string } };
+type Day = { format?: number; engine?: string; edition: "daily" | "weekly"; issue: number; date: string; window: { from: string; to: string } };
 
 export type Data = Day & { sources: { github?: GithubDay } & Record<string, unknown> };
 
@@ -159,7 +161,7 @@ export type Section = {
 
 export type Stories = {
   headline: string;
-  // Thursday only: the week in a title, a dek and a few points
+  // Weekly only: the week in a title, a dek and a few points
   recap?: { title: string; dek: string; points: string[] };
   sections: Section[];
   rail: { check: string; connects: string };

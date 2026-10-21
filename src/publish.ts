@@ -60,7 +60,7 @@ const site = process.env.SITE_URL;
 if (announce && webhook && site) {
   const issue = issues.find((i) => i.data.date === announce);
   if (!issue) throw new Error(`no issue ${announce} to announce`);
-  const label = issue.data.edition === "thursday" ? "Thursday edition" : "The Daily Token";
+  const label = issue.data.edition === "weekly" ? "Weekly edition" : "The Daily Token";
   const text = `🗞️ *${label} · ${name} · ${announce}*\n${issue.stories.headline}\n<${site.replace(/\/$/, "")}/${id}/${announce}/|Watch the reels and read the digest>`;
   console.log(`${dry ? "would post" : "post"} to Slack`);
   if (!dry) {

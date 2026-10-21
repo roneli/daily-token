@@ -443,10 +443,10 @@
   const group = (text) => { const p = document.createElement("p"); p.className = "ed-group"; p.textContent = text; return p; };
   fetch("../index.json").then((r) => (r.ok ? r.json() : Promise.reject(r.status))).then((entries) => {
     const nodes = [];
-    const weekly = entries.filter((e) => e.edition === "thursday");
+    const weekly = entries.filter((e) => e.edition === "weekly");
     if (weekly.length) { nodes.push(group("Weekly editions")); for (const e of weekly.slice(0, 6)) nodes.push(item(e)); }
     let week = "";
-    for (const e of entries.filter((x) => x.edition !== "thursday")) {
+    for (const e of entries.filter((x) => x.edition !== "weekly")) {
       const w = weekOf(e.date);
       if (w !== week) { week = w; nodes.push(group(`Week of ${fmt(w, { day: "numeric", month: "short" })}`)); }
       nodes.push(item(e));

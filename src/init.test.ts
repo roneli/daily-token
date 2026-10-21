@@ -7,7 +7,7 @@ import { cron, init, nextSteps } from "./init";
 import { ENGINE } from "./issue";
 import { answering } from "./prompter";
 
-const ANSWERS = { name: "Rocket", sources: "github", "github.repos": "acme/rocket, acme/ground", "github.useGhToken": false, tz: "Europe/Berlin", cutoff: "18:30", days: "mon,tue,wed,thu,fri", model: "sonnet", publish: "s3" };
+const ANSWERS = { name: "Rocket", sources: "github", "github.repos": "acme/rocket, acme/ground", "github.useGhToken": false, tz: "Europe/Berlin", cutoff: "18:30", days: "mon,tue,wed,thu,fri", weekly: "fri", model: "sonnet", publish: "s3" };
 
 test("init writes a data root from the answers, and doctor accepts it", async () => {
   const dir = join(await mkdtemp(join(tmpdir(), "init-")), "rocket");
@@ -17,7 +17,7 @@ test("init writes a data root from the answers, and doctor accepts it", async ()
   expect(daily).toContain('cron: "30 16,17 * * 1,2,3,4,5"');
   expect(daily).toContain("bunx daily-token publish");
   expect(daily).not.toContain("# publish:");
-  expect(await Bun.file(join(dir, "project.json")).json()).toEqual({ id: "rocket", name: "Rocket", sources: { github: { repos: ["acme/rocket", "acme/ground"] } }, days: ["mon", "tue", "wed", "thu", "fri"] });
+  expect(await Bun.file(join(dir, "project.json")).json()).toEqual({ id: "rocket", name: "Rocket", sources: { github: { repos: ["acme/rocket", "acme/ground"] } }, days: ["mon", "tue", "wed", "thu", "fri"], weekly: "fri" });
   expect(await Bun.file(join(dir, ".env")).text()).toBe("DIGEST_TZ=Europe/Berlin\nCUTOFF=18:30\nAGENT_MODEL=sonnet\n");
   expect((await Bun.file(join(dir, "package.json")).json()).dependencies["daily-token"]).toBe((await Bun.file(join(ENGINE, "package.json")).json()).version);
   expect(await readdir(join(dir, "issues"))).toEqual([]);
@@ -39,7 +39,7 @@ test("init on an existing root converts it, keeps its files and answers, and onl
   expect(written).not.toContain("system.json");
   expect(await Bun.file(join(dir, "system.json")).text()).toBe(system);
   const after = await Bun.file(join(dir, "project.json")).json();
-  expect(after).toEqual({ id: "rocket", name: "Rocket", sources: { github: { repos: ["acme/rocket", "acme/ground"] } }, pipeline: { reels: { rounds: 2 } }, days: ["mon", "tue", "wed", "thu", "fri"] });
+  expect(after).toEqual({ id: "rocket", name: "Rocket", sources: { github: { repos: ["acme/rocket", "acme/ground"] } }, pipeline: { reels: { rounds: 2 } }, days: ["mon", "tue", "wed", "thu", "fri"], weekly: "thu" });
   expect(await Bun.file(join(dir, ".env")).text()).toBe("GH_TOKEN=keep\nCUTOFF=17:00\nDIGEST_TZ=UTC\nAGENT_MODEL=opus\n");
 });
 

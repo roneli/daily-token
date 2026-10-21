@@ -9,6 +9,7 @@
     "id": { "type": "string", "pattern": "^[a-z0-9-]+$", "not": { "enum": ["static", "archive"] }, "description": "The site path: /<id>/<date>/" },
     "name": { "type": "string", "maxLength": 32 },
     "days": { "type": "array", "uniqueItems": true, "items": { "enum": ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] }, "description": "The days an issue comes out. Each issue covers everything since the previous one; without this, every day." },
+    "weekly": { "enum": ["sun", "mon", "tue", "wed", "thu", "fri", "sat"], "description": "The day an issue also looks back at the seven days ending on it. Without this, no weekly edition." },
     "sources": { "type": "object", "minProperties": 1, "description": "Each source's config by name, e.g. \"github\": { \"repos\": [\"owner/name\"] }. Each source checks its own." },
     "repos": { "description": "Before sources: the GitHub repos, the first being home. Read as sources.github.repos.", "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^[\\w.-]+/[\\w.-]+$" } },
     "brief": {

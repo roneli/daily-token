@@ -15,7 +15,7 @@
     },
     "recap": {
       "type": "object",
-      "description": "Thursday only: the week, Friday to Thursday, from data.week.",
+      "description": "Weekly edition only: the seven days ending on the issue, from data.week.",
       "additionalProperties": false,
       "required": [
         "title",

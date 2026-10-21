@@ -20,7 +20,7 @@ export type Planned = { id: string; kind: "story" | "recap" | "next"; title: str
 const WORDS = 30;
 const words = (t: string) => t.split(/\s+/).filter(Boolean).length;
 
-// Which threads the day has follows from the stories, so it is code: the week first on a Thursday, then every
+// Which threads the day has follows from the stories, so it is code: the week first on the weekly day, then every
 // story in the digest's order, then what's coming when anything is open.
 export function plan(stories: Stories, data: Data, max?: number): Planned[] {
   const threads: Planned[] = [];

@@ -59,6 +59,7 @@ export async function ask(dir: string, p: Prompter): Promise<Plan> {
   const tz = await p.text({ id: "tz", message: "Which time zone does the day end in?", initial: process.env.DIGEST_TZ ?? Intl.DateTimeFormat().resolvedOptions().timeZone, validate: (v) => (validZone(v) ? undefined : "an IANA zone, like Europe/Berlin") });
   const cutoff = await p.text({ id: "cutoff", message: "When does the day end? An issue covers everything since the last cutoff", initial: process.env.CUTOFF ?? "18:00", validate: (v) => (/^([01]\d|2[0-3]):[0-5]\d$/.test(v) ? undefined : "HH:MM, 24-hour") });
   const days = await p.multiselect<Day>({ id: "days", message: "Which days does an issue come out?", options: DAYS.map((d) => ({ value: d, label: d })), initial: current?.days ?? ["mon", "tue", "wed", "thu", "fri"] });
+  const weekly = await p.select({ id: "weekly", message: "Which day also looks back at the week?", options: [{ value: "none", label: "none" }, ...DAYS.map((d) => ({ value: d, label: d }))], initial: current?.weekly ?? "none" });
   const model = await p.select({ id: "model", message: "Which model do the agents use?", options: [{ value: "opus", label: "opus", hint: "best writing and judgment" }, { value: "sonnet", label: "sonnet", hint: "cheaper" }], initial: "opus" });
   const publish = await p.select({ id: "publish", message: "Where do issues go?", options: [{ value: "none", label: "Nowhere yet", hint: "render and preview locally" }, { value: "s3", label: "An S3-compatible bucket", hint: "AWS S3, Cloudflare R2, MinIO; with an optional Slack post" }], initial: "none" });
 
@@ -69,8 +70,9 @@ export async function ask(dir: string, p: Prompter): Promise<Plan> {
     Object.assign(vars, { S3_ENDPOINT: "", S3_BUCKET: "daily-token", SITE_URL: "" });
   }
   const all = days.length === DAYS.length;
-  const project: Project = { ...current, id, name, sources, ...(all ? {} : { days }) };
+  const project: Project = { ...current, id, name, sources, ...(all ? {} : { days }), ...(weekly === "none" ? {} : { weekly: weekly as Day }) };
   if (all) delete project.days;
+  if (weekly === "none") delete project.weekly;
   delete project.repos;
   return { dir, project, env: { ...env, DIGEST_TZ: tz, CUTOFF: cutoff, AGENT_MODEL: model }, secrets, vars, publish };
 }

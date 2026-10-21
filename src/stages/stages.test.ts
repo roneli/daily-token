@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { createCtx } from "../harness/context";
 import { scripted } from "../harness/model";
 import { run } from "../harness/runner";
-import { ENGINE, type Reels, type Stories, type Thread } from "../issue";
+import { ENGINE, FORMAT, type Reels, type Stories, type Thread } from "../issue";
 import { daily } from "../pipeline";
 import { plan } from "./reels";
 
@@ -87,7 +87,14 @@ test("collect writes the current format: what every issue has, and each source's
     const ctx = await createCtx({ root, date: "2026-01-16", tz: "UTC", cutoff: "18:30", model: scripted({}) });
     await collectStage.run(ctx);
     const data = await ctx.read<Record<string, unknown>>("data.json");
-    expect(data).toEqual({ format: 3, engine: (await Bun.file(join(ENGINE, "package.json")).json()).version, edition: "daily", issue: 3, date: "2026-01-16", window: { from: "2026-01-15T18:30:00Z", to: "2026-01-16T18:30:00Z" }, sources: { github: { repo: "acme/rocket", prs: [], tags: [], epics: [], openPrs: [], openPrCount: 0 } } });
+    expect(data).toEqual({ format: FORMAT, engine: (await Bun.file(join(ENGINE, "package.json")).json()).version, edition: "daily", issue: 3, date: "2026-01-16", window: { from: "2026-01-15T18:30:00Z", to: "2026-01-16T18:30:00Z" }, sources: { github: { repo: "acme/rocket", prs: [], tags: [], epics: [], openPrs: [], openPrCount: 0 } } });
+
+    // The weekly day is the project's: this Friday is weekly once project.json says so.
+    const project = await Bun.file(join(root, "project.json")).json();
+    await Bun.write(join(root, "project.json"), JSON.stringify({ ...project, weekly: "fri" }));
+    const friday = await createCtx({ root, date: "2026-01-16", tz: "UTC", cutoff: "18:30", model: scripted({}) });
+    await collectStage.run(friday);
+    expect((await friday.read<{ edition: string }>("data.json")).edition).toBe("weekly");
   } finally {
     github.collect = real;
   }
