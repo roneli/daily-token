@@ -21,7 +21,7 @@ const STARTER_SYSTEM = {
   edges: [],
 };
 
-export type Plan = { dir: string; project: Project; env: Record<string, string>; secrets: { name: string; why: string }[]; vars: Record<string, string>; publish: "none" | "r2" };
+export type Plan = { dir: string; project: Project; env: Record<string, string>; secrets: { name: string; why: string }[]; vars: Record<string, string>; publish: "none" | "s3" };
 
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "digest";
 
@@ -60,13 +60,13 @@ export async function ask(dir: string, p: Prompter): Promise<Plan> {
   const cutoff = await p.text({ id: "cutoff", message: "When does the day end? An issue covers everything since the last cutoff", initial: process.env.CUTOFF ?? "18:00", validate: (v) => (/^([01]\d|2[0-3]):[0-5]\d$/.test(v) ? undefined : "HH:MM, 24-hour") });
   const days = await p.multiselect<Day>({ id: "days", message: "Which days does an issue come out?", options: DAYS.map((d) => ({ value: d, label: d })), initial: current?.days ?? ["mon", "tue", "wed", "thu", "fri"] });
   const model = await p.select({ id: "model", message: "Which model do the agents use?", options: [{ value: "opus", label: "opus", hint: "best writing and judgment" }, { value: "sonnet", label: "sonnet", hint: "cheaper" }], initial: "opus" });
-  const publish = await p.select({ id: "publish", message: "Where do issues go?", options: [{ value: "none", label: "Nowhere yet", hint: "render and preview locally" }, { value: "r2", label: "Cloudflare R2", hint: "with an optional Slack post" }], initial: "none" });
+  const publish = await p.select({ id: "publish", message: "Where do issues go?", options: [{ value: "none", label: "Nowhere yet", hint: "render and preview locally" }, { value: "s3", label: "An S3-compatible bucket", hint: "AWS S3, Cloudflare R2, MinIO; with an optional Slack post" }], initial: "none" });
 
   const vars: Record<string, string> = { DIGEST_TZ: tz, CUTOFF: cutoff, AGENT_MODEL: model };
   secrets.push({ name: "ANTHROPIC_API_KEY", why: "or CLAUDE_CODE_OAUTH_TOKEN: the agents run through the claude CLI" });
-  if (publish === "r2") {
-    secrets.push({ name: "R2_ACCESS_KEY_ID", why: "an R2 API token's key id" }, { name: "R2_SECRET_ACCESS_KEY", why: "and its secret" }, { name: "SLACK_WEBHOOK_URL", why: "optional: posts each issue to a channel" });
-    Object.assign(vars, { R2_ENDPOINT: "", R2_BUCKET: "daily-token", SITE_URL: "" });
+  if (publish === "s3") {
+    secrets.push({ name: "S3_ACCESS_KEY_ID", why: "a write key for the bucket" }, { name: "S3_SECRET_ACCESS_KEY", why: "and its secret" }, { name: "SLACK_WEBHOOK_URL", why: "optional: posts each issue to a channel" });
+    Object.assign(vars, { S3_ENDPOINT: "", S3_BUCKET: "daily-token", SITE_URL: "" });
   }
   const all = days.length === DAYS.length;
   const project: Project = { ...current, id, name, sources, ...(all ? {} : { days }) };
@@ -115,12 +115,12 @@ export async function scaffold(plan: Plan): Promise<string[]> {
   }
   const starter = (f: string) => Bun.file(join(ENGINE, "starter", f)).text();
   let daily = (await starter("workflows/daily.yml")).replace("{{cron}}", cron(String(plan.env.DIGEST_TZ), String(plan.env.CUTOFF), plan.project.days));
-  daily = plan.publish === "r2" ? daily.replace(/# publish:(start|end)\n/g, "") : daily.replace(/# publish:start\n[\s\S]*?# publish:end\n/, "");
+  daily = plan.publish === "s3" ? daily.replace(/# publish:(start|end)\n/g, "") : daily.replace(/# publish:start\n[\s\S]*?# publish:end\n/, "");
   await put(".github/workflows/daily.yml", daily);
   // The same bun as the workflows, for anyone whose bun comes from mise.
   await put("mise.toml", await starter("mise.toml"));
-  if (plan.publish === "r2") await put(".github/workflows/publish.yml", await starter("workflows/publish.yml"));
-  await put("README.md", (await starter("README.md")).replaceAll("{{name}}", plan.project.name).replace("{{publishes}}", plan.publish === "r2" ? "publishes it to R2, " : ""));
+  if (plan.publish === "s3") await put(".github/workflows/publish.yml", await starter("workflows/publish.yml"));
+  await put("README.md", (await starter("README.md")).replaceAll("{{name}}", plan.project.name).replace("{{publishes}}", plan.publish === "s3" ? "publishes it to the bucket, " : ""));
   return written;
 }
 

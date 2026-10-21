@@ -22,11 +22,12 @@ const HELP = `daily-token <command> [options]
   render    Render issues to out/ (--all, --dates a,b)
   check     Validate an issue (--look measures it in a browser)
   init      Set up a data root here or in DIR, or bring one up to date; --yes takes flags instead of questions:
-            --name --id --sources github --repos a/b,c/d --tz --cutoff --days mon,tue --model --publish none|r2
+            --name --id --sources github --repos a/b,c/d --tz --cutoff --days mon,tue --model --publish none|s3
   migrate   Bring a data root to the current format; the words don't change (--dry-run lists the files)
   doctor    Check that the data root, its sources, the claude CLI and publishing are ready
-  publish   Make R2 match the data root and out/ (--announce DATE, --dry-run)
+  publish   Make the issues bucket match the data root and out/ (--announce DATE, --dry-run)
   preview   Render every issue and serve out/ on :5173
+  serve     Serve the site from the issues bucket (--port 8787, --host 127.0.0.1)
 
   --root DIR  the data root; default: DATA_DIR, else the current folder if it has project.json`;
 
@@ -195,6 +196,7 @@ if (import.meta.main) {
     case "check":
     case "publish":
     case "preview":
+    case "serve":
       await script(command, argv);
       break;
     default:

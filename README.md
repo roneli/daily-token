@@ -117,11 +117,12 @@ render    [--date D | --all]
 check     [--date D] [--look]
 publish   [--announce D] [--dry-run]
 preview   render every issue and serve out/ on :5173
+serve     [--port 8787] [--host 127.0.0.1]: the site, from the issues bucket
 doctor    is the data root ready
 migrate   [--dry-run]: bring a data root to the current format
 ```
 
-The mise tasks run the same commands on this repo: `mise run issue`, `map`, `collect`, `render`, `check`, `preview`, `publish`, `lint`, `test`, `worker:dev`, `worker:deploy`.
+The mise tasks run the same commands on this repo: `mise run issue`, `map`, `collect`, `render`, `check`, `preview`, `publish`, `serve`, `lint`, `test`, `worker:dev`, `worker:deploy`.
 
 `check` warns when a thread runs past 45 s or an issue has more than 8 threads; with `--look` it also measures the reels in a browser. It fails when a cited PR or commit isn't in `data.json`, one landed with no card covering it, a story has no thread, two shorts share an id, a part isn't in `system.json` or has no box, a short runs over 12 s, a cue points at nothing, or a field breaks its schema.
 
@@ -143,26 +144,34 @@ Files no part matches go in `unmatched`, for the Cartographer. An existing `data
 
 ## Publishing
 
-`.github/workflows/daily.yml` makes the issue every Sunday to Thursday at `CUTOFF` in `DIGEST_TZ`: `make` (collect and the agents), render, `check`, publish, and a commit of the issue folder to the data repo. GitHub's cron is UTC, so it fires at both possible UTC hours and runs only the one in the cutoff's local hour. Run it by hand with a date, `from` and `dry_run` (on by default: make and check, no publish or commit). `.github/workflows/publish.yml` publishes the whole archive on every push to `master` that touches the engine, or by hand. Both need the `publish` environment:
+Publishing is optional. Without it, `preview` renders every issue and serves it on your machine. To share issues, `publish` uploads them to an **issues bucket**: any S3-compatible store (AWS S3, Cloudflare R2, MinIO, Backblaze B2). Only what changed is uploaded.
+
+`.github/workflows/daily.yml` makes the issue at `CUTOFF` in `DIGEST_TZ` on the project's issue days: `make` (collect and the agents), render, `check`, publish, and a commit of the issue folder to the data repo. GitHub's cron is UTC, so it fires at both possible UTC hours and runs only the one in the cutoff's local hour. Run it by hand with a date, `from` and `dry_run` (on by default: make and check, no publish or commit). `.github/workflows/publish.yml` publishes the whole archive on every push to `master` that touches the engine, or by hand. Both need the `publish` environment:
 
 | Name | Kind | What |
 |---|---|---|
-| `R2_ENDPOINT` | variable | full S3 URL; a jurisdiction bucket has its own host |
-| `R2_BUCKET` | variable | `daily-token` |
-| `SITE_URL` | variable | the Worker's address |
-| `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | secret | write token for the bucket |
-| `SLACK_WEBHOOK_URL` | secret | incoming webhook for the allowed channel |
+| `S3_ENDPOINT` | variable | the store's full URL, e.g. `https://<account>.r2.cloudflarestorage.com` or `https://s3.eu-central-1.amazonaws.com` |
+| `S3_BUCKET` | variable | `daily-token` |
+| `S3_REGION` | variable | only where the store needs one (AWS) |
+| `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | secret | a write key for the bucket. The older `R2_*` names are still read |
+| `SITE_URL` | variable | the site's address, for the Slack post |
+| `SLACK_WEBHOOK_URL` | secret | optional: incoming webhook for the allowed channel |
 | `DIGEST_TZ`, `CUTOFF` | variable | the window's time zone and cutoff, e.g. `Europe/Berlin`, `18:00` (daily) |
 | `DATA_REPO` | variable | the private data repo, `owner/name` (daily) |
 | `DATA_TOKEN` | secret | contents read and write on the data repo (daily) |
 | `SOURCE_TOKEN` | secret | read-only on the project's repos: contents, pull requests, issues (daily) |
 | `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN` | secret | for the agents; the CLI is pinned to Claude Code 2.1.289 (daily) |
 
-The Worker (`apps/worker`) only reads R2. `/` lists the projects (or opens the only one), `/<project>/` is its latest issue, `/<project>/<date>/` an issue, `/<project>/archive` all of them, `/static/*` the pinned assets every project shares.
+### The site
+
+The site reads the bucket and nothing else. `/` lists the projects (or opens the only one), `/<project>/` is its latest issue, `/<project>/<date>/` an issue, `/<project>/archive` all of them, `/static/*` the pinned assets every project shares. The routes live in `src/site.ts`, and two hosts serve them:
+
+- **`daily-token serve`** (`--port 8787`, `--host 127.0.0.1`): wherever Bun runs, on your laptop, a VM or a container, with the bucket's `S3_*` settings. It checks no one: keep it on localhost, or put it behind your own sign-in (a reverse proxy, Tailscale, oauth2-proxy).
+- **The Cloudflare Worker** (`apps/worker`), optional: the bucket bound as R2 (`bucket_name` in `wrangler.toml`), behind Cloudflare Access.
 
 ### Access
 
-The site sits behind Cloudflare Access. Access decides who may read; the Worker refuses any request Access didn't sign, so a policy or route mistake fails closed. Set it up once, with the domain's zone in the same Cloudflare account:
+On Cloudflare, the site sits behind Access. Access decides who may read; the Worker refuses any request Access didn't sign, so a policy or route mistake fails closed. Set it up once, with the domain's zone in the same Cloudflare account:
 
 1. Zero Trust → Settings → Authentication: add **One-time PIN**. Readers sign in with a code mailed to them.
 2. Zero Trust → Access → Applications → **Self-hosted**, domain as in `WORKER_DOMAIN`, session about a week. Policy: **Allow**, include **Emails**, one per reader. Nothing else.
@@ -215,7 +224,7 @@ Agents run headless through the `claude` CLI (`src/harness/model.ts`), with no t
 
 `look` (`src/look.ts`) opens the issue in a headless browser (Playwright: the Chrome the CI runner ships, your Chrome locally, or `LOOK_BROWSER=chrome|chromium`) and measures every reel at rest. Text on other text, or outside the 640×360 frame, is an error the Director must fix; text across a line is a warning, since every reel label wears a thin outline in the background color and lines pass behind it. A template marks a line that crosses text on purpose (a lifeline, a strike-through) `data-look="behind"`; scenes can't. It also takes the pictures the Readers get. `mise run check -- --look` adds it to a check; `bun src/look.ts --shots DIR` saves the pictures.
 
-R2 is the archive: `projects.json`, and per project every issue's JSON and HTML under `<project>/issues/` with its `index.json`, and beside a page the motion's video and poster. The Worker answers a video's range requests, which Safari needs to play it. The data root is the source: `publish` renders nothing itself, it makes R2 match the root and `out/` (run `render --all` first) and uploads only the files whose MD5 differs. `--announce DATE` also posts that issue to Slack.
+The bucket is the archive: `projects.json`, and per project every issue's JSON and HTML under `<project>/issues/` with its `index.json`, and beside a page the motion's video and poster. The Worker answers a video's range requests, which Safari needs to play it. The data root is the source: `publish` renders nothing itself, it makes R2 match the root and `out/` (run `render --all` first) and uploads only the files whose MD5 differs. `--announce DATE` also posts that issue to Slack.
 
 ### Formats
 

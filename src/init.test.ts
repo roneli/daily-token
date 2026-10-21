@@ -7,7 +7,7 @@ import { cron, init, nextSteps } from "./init";
 import { ENGINE } from "./issue";
 import { answering } from "./prompter";
 
-const ANSWERS = { name: "Rocket", sources: "github", "github.repos": "acme/rocket, acme/ground", "github.useGhToken": false, tz: "Europe/Berlin", cutoff: "18:30", days: "mon,tue,wed,thu,fri", model: "sonnet", publish: "r2" };
+const ANSWERS = { name: "Rocket", sources: "github", "github.repos": "acme/rocket, acme/ground", "github.useGhToken": false, tz: "Europe/Berlin", cutoff: "18:30", days: "mon,tue,wed,thu,fri", model: "sonnet", publish: "s3" };
 
 test("init writes a data root from the answers, and doctor accepts it", async () => {
   const dir = join(await mkdtemp(join(tmpdir(), "init-")), "rocket");
@@ -21,7 +21,7 @@ test("init writes a data root from the answers, and doctor accepts it", async ()
   expect(await Bun.file(join(dir, ".env")).text()).toBe("DIGEST_TZ=Europe/Berlin\nCUTOFF=18:30\nAGENT_MODEL=sonnet\n");
   expect((await Bun.file(join(dir, "package.json")).json()).dependencies["daily-token"]).toBe((await Bun.file(join(ENGINE, "package.json")).json()).version);
   expect(await readdir(join(dir, "issues"))).toEqual([]);
-  expect(nextSteps(plan)).toContain("secret   R2_SECRET_ACCESS_KEY");
+  expect(nextSteps(plan)).toContain("secret   S3_SECRET_ACCESS_KEY");
   const found = Object.fromEntries((await doctor(dir, {})).map((f) => [f.what, f.ok]));
   expect(found["project.json"]).toBe(true);
   expect(found["system.json"]).toBe(true);

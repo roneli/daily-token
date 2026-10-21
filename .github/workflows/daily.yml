@@ -1,6 +1,6 @@
 name: daily
 
-# Makes one day's issue end to end, publishes it to R2 and Slack, and commits the issue folder to the data repo.
+# Makes one day's issue end to end, publishes it to the issues bucket and Slack, and commits the issue folder to the data repo.
 # Sunday to Thursday at the cutoff in DIGEST_TZ. GitHub's cron is UTC, so it fires at both possible UTC hours
 # and the first step lets through only the run that lands in the cutoff's local hour: daylight saving needs no edit.
 on:
@@ -111,14 +111,15 @@ jobs:
       - if: steps.made.outputs.issue == 'true'
         run: bun src/render.ts --all --root data && bun src/check.ts --root data --date "$DATE" --look
 
-      - name: Publish to R2 and Slack
+      - name: Publish to the bucket and Slack
         if: steps.made.outputs.issue == 'true' && !inputs.dry_run
         run: bun src/publish.ts --root data --announce "$DATE"
         env:
-          R2_ENDPOINT: ${{ vars.R2_ENDPOINT }}
-          R2_BUCKET: ${{ vars.R2_BUCKET }}
-          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          S3_ENDPOINT: ${{ vars.S3_ENDPOINT }}
+          S3_BUCKET: ${{ vars.S3_BUCKET }}
+          S3_REGION: ${{ vars.S3_REGION }}
+          S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+          S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
           SITE_URL: ${{ vars.SITE_URL }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 

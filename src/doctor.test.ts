@@ -13,12 +13,12 @@ test("doctor names what's missing and how to fix it", async () => {
   const token = process.env.GH_TOKEN;
   delete process.env.GH_TOKEN;
   try {
-    const found = await doctor(root, { R2_BUCKET: "b" });
+    const found = await doctor(root, { S3_BUCKET: "b" });
     const by = Object.fromEntries(found.map((f) => [f.what, f]));
     expect(by["project.json"].ok).toBe(true);
     expect(by["system.json"].ok).toBe(true);
     expect(by["source github"].detail).toContain("GH_TOKEN is not set");
-    expect(by["publishing (R2)"].detail).toContain("R2_ENDPOINT");
+    expect(by["publishing (S3)"].detail).toContain("S3_ENDPOINT");
   } finally {
     if (token) process.env.GH_TOKEN = token;
   }

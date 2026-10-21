@@ -1,5 +1,6 @@
 import { join } from "node:path";
 import { errorsOf, load } from "./harness/schema";
+import { bucketMissing, bucketSet } from "./bucket";
 import { type Project, readJson } from "./issue";
 import { configured } from "./sources";
 
@@ -36,8 +37,6 @@ export async function doctor(root: string, env = process.env): Promise<Finding[]
   add("claude CLI", claude ? [] : ["not found; install @anthropic-ai/claude-code, then log in (locally) or set ANTHROPIC_API_KEY (CI)"]);
 
   // Publishing is optional; half of it set is a mistake.
-  const r2 = ["R2_ENDPOINT", "R2_BUCKET", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY"];
-  const set = r2.filter((k) => env[k]);
-  if (set.length) add("publishing (R2)", set.length === r2.length ? [] : [`missing ${r2.filter((k) => !env[k]).join(", ")}`]);
+  if (bucketSet(env)) add("publishing (S3)", bucketMissing(env).length ? [`missing ${bucketMissing(env).join(", ")}`] : []);
   return out;
 }

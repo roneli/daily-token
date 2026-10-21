@@ -46,8 +46,12 @@ run = "bun src/preview.ts"
 description = "Biome lint and TypeScript"
 run = ["bunx biome check", "bunx tsc --noEmit"]
 
+[tasks.serve]
+description = "Serve the site from the issues bucket on :8787"
+run = "bun src/cli.ts serve"
+
 [tasks."worker:dev"]
-description = "Run the Worker locally against a local R2 bucket"
+description = "Run the Cloudflare Worker locally against a local R2 bucket"
 dir = "apps/worker"
 run = "bunx wrangler dev"
 
@@ -60,5 +64,5 @@ bunx wrangler deploy --domain "$WORKER_DOMAIN" --var "ACCESS_TEAM_DOMAIN:$ACCESS
 """
 
 [tasks.publish]
-description = "Make R2 match the data root and out/; --announce DATE posts it to Slack (--dry-run to print only)"
+description = "Make the issues bucket match the data root and out/; --announce DATE posts it to Slack (--dry-run to print only)"
 run = "bun src/publish.ts"

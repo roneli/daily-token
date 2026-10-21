@@ -1,10 +1,10 @@
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
-import { S3Client } from "bun";
-import { issueArgs, issueDates, loadIssue, need } from "./issue";
+import { bucket } from "./bucket";
+import { issueArgs, issueDates, loadIssue } from "./issue";
 import { indexOf } from "./render";
 
-// Publish makes R2 match the data root: every issue's JSON and page, the editions list and the shared assets.
+// Publish makes the issues bucket match the data root: every issue's JSON and page, the editions list and the shared assets.
 // Pages are rendered again on each publish, so a template or player fix reaches every issue of its format.
 // Only what changed is uploaded. --announce DATE posts that issue to Slack.
 const { root, out, values } = await issueArgs({ "dry-run": { type: "boolean", default: false }, announce: { type: "string" } });
@@ -12,14 +12,9 @@ const dry = values["dry-run"] as boolean;
 const issues = await Promise.all((await issueDates(root)).map((d) => loadIssue(root, d)));
 const { id, name } = issues[0].project;
 
-const s3 = new S3Client({
-  endpoint: need("R2_ENDPOINT"),
-  bucket: need("R2_BUCKET"),
-  accessKeyId: need("R2_ACCESS_KEY_ID"),
-  secretAccessKey: need("R2_SECRET_ACCESS_KEY"),
-});
+const s3 = bucket();
 
-// What R2 holds now, from one listing per thousand keys. A single-part upload's ETag is its MD5, sometimes marked weak: W/"<md5>".
+// What the bucket holds now, from one listing per thousand keys. A single-part upload's ETag is its MD5, sometimes marked weak: W/"<md5>".
 const held = new Map<string, string>();
 for (const prefix of ["static/", `${id}/`]) {
   let token: string | undefined;
