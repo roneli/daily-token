@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { compile, errorsOf, load } from "./schema";
+import { compile, errorsOf, agentSchema, load } from "./schema";
 
 test("a schema file is read and compiled once", async () => {
   const a = await load("stories");
@@ -18,7 +18,7 @@ test("a schema with the $id of one already compiled reuses it", async () => {
 });
 
 test("a ref to another schema file is copied in, without its $id", async () => {
-  const [director, reels] = await Promise.all([load("agents/director"), load("reels")]);
+  const [director, reels] = await Promise.all([agentSchema("director"), load("reels")]);
   const prop = (s: object, k: string) => (s as { properties: Record<string, unknown> }).properties[k];
   expect(prop(director, "reels")).toEqual(prop(reels, "reels"));
   expect(JSON.stringify(director)).not.toContain('"$ref":"');
@@ -26,7 +26,7 @@ test("a ref to another schema file is copied in, without its $id", async () => {
 });
 
 test("every agent schema compiles", async () => {
-  for (const name of ["director", "cartographer"]) expect(typeof compile(await load(`agents/${name}`))).toBe("function");
+  for (const name of ["director", "cartographer"]) expect(typeof compile(await agentSchema(name))).toBe("function");
 });
 
 test("a whole schema copied in by ref loses its $id", async () => {

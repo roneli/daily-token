@@ -6,7 +6,7 @@ import type { Ctx } from "../harness/context";
 import { type Gate, refine, type Reviewer } from "../harness/loop";
 import { loadRubric } from "../harness/rubric";
 import type { Stage } from "../harness/runner";
-import { load } from "../harness/schema";
+import { agentSchema } from "../harness/schema";
 import { commitRef, type Data, githubOf, type Ref, refOf, reposOf, type Section, type Short, type Stories, type Thread } from "../issue";
 import { look } from "../look";
 import { chosen, issueOf, slim, templates } from "./day";
@@ -123,7 +123,7 @@ async function thread(ctx: Ctx, t: Planned, all: Planned[], data: Data, stories:
   };
   const config = chosen(ctx, "reels", gates, reviewers);
   return refine<Cut>({
-    model: ctx.model, author: "director", input, schema: await load("agents/director"),
+    model: ctx.model, author: "director", input, schema: await agentSchema("director"),
     ...config, budgetUsd: shared.budgetUsd, trace: ctx.trace(`reels/${t.id}`), log: ctx.log(`reels:${t.id}`),
   });
 }

@@ -2,7 +2,7 @@ import { join } from "node:path";
 import { type Brief, readBrief } from "../brief";
 import { refine } from "../harness/loop";
 import type { ProjectCollector, ProjectCtx } from "../harness/plugin";
-import { errorsOf, load } from "../harness/schema";
+import { errorsOf, agentSchema, load } from "../harness/schema";
 import { type Data, type DataV1, githubOf, issueDates, readJson, reposOf, writeJson } from "../issue";
 import { rest } from "../sources/github/collect";
 
@@ -105,7 +105,7 @@ async function draft(ctx: ProjectCtx, days: number) {
     model: ctx.model,
     author: "briefer",
     input: { project: { name: ctx.project.name }, current, parts: ctx.system.parts.map((p) => ({ id: p.id, name: p.name, what: p.what })), docs, recent: prs.map((p) => ({ ref: p.ref, title: p.title })) },
-    schema: await load("agents/briefer"),
+    schema: await agentSchema("briefer"),
     gates: [{ name: "grounded", run: async (p) => ({ errors: ungrounded(p.brief, read) }) }],
     rounds: 1,
     trace: ctx.trace,

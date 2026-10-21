@@ -26,7 +26,10 @@ export function errorsOf(schema: object, value: unknown, name = ""): string[] {
   return fn(value) ? [] : (fn.errors ?? []).map((e) => `${name}${e.instancePath || (name ? "" : "/")} ${e.message}`);
 }
 
-// A schema file, read once. A path is absolute, or relative to the engine's schemas/ ("agents/cut").
+// An agent's output schema, from its folder.
+export const agentSchema = (agent: string) => load(join(ENGINE, "agents", agent, "output.schema.json"));
+
+// A schema file, read once. A path is absolute, or relative to the engine's schemas/ ("reels").
 export function load(path: string): Promise<object> {
   const file = path.startsWith("/") ? path : join(ENGINE, "schemas", `${path}.schema.json`);
   let p = loaded.get(file);

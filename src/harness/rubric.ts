@@ -8,7 +8,7 @@ export type Criterion = { id: string; describe: string; weight: number; threshol
 export type Rubric = { criteria: Criterion[]; examples: { work: unknown; scores: Record<string, number>; why: string }[] };
 export type Review = { scores: Record<string, number>; notes: string[]; asks: { criterion: string; ask: string }[] };
 
-export const loadRubric = (agent: string) => readJson<Rubric>(join(ENGINE, "agents", `${agent}.rubric.json`));
+export const loadRubric = (agent: string) => readJson<Rubric>(join(ENGINE, "agents", agent, "rubric.json"));
 
 export function reviewSchema(rubric: Rubric): object {
   const ids = rubric.criteria.map((c) => c.id);

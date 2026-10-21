@@ -23,7 +23,7 @@ Text fields are plain text with three marks: `` `code` ``, `**bold**` and `#123`
 
 ## Scenes and animation marks
 
-A reel can be a template or a `scene`: SVG the Director draws itself, held to an allowlist. Both animate with `data-anim` and `data-cue` marks. The rules and the marks are in [agents/scenes.md](../agents/scenes.md), which the Director reads as written.
+A reel can be a template or a `scene`: SVG the Director draws itself, held to an allowlist. Both animate with `data-anim` and `data-cue` marks. The rules and the marks are in [agents/director/scenes.md](../agents/director/scenes.md), which the Director reads as written.
 
 ## Reel templates
 

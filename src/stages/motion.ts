@@ -5,7 +5,7 @@ import { checkMotion, type Recent } from "../check";
 import { type Gate, refine, type Reviewer } from "../harness/loop";
 import { loadRubric } from "../harness/rubric";
 import type { Stage } from "../harness/runner";
-import { load } from "../harness/schema";
+import { agentSchema } from "../harness/schema";
 import { commitRef, type Data, githubOf, issueDates, type Ref, type Reels, readJson, refOf, reposOf, shortsOf, type Stories } from "../issue";
 import { meaningOf } from "../layout";
 import { estimated, fitted, INSIDE, lookOf, MAX_SECONDS, MIN_SECONDS, MOTION_TAB, moveOf, refsOf, type Storyboard, speechOf, stills, timeline } from "../motion";
@@ -151,7 +151,7 @@ export function motionStageWith(speak: Speaker): Stage {
       };
       try {
         const r = await refine<Answer>({
-          model: ctx.model, author: "explainer", input, schema: await load("agents/explainer"),
+          model: ctx.model, author: "explainer", input, schema: await agentSchema("explainer"),
           ...chosen(ctx, "motion", gates, reviewers),
           settled: (a) => !a.make, trace: ctx.trace("motion"), log,
         });

@@ -60,7 +60,7 @@ export async function templates() {
     const schema = await readJson<{ description?: string }>(join(dir, f));
     out.push({ name, description: schema.description ?? "", schema, example: examples.find((r) => r.template === name) ?? null });
   }
-  return { templates: out, sceneRules: await Bun.file(join(ENGINE, "agents", "scenes.md")).text() };
+  return { templates: out, sceneRules: await Bun.file(join(ENGINE, "agents", "director", "scenes.md")).text() };
 }
 
 // The stage's gates and reviewers that project.json leaves on. check is never off: rule 1.

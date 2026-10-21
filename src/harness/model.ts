@@ -126,7 +126,7 @@ export const claudeCli: Model = retrying(async ({ agent, model, message, images,
   const stdin = images.length ? `${JSON.stringify({ type: "user", message: { role: "user", content } })}\n` : message;
   const args = [
     "claude", "-p", ...(images.length ? ["--input-format", "stream-json", "--output-format", "stream-json", "--verbose"] : ["--output-format", "json"]),
-    "--json-schema", JSON.stringify(schema), "--system-prompt-file", join(ENGINE, "agents", `${agent}.md`), "--model", model,
+    "--json-schema", JSON.stringify(schema), "--system-prompt-file", join(ENGINE, "agents", agent, "prompt.md"), "--model", model,
     "--no-session-persistence", "--tools", "", "--setting-sources", "", "--strict-mcp-config",
   ];
   // A Reader answers in under a minute; a Director may write a long scene.

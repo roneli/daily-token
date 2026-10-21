@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { refine } from "../harness/loop";
 import type { ProjectCollector } from "../harness/plugin";
-import { load } from "../harness/schema";
+import { agentSchema } from "../harness/schema";
 import { type Data, type DataV1, githubOf, issueDates, reposOf, type System, writeJson } from "../issue";
 import { layout, meaningOf, type SystemMap } from "../layout";
 import { partsOf, rest } from "../sources/github/collect";
@@ -67,7 +67,7 @@ async function map(ctx: Parameters<ProjectCollector["run"]>[0], days: number) {
   };
 
   const { value, runs } = await refine<Proposal>({
-    model: ctx.model, author: "cartographer", input: { project, current, unmatched, folders }, schema: await load("agents/cartographer"),
+    model: ctx.model, author: "cartographer", input: { project, current, unmatched, folders }, schema: await agentSchema("cartographer"),
     gates: [{ name: "structure", run: async (p) => ({ errors: validate(p) }) }], rounds: 1, trace: ctx.trace, log: ctx.log,
   });
   const { notes, ...meaning } = value;
