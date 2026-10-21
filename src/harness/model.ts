@@ -68,12 +68,17 @@ export async function spawnIn(dir: string, cmd: string[], o: { ms: number; label
   const shell = Bun.spawn(["sh", "-c", script, "sh", ...cmd], { cwd: tmpdir(), env: { ...process.env, D: dir }, stdin: "ignore", stdout: "ignore", stderr: "ignore" });
   shell.unref();
   const pidOf = () => Number((existsSync(at("pid")) ? readFileSync(at("pid"), "utf8") : "").trim());
+  // A zombie answers kill(0) but is gone: an orphan waits as one where its new parent doesn't reap, as on CI runners.
   const alive = (pid: number) => {
     try {
       process.kill(pid, 0);
-      return true;
     } catch {
       return false;
+    }
+    try {
+      return !/^\d+ \(.*\) Z/.test(readFileSync(`/proc/${pid}/stat`, "utf8"));
+    } catch {
+      return true;
     }
   };
   const label = o.label ?? cmd[0];
