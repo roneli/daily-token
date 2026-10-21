@@ -29,7 +29,7 @@ const HELP = `daily-token <command> [options]
   preview   Render every issue and serve out/ on :5173
   serve     Serve the site from the issues bucket (--port 8787, --host 127.0.0.1)
 
-  --root DIR  the data root; default: DATA_DIR, else the current folder if it has project.json`;
+  --root DIR  the data root; default: the current folder if it has project.json, else DATA_DIR`;
 
 // "--set reels.reviewers=[]" → { reels: { reviewers: [] } }. A value that isn't JSON is a string.
 export function settings(pairs: string[]): Record<string, StageConfig> {

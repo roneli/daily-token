@@ -228,9 +228,10 @@ export const issueDates = async (root: string) =>
 //   <root>/issues/<date>/       data.json, stories.json, reels.json
 // DATA_DIR points at it; without it the commands use the made-up fixture.
 // The data root when --root doesn't say: DATA_DIR, else the current folder when it holds a project, else the fixture.
+// The data root you stand in, else DATA_DIR, else the made-up fixture.
 export async function defaultRoot() {
-  if (process.env.DATA_DIR) return process.env.DATA_DIR;
-  return (await Bun.file("project.json").exists()) ? "." : join(ENGINE, "fixtures", "sample");
+  if (await Bun.file("project.json").exists()) return ".";
+  return process.env.DATA_DIR || join(ENGINE, "fixtures", "sample");
 }
 
 export async function issueArgs(extra: NonNullable<ParseArgsConfig["options"]> = {}) {
