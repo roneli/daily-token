@@ -52,12 +52,12 @@ run = "bun src/cli.ts serve"
 
 [tasks."worker:dev"]
 description = "Run the Cloudflare Worker locally against a local R2 bucket"
-dir = "apps/worker"
+dir = "deploy/cloudflare"
 run = "bunx wrangler dev"
 
 [tasks."worker:deploy"]
 description = "Deploy the Worker on WORKER_DOMAIN behind Access (ACCESS_TEAM_DOMAIN, ACCESS_AUD from .env)"
-dir = "apps/worker"
+dir = "deploy/cloudflare"
 run = """
 : "${WORKER_DOMAIN:?set WORKER_DOMAIN in .env}" "${ACCESS_TEAM_DOMAIN:?set ACCESS_TEAM_DOMAIN in .env}" "${ACCESS_AUD:?set ACCESS_AUD in .env}"
 bunx wrangler deploy --domain "$WORKER_DOMAIN" --var "ACCESS_TEAM_DOMAIN:$ACCESS_TEAM_DOMAIN" --var "ACCESS_AUD:$ACCESS_AUD"

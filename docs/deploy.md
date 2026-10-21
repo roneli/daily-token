@@ -2,7 +2,7 @@
 
 Publishing is optional. Without it, `preview` renders every issue and serves it on your machine. To share issues, `publish` uploads them to an **issues bucket**: any S3-compatible store (AWS S3, Cloudflare R2, MinIO, Backblaze B2). Only what changed is uploaded.
 
-`.github/workflows/daily.yml` makes the issue at `CUTOFF` in `DIGEST_TZ` on the project's issue days: `make` (collect and the agents), render, `check`, publish, and a commit of the issue folder to the data repo. GitHub's cron is UTC, so it fires at both possible UTC hours and runs only the one in the cutoff's local hour. Run it by hand with a date, `from` and `dry_run` (on by default: make and check, no publish or commit). `.github/workflows/publish.yml` publishes the whole archive on every push to `master` that touches the engine, or by hand. Both need the `publish` environment:
+`init` writes the data repo's workflows. `.github/workflows/daily.yml` makes the issue at `CUTOFF` in `DIGEST_TZ` on the project's issue days: `make` (collect and the agents), render, `check`, publish, and a commit of the issue folder to the data repo. GitHub's cron is UTC, so it fires at both possible UTC hours and runs only the one in the cutoff's local hour. Run it by hand with a date, `from` and `dry_run` (on by default: make and check, no publish or commit). `.github/workflows/publish.yml` publishes the whole archive when the engine is upgraded, the project or its map changes, or by hand. Both need the `publish` environment:
 
 | Name | Kind | What |
 |---|---|---|
@@ -13,8 +13,6 @@ Publishing is optional. Without it, `preview` renders every issue and serves it 
 | `SITE_URL` | variable | the site's address, for the Slack post |
 | `SLACK_WEBHOOK_URL` | secret | optional: incoming webhook for the allowed channel |
 | `DIGEST_TZ`, `CUTOFF` | variable | the window's time zone and cutoff, e.g. `Europe/Berlin`, `18:00` (daily) |
-| `DATA_REPO` | repository variable | the private data repo, `owner/name`; without it this repo's workflows skip |
-| `DATA_TOKEN` | secret | contents read and write on the data repo (daily) |
 | `SOURCE_TOKEN` | secret | read-only on the project's repos: contents, pull requests, issues (daily) |
 | `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN` | secret | for the agents; the CLI is pinned to Claude Code 2.1.289 (daily) |
 
@@ -23,7 +21,7 @@ Publishing is optional. Without it, `preview` renders every issue and serves it 
 The site reads the bucket and nothing else. `/` lists the projects (or opens the only one), `/<project>/` is its latest issue, `/<project>/<date>/` an issue, `/<project>/archive` all of them, `/static/*` the pinned assets every project shares. The routes live in `src/site.ts`, and two hosts serve them:
 
 - **`daily-token serve`** (`--port 8787`, `--host 127.0.0.1`): wherever Bun runs, on your laptop, a VM or a container, with the bucket's `S3_*` settings. It checks no one: keep it on localhost, or put it behind your own sign-in (a reverse proxy, Tailscale, oauth2-proxy).
-- **The Cloudflare Worker** (`apps/worker`), optional: the bucket bound as R2 (`bucket_name` in `wrangler.toml`), behind Cloudflare Access.
+- **The Cloudflare Worker** (`deploy/cloudflare`), optional: the bucket bound as R2 (`bucket_name` in `wrangler.toml`), behind Cloudflare Access.
 
 ## Access
 

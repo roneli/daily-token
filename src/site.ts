@@ -1,5 +1,5 @@
 // The site: every project, each one's latest issue and archive, and the issues, read from the bucket publish writes.
-// Read-only. It runs as the Cloudflare Worker (apps/worker) or wherever Bun runs (`daily-token serve`); each hands it a Store.
+// Read-only. It runs as the Cloudflare Worker (deploy/cloudflare) or wherever Bun runs (`daily-token serve`); each hands it a Store.
 //
 // Bucket layout:
 //   projects.json                          [{ id, name }]

@@ -7,7 +7,7 @@ import { ENGINE } from "./issue";
 
 test("doctor names what's missing and how to fix it", async () => {
   const root = await mkdtemp(join(tmpdir(), "doctor-"));
-  expect((await doctor(root))[0].detail).toContain("bun create daily-token");
+  expect((await doctor(root))[0].detail).toContain("daily-token init");
 
   await cp(join(ENGINE, "fixtures", "sample"), root, { recursive: true });
   const token = process.env.GH_TOKEN;

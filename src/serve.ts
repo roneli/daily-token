@@ -3,7 +3,7 @@ import { bucket } from "./bucket";
 import { site, type Store, span } from "./site";
 
 // The site, served from the issues bucket wherever Bun runs. It checks no one: keep it on localhost,
-// or put it behind your own sign-in. On Cloudflare, apps/worker serves the same site behind Access.
+// or put it behind your own sign-in. On Cloudflare, deploy/cloudflare serves the same site behind Access.
 const { values } = parseArgs({
   args: process.argv.slice(2),
   // --root comes from the CLI with every script; the site reads only the bucket.

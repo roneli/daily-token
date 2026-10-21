@@ -21,9 +21,3 @@ test("check runs through the CLI on the fixture", () => {
   expect(r.stdout.toString()).toContain("check passed");
 });
 
-test("the starter package asks for the engine version it ships with", async () => {
-  const engine = await Bun.file(join(ENGINE, "package.json")).json();
-  const create = await Bun.file(join(ENGINE, "packages", "create", "package.json")).json();
-  expect(create.version).toBe(engine.version);
-  expect(create.dependencies["daily-token"]).toBe(engine.version);
-});

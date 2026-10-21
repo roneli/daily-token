@@ -13,7 +13,7 @@ export async function doctor(root: string, env = process.env): Promise<Finding[]
   const add = (what: string, problems: string[]) => out.push({ what, ok: !problems.length, detail: problems.join("; ") || undefined });
 
   const projectFile = Bun.file(join(root, "project.json"));
-  if (!(await projectFile.exists())) return [{ ok: false, what: "project.json", detail: `no project.json in ${root}; run \`bun create daily-token\` or pass --root` }];
+  if (!(await projectFile.exists())) return [{ ok: false, what: "project.json", detail: `no project.json in ${root}; run \`daily-token init\` or pass --root` }];
   const project = await readJson<Project>(join(root, "project.json"));
   add("project.json", errorsOf(await load("project"), project, "project"));
 

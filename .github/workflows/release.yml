@@ -1,6 +1,6 @@
 name: release
 
-# A tag v<version> publishes the engine and the starter to npm, at the version both package.json files name.
+# A tag v<version> publishes the engine to npm, at the version package.json names.
 on:
   push:
     tags: ["v*"]
@@ -24,16 +24,10 @@ jobs:
           registry-url: https://registry.npmjs.org
       - run: bun install --frozen-lockfile
       - run: bunx biome check && bunx tsc --noEmit && bun test
-      - name: The tag, the engine and the starter name one version
+      - name: The tag and the engine name one version
         run: |
           v="${GITHUB_REF_NAME#v}"
           test "$(jq -r .version package.json)" = "$v"
-          test "$(jq -r .version packages/create/package.json)" = "$v"
-          test "$(jq -r '.dependencies["daily-token"]' packages/create/package.json)" = "$v"
       - run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - run: npm publish --provenance --access public
-        working-directory: packages/create
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
