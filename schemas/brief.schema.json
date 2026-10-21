@@ -1,0 +1,40 @@
+{
+  "$id": "brief",
+  "description": "What the project is and what its words mean, for agents writing for people who don't read the code. Drawn by the Briefer from the repos' own docs; edit it by hand freely.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["about", "names", "terms"],
+  "properties": {
+    "about": { "type": "string", "minLength": 20, "maxLength": 600, "description": "What the project is and who it is for, in plain words a newcomer follows." },
+    "names": {
+      "type": "array",
+      "maxItems": 20,
+      "description": "The things people name: the product, its pieces, its services. Write `name` as given; `aka` are other names the code and PRs use for the same thing.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "is"],
+        "properties": {
+          "name": { "type": "string", "maxLength": 32 },
+          "is": { "type": "string", "maxLength": 140 },
+          "aka": { "type": "array", "items": { "type": "string", "maxLength": 32 } }
+        }
+      }
+    },
+    "terms": {
+      "type": "array",
+      "maxItems": 40,
+      "description": "Words a newcomer won't know, and the plain words to use instead or to explain them once.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["term", "plain"],
+        "properties": {
+          "term": { "type": "string", "maxLength": 40 },
+          "plain": { "type": "string", "maxLength": 140 }
+        }
+      }
+    },
+    "from": { "type": "array", "items": { "type": "string" }, "description": "The docs it was drawn from." }
+  }
+}

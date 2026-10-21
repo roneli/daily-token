@@ -1,0 +1,110 @@
+{
+ "size": [
+  640,
+  260
+ ],
+ "groups": [
+  {
+   "label": "ROCKET",
+   "kind": "zone",
+   "box": [
+    210,
+    30,
+    190,
+    210
+   ]
+  }
+ ],
+ "parts": [
+  {
+   "id": "engine",
+   "name": "Engine",
+   "sub": "thrust · fuel",
+   "what": "Burns fuel and pushes the rocket.",
+   "box": [
+    230,
+    60,
+    150,
+    56
+   ],
+   "paths": [
+    "engine/**"
+   ]
+  },
+  {
+   "id": "guidance",
+   "name": "Guidance",
+   "sub": "gyro · autopilot",
+   "what": "Keeps the rocket pointed the right way.",
+   "box": [
+    230,
+    170,
+    150,
+    56
+   ],
+   "paths": [
+    "guidance/**"
+   ]
+  },
+  {
+   "id": "launchpad",
+   "name": "Launch pad",
+   "sub": "countdown · clamps",
+   "what": "Holds the rocket until it is ready to go.",
+   "box": [
+    30,
+    60,
+    150,
+    56
+   ],
+   "paths": [
+    "pad/**",
+    "ground:screen/**"
+   ]
+  },
+  {
+   "id": "ci",
+   "name": "CI",
+   "sub": "tests · builds",
+   "what": "Runs every test on every change.",
+   "box": [
+    460,
+    120,
+    150,
+    56
+   ],
+   "paths": [
+    ".github/**"
+   ]
+  }
+ ],
+ "edges": [
+  {
+   "d": "M180,88 H228",
+   "label": "holds",
+   "at": [
+    204,
+    80
+   ],
+   "anchor": "middle"
+  },
+  {
+   "d": "M305,116 V168",
+   "label": "steers",
+   "at": [
+    312,
+    146
+   ]
+  },
+  {
+   "d": "M458,148 C420,148 410,100 382,92",
+   "label": "tests",
+   "at": [
+    430,
+    112
+   ],
+   "anchor": "middle",
+   "dashed": true
+  }
+ ]
+}

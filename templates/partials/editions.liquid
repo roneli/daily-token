@@ -1,0 +1,12 @@
+<aside class="editions" id="editions" aria-label="Editions">
+  <div class="ed-head">
+    <b>Editions</b>
+    <button class="ed-close" type="button" data-editions="close" aria-label="Close editions">✕</button>
+  </div>
+  <nav id="ed-list" data-current="{{ data.date }}">
+    <p class="ed-group">This issue</p>
+    <a class="ed-item" href="../{{ data.date }}/" aria-current="page"><span class="ed-date">{{ data.date | date: "%a %-d %b" }}</span><span class="ed-title">{{ stories.headline }}</span></a>
+  </nav>
+  <a class="ed-all" href="../archive">All editions ›</a>
+</aside>
+<div class="ed-scrim" data-editions="close" hidden></div>

@@ -1,0 +1,74 @@
+<section id="page-blueprint" hidden aria-label="Blueprint">
+  <div class="bp">
+    <figure>
+      <div class="bp-bar">
+        <div class="legend">{% for l in bp.legend %}<span><span class="swatch" style="background:var({{ l.color }})"></span>{{ l.name }}</span>{% endfor %}</div>
+        <span class="clickhint">●<span><span class="verb"></span> a lit part to see its changes</span></span>
+      </div>
+      <div class="panel scroll">
+        <svg id="map" role="img" aria-label="Map of the system. Parts changed today are outlined in their story's color with a count; dashed parts didn't change." viewBox="0 0 {{ bp.size[0] }} {{ bp.size[1] }}" width="100%">
+          <defs><marker id="bp-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker></defs>
+          {%- for g in bp.groups %}
+          {%- if g.kind == "zone" %}
+          <rect class="boundary" x="{{ g.box[0] }}" y="{{ g.box[1] }}" width="{{ g.box[2] }}" height="{{ g.box[3] }}" rx="8"/><text x="{{ g.box[0] | plus: 12 }}" y="{{ g.box[1] | plus: 18 }}">{{ g.label }}</text>
+          {%- else %}
+          <rect class="frame" x="{{ g.box[0] }}" y="{{ g.box[1] }}" width="{{ g.box[2] }}" height="{{ g.box[3] }}" rx="7"/><text class="name" x="{{ g.box[0] | plus: 8 }}" y="{{ g.box[1] | plus: 14 }}">{{ g.label }}</text>
+          {%- endif %}
+          {%- endfor %}
+          {%- for e in bp.edges %}
+          <path class="edge{% if e.dashed %} dash{% endif %}" d="{{ e.d }}" marker-end="url(#bp-ah)"/><text x="{{ e.at[0] }}" y="{{ e.at[1] }}"{% if e.anchor %} text-anchor="{{ e.anchor }}"{% endif %}>{{ e.label }}</text>
+          {%- endfor %}
+          {%- for p in bp.parts %}
+          <g class="comp {% if p.lit %}lit{% else %}off{% endif %}" data-part="{{ p.id }}"{% if p.lit %} tabindex="0" role="button" aria-pressed="false"{% endif %} aria-label="{{ p.name }}: {{ p.n }} change{% if p.n != 1 %}s{% endif %}">
+            <rect class="halo" x="{{ p.x | minus: 4 }}" y="{{ p.y | minus: 4 }}" width="{{ p.w | plus: 8 }}" height="{{ p.h | plus: 8 }}" rx="7"/>
+            <rect class="box" x="{{ p.x }}" y="{{ p.y }}" width="{{ p.w }}" height="{{ p.h }}" rx="5"{% if p.lit %} style="stroke:var({{ p.color }})"{% endif %}/>
+            <text class="name" x="{{ p.x | plus: 10 }}" y="{{ p.nameY }}">{{ p.name }}</text>
+            {%- if p.showSub %}<text class="sub" x="{{ p.x | plus: 10 }}" y="{{ p.subY }}">{{ p.sub }}</text>{% endif %}
+            {%- if p.lit %}
+            <circle class="badge" cx="{{ p.x | plus: p.w | minus: 4 }}" cy="{{ p.y | plus: 4 }}" r="9" style="fill:var({{ p.color }})"/><text class="badge-n" x="{{ p.x | plus: p.w | minus: 4 }}" y="{{ p.y | plus: 4 }}" text-anchor="middle" dominant-baseline="central">{{ p.n }}</text>
+            {%- endif %}
+          </g>
+          {%- endfor %}
+        </svg>
+      </div>
+      <figcaption>Lit parts changed today; the badge is how many changes. Dashed parts didn't change.</figcaption>
+      {%- if bp.tags %}
+      <h3 class="sub">Today's releases</h3>
+      <div class="panel scroll">
+        <svg id="tags" role="img" aria-label="{{ github.tags.size }} release tags today" viewBox="0 0 560 96" width="100%">
+          <line class="axis" x1="20" x2="540" y1="74" y2="74"/>
+          {%- for t in bp.tags.ticks %}
+          <line class="axis" x1="{{ t.x }}" x2="{{ t.x }}" y1="70" y2="78"/><text x="{{ t.x }}" y="92" text-anchor="middle">{{ t.label }}</text>
+          {%- endfor %}
+          {%- for m in bp.tags.marks %}
+          <a href="{{ m.url }}" target="_blank"><line class="tick" x1="{{ m.x }}" x2="{{ m.x }}" y1="{{ m.top }}" y2="74"/><circle cx="{{ m.x }}" cy="74" r="4" style="fill:var({{ m.color }});stroke:var(--surface);stroke-width:2"/><text class="tagname" x="{% if m.end %}{{ m.x | minus: 4 }}{% else %}{{ m.x | plus: 4 }}{% endif %}" y="{{ m.labelY }}" text-anchor="{% if m.end %}end{% else %}start{% endif %}">{{ m.name }}</text></a>
+          {%- endfor %}
+        </svg>
+      </div>
+      {%- endif %}
+    </figure>
+    <div class="bp-scrim" data-sheet="close" hidden></div>
+    <aside class="panel" id="bp-detail">
+      <button class="bp-close" type="button" data-sheet="close" aria-label="Close">✕</button>
+      <div class="inner">
+        {%- for p in bp.lit %}
+        <div class="bp-view" data-view="{{ p.id }}"{% unless p.id == bp.start %} hidden{% endunless %}>
+          <div class="kicker"><span class="swatch" style="background:var({{ p.color }})"></span>{{ p.story }} · {{ p.n }} change{% if p.n != 1 %}s{% endif %} today</div>
+          <h2>{{ p.name }}</h2>
+          <p class="what">{{ p.what }}</p>
+          {%- if p.today %}
+          <p class="today"><b>Today:</b> {{ p.today | inline | raw }}</p>
+          {%- endif %}
+          <div class="bp-list">
+            {%- for c in p.cards %}
+            <a class="bp-item" href="{{ c.url }}" target="_blank"><span class="type" style="color:var({{ c.typeColor }})"><i style="background:var({{ c.typeColor }})"></i>{{ c.typeLabel }}</span><span class="h">{{ c.headline }}</span><span class="n">{{ c.ref | ref }}</span></a>
+            {%- endfor %}
+          </div>
+          <a class="bp-read" href="#d-{{ p.sectionId }}" data-digest="d-{{ p.sectionId }}">Read these in the digest ›</a>
+          <div class="bp-others"><span class="label">Other parts that changed</span>{% for o in bp.lit %}{% if o.id != p.id %}<button class="place" type="button" data-part="{{ o.id }}">{{ o.name }} · {{ o.n }}</button>{% endif %}{% endfor %}</div>
+        </div>
+        {%- endfor %}
+      </div>
+    </aside>
+  </div>
+</section>

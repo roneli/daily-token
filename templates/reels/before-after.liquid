@@ -1,0 +1,13 @@
+<svg class="scene" viewBox="0 0 640 360" role="img" aria-label="{{ reel.headline }}">
+  <rect x="70" y="60" width="500" height="120" rx="8" style="fill:var(--bg);stroke:var(--rule)"/>
+  <text x="{{ f.textX }}" y="92">{{ f.call }}</text>
+  <text x="{{ f.textX }}" y="124" class="ink" style="font-size:17px">{{ f.prefix }}<tspan class="secret">{{ f.before }}</tspan>{{ f.suffix }}</text>
+  <line x1="{{ f.strike.x1 }}" x2="{{ f.strike.x2 }}" y1="{{ f.strike.y }}" y2="{{ f.strike.y }}" style="stroke:var(--bad);stroke-width:2" data-anim="draw" data-at="{{ f.strike.at }}" data-ms="500" data-look="behind"/>
+  <text x="{{ f.textX }}" y="160" class="ink" style="font-size:17px" data-anim="fade" data-at="{{ f.afterAt.at }}">{{ f.prefix }}<tspan class="good" data-anim="type" data-at="{{ f.afterAt.typeAt }}" data-ms="{{ f.afterAt.typeMs }}" data-to="{{ f.after }}">{{ f.after }}</tspan>{{ f.suffix }}</text>
+  {%- for c in f.chips %}
+  <g data-anim="drop" data-at="{{ c.at }}" data-ms="300"><rect x="{{ c.x }}" y="214" width="62" height="30" rx="4" style="fill:var(--surface);stroke:var({{ color }})"/><text x="{{ c.cx }}" y="234" text-anchor="middle" class="ink">{{ c.text }}</text></g>
+  {%- endfor %}
+  {%- for n in f.notes %}
+  <text x="320" y="{{ n.y }}" text-anchor="middle"{% if forloop.last %} class="ink"{% endif %} data-anim="fade" data-at="{{ n.at }}">{{ n.text }}</text>
+  {%- endfor %}
+</svg>

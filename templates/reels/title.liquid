@@ -1,0 +1,9 @@
+<svg class="scene" viewBox="0 0 640 360" role="img" aria-label="{{ reel.headline }}">
+  <rect x="50" y="{{ f.barY }}" width="56" height="5" rx="2" style="fill:var({{ color }})" data-anim="grow" data-at="0" data-ms="400"/>
+  {%- for l in f.title %}
+  <text x="50" y="{{ l.y }}" class="ink" style="font:700 30px var(--f-display)" data-anim="fade" data-at="{{ l.at }}" data-ms="400">{{ l.text }}</text>
+  {%- endfor %}
+  {%- for l in f.dek %}
+  <text x="50" y="{{ l.y }}" style="font:400 18px var(--f-body)" data-anim="fade" data-at="{{ l.at }}" data-ms="400">{{ l.text }}</text>
+  {%- endfor %}
+</svg>

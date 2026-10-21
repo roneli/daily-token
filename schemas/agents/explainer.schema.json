@@ -1,0 +1,10 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["make", "why"],
+  "properties": {
+    "make": { "type": "boolean", "description": "false when no tour would teach something true; then leave out storyboard." },
+    "why": { "type": "string", "minLength": 1, "maxLength": 300, "description": "Why this flow, or why none: one or two sentences for the editors." },
+    "storyboard": { "$ref": "motion" }
+  }
+}

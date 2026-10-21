@@ -1,0 +1,258 @@
+{
+ "format": 3,
+ "edition": "thursday",
+ "issue": 2,
+ "date": "2026-01-15",
+ "window": {
+  "from": "2026-01-14T17:00:00Z",
+  "to": "2026-01-15T17:00:00Z"
+ },
+ "sources": {
+  "github": {
+   "repo": "acme/rocket",
+   "prs": [
+    {
+     "number": 11,
+     "title": "Retry ignition when the first spark misses",
+     "url": "https://github.com/acme/rocket/pull/11",
+     "mergedAt": "2026-01-15T09:10:00Z",
+     "additions": 120,
+     "deletions": 14,
+     "files": [
+      "engine/main.go"
+     ],
+     "closes": [],
+     "epicPath": [
+      7
+     ],
+     "core": true,
+     "author": "Sam",
+     "coauthors": [
+      "Opus 5.5"
+     ],
+     "body": "Made-up PR for the fixture. The engine tries the spark again before it gives up:\n\n```go\nfor try := 1; try <= 3; try++ {\n\tif ignite() {\n\t\treturn nil\n\t}\n\ttime.Sleep(200 * time.Millisecond)\n}\nreturn errNoSpark\n```"
+    },
+    {
+     "number": 12,
+     "title": "Hold the clamps until the gyro settles",
+     "url": "https://github.com/acme/rocket/pull/12",
+     "mergedAt": "2026-01-15T10:40:00Z",
+     "additions": 64,
+     "deletions": 8,
+     "files": [
+      "engine/main.go"
+     ],
+     "closes": [],
+     "epicPath": [
+      7
+     ],
+     "core": true,
+     "author": "Sam",
+     "coauthors": [
+      "Opus 5.5"
+     ],
+     "body": "Made-up PR for the fixture."
+    },
+    {
+     "repo": "acme/ground",
+     "number": 11,
+     "title": "Show the countdown on the ground station screen",
+     "url": "https://github.com/acme/ground/pull/11",
+     "mergedAt": "2026-01-15T12:00:00Z",
+     "additions": 48,
+     "deletions": 3,
+     "files": [
+      "screen/countdown.ts"
+     ],
+     "parts": [
+      "launchpad"
+     ],
+     "closes": [],
+     "epicPath": [
+      7
+     ],
+     "core": false,
+     "author": "Ari",
+     "coauthors": [
+      "Sonnet 5.5"
+     ],
+     "body": "Part of acme/rocket#7. The ground screen shows the same countdown the pad runs."
+    },
+    {
+     "number": 13,
+     "title": "Run the countdown test on every change",
+     "url": "https://github.com/acme/rocket/pull/13",
+     "mergedAt": "2026-01-15T12:05:00Z",
+     "additions": 30,
+     "deletions": 2,
+     "files": [
+      "engine/main.go"
+     ],
+     "closes": [],
+     "epicPath": [
+      7
+     ],
+     "core": false,
+     "author": "Sam",
+     "coauthors": [
+      "Sonnet 5.5"
+     ],
+     "body": "Made-up PR for the fixture."
+    },
+    {
+     "number": 14,
+     "title": "Rename boosters to stages",
+     "url": "https://github.com/acme/rocket/pull/14",
+     "mergedAt": "2026-01-15T14:30:00Z",
+     "additions": 210,
+     "deletions": 210,
+     "files": [
+      "engine/main.go"
+     ],
+     "closes": [],
+     "epicPath": [],
+     "core": false,
+     "author": "Sam",
+     "coauthors": [
+      "Haiku 5.5"
+     ],
+     "body": "Made-up PR for the fixture."
+    }
+   ],
+   "tags": [
+    {
+     "name": "rocket/v1.0.0",
+     "at": "2026-01-15T15:00:00Z",
+     "sha": "abc1234"
+    }
+   ],
+   "epics": [
+    {
+     "number": 7,
+     "title": "Reach orbit",
+     "closed": 3,
+     "total": 5
+    }
+   ],
+   "openPrs": [
+    {
+     "number": 15,
+     "title": "Add a second stage"
+    },
+    {
+     "repo": "acme/ground",
+     "number": 4,
+     "title": "Sound the horn at T-10",
+     "url": "https://github.com/acme/ground/pull/4",
+     "draft": false,
+     "review": "REVIEW_REQUIRED",
+     "author": "Ari",
+     "createdAt": "2026-01-15T14:00:00Z",
+     "updatedAt": "2026-01-15T14:00:00Z",
+     "additions": 30,
+     "deletions": 0,
+     "parts": [
+      "launchpad"
+     ],
+     "closes": [],
+     "epicPath": [
+      7
+     ],
+     "isNew": true,
+     "active": true,
+     "body": "Part of acme/rocket#7."
+    }
+   ],
+   "openPrCount": 2,
+   "repos": [
+    "acme/rocket",
+    "acme/ground"
+   ],
+   "commits": [
+    {
+     "repo": "acme/ground",
+     "sha": "1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d",
+     "title": "Dim the ground screen at night",
+     "url": "https://github.com/acme/ground/commit/1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d",
+     "at": "2026-01-15T13:05:00Z",
+     "additions": 6,
+     "deletions": 2,
+     "files": [
+      "screen/theme.ts"
+     ],
+     "parts": [
+      "launchpad"
+     ],
+     "closes": [],
+     "epicPath": [],
+     "core": false,
+     "author": "Ari",
+     "coauthors": [],
+     "body": ""
+    },
+    {
+     "repo": "acme/ground",
+     "sha": "9f8e7d6c5b4a39281706f5e4d3c2b1a09f8e7d6c",
+     "title": "Bigger digits on the ground screen",
+     "url": "https://github.com/acme/ground/commit/9f8e7d6c5b4a39281706f5e4d3c2b1a09f8e7d6c",
+     "at": "2026-01-15T13:20:00Z",
+     "additions": 6,
+     "deletions": 2,
+     "files": [
+      "screen/countdown.ts"
+     ],
+     "parts": [
+      "launchpad"
+     ],
+     "closes": [],
+     "epicPath": [],
+     "core": false,
+     "author": "Ari",
+     "coauthors": [],
+     "body": ""
+    }
+   ],
+   "week": {
+    "from": "2026-01-09",
+    "to": "2026-01-15",
+    "days": [
+     {
+      "date": "2026-01-14",
+      "headline": "The countdown learns to wait for the gyro",
+      "prs": 4,
+      "commits": 0,
+      "epics": {
+       "7": 3,
+       "none": 1
+      }
+     },
+     {
+      "date": "2026-01-15",
+      "headline": "",
+      "prs": 5,
+      "commits": 2,
+      "epics": {
+       "7": 4,
+       "none": 3
+      }
+     }
+    ],
+    "totals": {
+     "prs": 9,
+     "commits": 2,
+     "issuesClosed": 0,
+     "tags": 1
+    },
+    "epics": [
+     {
+      "ref": 7,
+      "title": "Reach orbit",
+      "closed": 3,
+      "total": 5,
+      "closedThisWeek": 0
+     }
+    ]
+   }
+  }
+ }
+}

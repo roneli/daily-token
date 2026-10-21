@@ -1,0 +1,27 @@
+<svg class="scene" viewBox="0 0 640 360" role="img" aria-label="{{ reel.headline }}">
+  {%- if f.barsTitle %}<text x="20" y="40" class="tb">{{ f.barsTitle }}</text>{% endif %}
+  {%- for b in f.bars %}
+  <g data-anim="fade" data-at="{{ b.at }}" data-ms="200">
+    <text x="20" y="{{ b.y }}" class="ink">{{ b.label }}</text><text x="320" y="{{ b.y }}" text-anchor="end">{{ b.done }}/{{ b.total }}</text>
+    <rect x="20" y="{{ b.y | plus: 8 }}" width="{{ f.barW }}" height="8" rx="4" style="fill:var(--track)"/>
+    <rect id="{{ reel.id }}-bar{{ forloop.index0 }}" x="20" y="{{ b.y | plus: 8 }}" width="{{ b.w }}" height="8" rx="4" style="fill:var({{ color }})" data-anim="width" data-at="{{ b.at }}" data-ms="900" data-from="0" data-to="{{ b.w }}"/>
+  </g>
+  {%- endfor %}
+  {%- if f.queueTitle %}<text x="370" y="40" class="tb">{{ f.queueTitle }}</text>{% endif %}
+  {%- for x in f.boxes %}
+  <g data-anim="drop" data-at="{{ x.at }}" data-ms="300"><rect x="{{ x.x }}" y="{{ x.y }}" width="{{ x.w }}" height="40" rx="4" style="fill:var(--surface);stroke:var({{ color }});stroke-width:1.5"/>{% if x.name != "" %}<text x="{{ x.cx }}" y="{{ x.y | plus: 24 }}" text-anchor="middle" class="ink" style="font-size:10px">{{ x.name }}</text>{% endif %}</g>
+  {%- endfor %}
+  {%- if f.queue %}
+  <g data-anim="fade" data-at="{{ f.queueAt }}">
+    <text x="370" y="180" class="ink">{{ f.queue.label }}</text>
+    {%- if f.queue.sub %}<text x="370" y="200">{{ f.queue.sub }}</text>{% endif %}
+  </g>
+  {%- endif %}
+  {%- if f.card %}
+  <g data-anim="fade" data-at="{{ f.cardAt }}">
+    <rect x="360" y="228" width="262" height="84" rx="6" style="fill:var(--core-bg);stroke:var(--core)"/>
+    <text x="374" y="252" style="fill:var(--core);font-weight:600">{{ f.card.title }}</text>
+    {%- for l in f.card.lines %}<text x="374" y="{{ forloop.index0 | times: 20 | plus: 274 }}" class="ink">{{ l }}</text>{% endfor %}
+  </g>
+  {%- endif %}
+</svg>

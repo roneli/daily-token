@@ -1,0 +1,33 @@
+<svg class="scene" viewBox="0 0 640 360" role="img" aria-label="{{ reel.headline }}">
+  <defs><marker id="{{ reel.id }}-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted);fill:context-stroke"/></marker></defs>
+  {%- for s in f.steps %}
+  <g class="box" id="{{ reel.id }}-s{{ forloop.index0 }}"><rect x="{{ s.x }}" y="52" width="{{ s.w }}" height="52" rx="6"/><text class="tb" x="{{ s.cx }}" y="75" text-anchor="middle">{{ s.name }}</text><text x="{{ s.cx }}" y="92" text-anchor="middle" style="font-size:11px">{{ s.sub }}</text></g>
+  {%- unless forloop.last %}
+  <line x1="{{ s.ax1 }}" x2="{{ s.ax2 }}" y1="78" y2="78" class="line" marker-end="url(#{{ reel.id }}-ah)"/>
+  {%- endunless %}
+  {%- endfor %}
+  <circle id="{{ reel.id }}-tok" class="tok" cx="{{ f.steps[0].cx }}" cy="122" r="7" style="fill:var({{ color }})"/>
+  {%- for m in f.moves %}
+  <g data-cue="move" data-el="{{ reel.id }}-tok" data-at="{{ m.at }}" data-ms="500" data-x="{{ m.x }}" data-y="122"></g>
+  {%- endfor %}
+  {%- for c in f.boxCues %}
+  <g data-cue="class" data-el="{{ reel.id }}-s{{ c.step }}" data-at="{{ c.at }}" data-to="{{ c.cls }}"></g>
+  {%- endfor %}
+  <g style="font-size:12.5px">
+    {%- for e in f.events %}
+    <text x="18" y="{{ e.y }}" class="{{ e.kind }}" data-anim="fade" data-at="{{ e.at }}">{% if e.kind == "bad" %}✕{% else %}✓{% endif %} {{ e.text }}{% if e.ref %}  {{ e.ref | ref }}{% endif %}</text>
+    {%- endfor %}
+    {%- for m in f.metrics %}
+    <g data-anim="fade" data-at="{{ m.at }}">
+      <text x="18" y="{{ m.y }}" class="ink">{{ m.label }}</text>
+      {%- if m.ratio %}
+      <rect x="170" y="{{ m.y | minus: 12 }}" width="300" height="16" rx="3" style="fill:var(--track)"/>
+      <rect x="170" y="{{ m.y | minus: 12 }}" width="300" height="16" rx="3" style="fill:var({{ color }})" data-anim="width" data-at="{{ m.at | plus: 300 }}" data-ms="900" data-from="300" data-to="{{ m.w }}"/>
+      <text x="480" y="{{ m.y }}" data-anim="text" data-at="{{ m.at | plus: 1200 }}" data-to="{{ m.after }}{% if m.ref %}  {{ m.ref | ref }}{% endif %}">{{ m.before }}</text>
+      {%- else %}
+      <text x="170" y="{{ m.y }}" data-anim="text" data-at="{{ m.at | plus: 600 }}" data-to="{{ m.after }}{% if m.ref %}  {{ m.ref | ref }}{% endif %}">{{ m.before }}</text>
+      {%- endif %}
+    </g>
+    {%- endfor %}
+  </g>
+</svg>

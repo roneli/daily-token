@@ -1,0 +1,9 @@
+{
+  "description": "Anything no template shows: the inside of a 640×360 SVG the Director draws, with animation marks. See the scene rules.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["svg"],
+  "properties": {
+    "svg": { "type": "string", "minLength": 1, "maxLength": 24000, "description": "The inside of a 640×360 SVG with animation marks. Checked by src/scene.ts." }
+  }
+}

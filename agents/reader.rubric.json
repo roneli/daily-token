@@ -1,0 +1,47 @@
+{
+ "criteria": [
+  { "id": "teammate", "describe": "A teammate skimming on a phone learns what changed and whether it touches their work.", "weight": 2, "threshold": 4 },
+  { "id": "newcomer", "describe": "Someone who joined last week gets the plain idea without internal jargon.", "weight": 2, "threshold": 4 },
+  { "id": "partner", "describe": "Someone building on the project sees what changed in what they use, and what's coming.", "weight": 1, "threshold": 3 },
+  { "id": "honest", "describe": "Every chart, number and caption says what the data and the picture support, no more.", "weight": 3, "threshold": 5 },
+  { "id": "legible", "describe": "In the pictures, text is big enough and sparse enough to read on a phone, and nothing crowds or collides.", "weight": 2, "threshold": 4 },
+  { "id": "arc", "describe": "The first short gives the story's point on its own; each one after it adds something; nothing repeats another thread.", "weight": 1, "threshold": 4 },
+  { "id": "tight", "describe": "As few shorts and words as the story allows: every short is one a teammate would miss if it were cut, and each reads in its seconds.", "weight": 2, "threshold": 4 }
+ ],
+ "examples": [
+  {
+   "work": {
+    "thread": { "title": "Failed webhooks now retry on their own", "story": { "cards": [{ "ref": 41, "headline": "Webhooks retry for a day" }, { "ref": 44, "headline": "Retries show in the event log" }] } },
+    "shorts": [
+     { "id": "hooks-retry", "template": "sequence", "headline": "Webhook delivery gets exponential backoff with jitter", "caption": "On a 5xx or timeout the dispatcher re-enqueues the event with backoff from 250 ms, doubling to 6 h, plus ±20% jitter, keyed by an idempotency key so receivers can dedupe.", "why": "Transient receiver outages no longer drop events.", "picture": "nine attempts on a log-scale axis, each with its delay in ms; small labels overlap near the start" },
+     { "id": "hooks-queue", "template": "pipeline", "headline": "Retries live in the dispatch_queue table", "caption": "A new next_attempt_at column and a partial index let the worker poll due rows; rows past 24 h move to dead_letters.", "why": "", "picture": "five boxes with table and column names" },
+     { "id": "hooks-key", "template": "before-after", "headline": "Idempotency-Key header on every delivery", "caption": "Each delivery now carries the event id in an Idempotency-Key header.", "why": "Receivers can drop duplicates.", "picture": "two header listings" },
+     { "id": "hooks-log", "template": "sequence", "headline": "Every attempt shows in the event log", "caption": "The event log lists each attempt with its status code and delay.", "why": "Support can see why an event was late.", "picture": "a log with four rows" }
+    ]
+   },
+   "scores": { "teammate": 3, "newcomer": 2, "partner": 3, "honest": 4, "legible": 2, "arc": 2, "tight": 1 },
+   "why": "A two-card story told in four shorts. The first opens on mechanism (backoff, jitter, 5xx) instead of the news a customer feels. hooks-queue is internals nobody would miss; hooks-key repeats the first short's idempotency point. Captions run past 30 words, and the first picture is too dense to read. The ms values are in the data but aren't the news."
+  },
+  {
+   "work": {
+    "thread": { "title": "Failed webhooks now retry on their own", "story": { "cards": [{ "ref": 41, "headline": "Webhooks retry for a day" }, { "ref": 44, "headline": "Retries show in the event log" }] } },
+    "shorts": [
+     { "id": "hooks-retry", "template": "sequence", "headline": "Failed webhooks now retry for up to a day", "caption": "When a customer's server is down, we keep trying instead of dropping the event.", "why": "Fewer missed events to chase by hand.", "picture": "three attempts on a timeline: two ✕ in the bad tone, the third ✓ delivered; four labels" }
+    ]
+   },
+   "scores": { "teammate": 5, "newcomer": 5, "partner": 4, "honest": 5, "legible": 5, "arc": 5, "tight": 5 },
+   "why": "One short carries the story: what changed and who it helps, in 21 words, with a picture you read at a glance. The log card is a detail for the digest. Partner gets 4: it doesn't say that retried events may arrive twice."
+  },
+  {
+   "work": {
+    "thread": { "title": "Failed webhooks now retry on their own", "story": { "cards": [{ "ref": 41, "headline": "Webhooks retry for a day" }, { "ref": 44, "headline": "Retries show in the event log" }] } },
+    "shorts": [
+     { "id": "hooks-retry", "template": "sequence", "headline": "Failed webhooks now retry for up to a day", "caption": "When a customer's server is down, we keep trying instead of dropping the event.", "why": "Fewer missed events to chase by hand.", "picture": "three attempts on a timeline; the third ✓ delivered" },
+     { "id": "hooks-log", "template": "before-after", "headline": "Support can see every retry", "caption": "The event log now lists each attempt, so a late event has an answer.", "why": "", "picture": "before: one row 'failed'; after: three rows ending 'delivered'" }
+    ]
+   },
+   "scores": { "teammate": 5, "newcomer": 5, "partner": 4, "honest": 5, "legible": 4, "arc": 4, "tight": 4 },
+   "why": "The second short earns its seconds: it is the change support will notice. Both stay short. It passes, though one short would have done."
+  }
+ ]
+}

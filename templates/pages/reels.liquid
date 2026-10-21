@@ -1,0 +1,52 @@
+<div class="book" id="book">
+{%- for t in threads %}
+  <section class="thread" id="thread-{{ t.id }}" style="--c:var({{ t.color }})" aria-label="{{ t.title }}" hidden>
+    <div class="segs">
+      {%- for r in t.shorts %}
+      <span class="seg"><span class="bar"><i></i></span></span>
+      {%- endfor %}
+    </div>
+    <header class="thead"><span class="swatch" style="background:var({{ t.color }})"></span><b>{{ t.name }}</b><span class="ttitle">{{ t.title }}</span></header>
+    {%- for r in t.shorts %}
+    <article class="page reel" id="reel-{{ r.id }}" data-ms="{{ r.ms }}" hidden>
+      <div class="stage">
+        <div class="viz">{{ r.svg | raw }}</div>
+        <div class="copy">
+          {%- capture epic %}{% for e in r.epic %}{{ e | ref }}{% unless forloop.last %} › {% endunless %}{% endfor %}{% endcapture %}
+          <div class="kicker"><span class="swatch" style="background:var({{ r.color }})"></span>{{ r.seg }}{% if r.epic.size > 0 %} · epic {{ epic | inline | raw }}{% endif %}</div>
+          <h1>{{ r.headline }}</h1>
+          <p>{{ r.caption | inline | raw }}</p>
+          {%- if r.why %}
+          <p class="why">{{ r.why | inline | raw }}</p>
+          {%- endif %}
+          <div class="prs">{% for c in r.chips %}<a class="pr" href="{{ c.url }}" target="_blank"><span class="n">{{ c.n | ref }}</span>{% if c.core %}<span class="core">Core</span>{% endif %}</a>{% endfor %}</div>
+        </div>
+      </div>
+    </article>
+    {%- endfor %}
+    {%- if t.section %}{% assign more = t.section.cards.size %}{% assign what = "change" %}{% elsif t.id == "recap" %}{% assign more = stories.recap.points.size %}{% assign what = "point" %}{% else %}{% assign more = openPrs.size %}{% assign what = "open PR" %}{% endif %}
+    <button class="read-bar" type="button" data-read><span class="chev" aria-hidden="true"></span><span>Read the story</span><span class="more">{{ more }} {{ what }}{% if more != 1 %}s{% endif %}</span></button>
+    <aside class="sheet" aria-label="The story in the digest" hidden>
+      <span class="sheet-grab" aria-hidden="true"></span>
+      <button class="sheet-close" type="button" data-sheet="close" aria-label="Close">↓ Back to the reel</button>
+      {%- if t.section %}
+      <div class="kicker"><span class="swatch" style="background:var({{ t.color }})"></span>{{ t.section.story | capitalize }}</div>
+      <h2>{{ t.section.title }}</h2>
+      <p class="dek">{{ t.section.dek | inline | raw }}</p>
+      <div class="cards">
+        {%- for c in t.section.cards %}{% include "partials/card", c: c %}{% endfor %}
+      </div>
+      {%- elsif t.id == "recap" %}
+      <div class="kicker"><span class="swatch" style="background:var(--accent)"></span>This week</div>
+      <h2>{{ stories.recap.title }}</h2>
+      <p class="dek">{{ stories.recap.dek | inline | raw }}</p>
+      <ul class="points">{% for p in stories.recap.points %}<li>{{ p | inline | raw }}</li>{% endfor %}</ul>
+      {%- else %}
+      <div class="kicker"><span class="swatch" style="background:var(--s0)"></span>Coming up</div>
+      <h2>What's coming</h2>
+      <ul class="queue">{% for o in openPrs %}<li><a href="{{ o.url }}" target="_blank">{{ o.ref | ref }}</a><span>{{ o.title }}</span></li>{% endfor %}</ul>
+      {%- endif %}
+    </aside>
+  </section>
+{%- endfor %}
+</div>

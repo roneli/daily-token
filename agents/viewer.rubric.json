@@ -1,0 +1,284 @@
+{
+ "criteria": [
+  {
+   "id": "how",
+   "describe": "How it works: after watching, a newcomer could explain how it works, step by step, including what happens when it fails.",
+   "weight": 3,
+   "threshold": 4
+  },
+  {
+   "id": "deep",
+   "describe": "Deep: the stops where something happens show their part's mechanism with concrete beats (three real actions or checks is enough), in the move that fits its shape (a sequence, a fan-out, a loop, nested layers, a comparison, a gate), with what happens when it fails, so a newcomer learns the mechanism, not just the part's name. A stop that only says where something sits costs a point.",
+   "weight": 3,
+   "threshold": 4
+  },
+  {
+   "id": "clear",
+   "describe": "Clear, in Simplified Technical English and for the ear: one idea per sentence, at most 20 words, active voice, plain meaning for a term the first time, and narration that flows: the actor named once, then \"it\"; openings that vary. The same subject starting sentence after sentence reads like a list and loses a point. The map's labels come from the system map; speech using the brief's name for the lit part is not a mismatch.",
+   "weight": 2,
+   "threshold": 4
+  },
+  {
+   "id": "big",
+   "describe": "Big picture: the newcomer also knows where this happens in the system and how the parts it crosses fit together, from the event that starts the flow to where it ends.",
+   "weight": 2,
+   "threshold": 4
+  },
+  {
+   "id": "engaging",
+   "describe": "Engaging: it opens on the event that starts the flow and a question with stakes, and its closing answers that question (naming the mechanism's main moves counts as an answer); the narration has momentum (first, then, if, once, so), not a list of descriptions.",
+   "weight": 2,
+   "threshold": 4
+  },
+  {
+   "id": "fresh",
+   "describe": "Fresh: it doesn't repeat today's reels, in content or in look. Today's changes are marked on the way, not walked through one by one.",
+   "weight": 2,
+   "threshold": 4
+  },
+  {
+   "id": "honest",
+   "describe": "Every claim, step and label is what the parts' descriptions, the brief and the PRs support, no more.",
+   "weight": 3,
+   "threshold": 5
+  },
+  {
+   "id": "legible",
+   "describe": "In the pictures, every step, label and caption reads on a phone; nothing crowds.",
+   "weight": 1,
+   "threshold": 4
+  }
+ ],
+ "examples": [
+  {
+   "work": {
+    "storyboard": {
+     "title": "Where firmware goes",
+     "dek": "Firmware travels from the build server to thermostats.",
+     "flow": "A firmware's way in",
+     "question": "Where does firmware go?",
+     "opening": "Here are the parts a firmware passes.",
+     "stops": [
+      {
+       "part": "build",
+       "say": "This is the build server. It builds firmware."
+      },
+      {
+       "part": "store",
+       "via": "uploads",
+       "say": "This is the firmware store. It stores firmware."
+      },
+      {
+       "part": "rollout",
+       "via": "publishes",
+       "say": "This is the rollout service, which takes care of sending firmware and is also responsible for retries.",
+       "move": "steps",
+       "beats": [
+        {
+         "label": "Sends",
+         "say": "It sends."
+        },
+        {
+         "label": "Retries",
+         "say": "It retries."
+        },
+        {
+         "label": "Done",
+         "say": "Done."
+        }
+       ],
+       "today": [
+        52
+       ]
+      },
+      {
+       "part": "fleet",
+       "via": "reports",
+       "say": "This is the fleet view. It shows versions."
+      }
+     ],
+     "closing": "Those are the parts a firmware passes."
+    },
+    "todaysReels": {
+     "stories": [
+      "Rollouts pause on failures"
+     ],
+     "reels": [
+      "A failing canary now stops the rollout"
+     ]
+    },
+    "pictures": [
+     "the opening map",
+     "stop 1 (build)",
+     "stop 3 (rollout), its steps played",
+     "the closing pull-back"
+    ]
+   },
+   "scores": {
+    "how": 1,
+    "deep": 1,
+    "clear": 2,
+    "big": 3,
+    "engaging": 1,
+    "fresh": 3,
+    "honest": 4,
+    "legible": 4
+   },
+   "why": "A map of where firmware goes, read out part by part: \"This is the firmware store. It stores firmware.\" The rollout's beats are words, not actions (\"It sends.\", \"Done.\"), and a rollout drawn as a list instead of a fan-out hides its shape. Nobody learns how an update reaches a home or what happens when one fails. The question is a label, not a stake, and the closing repeats the opening. One sentence packs two ideas into \"takes care of … is responsible for\", and \"This is…\" three times running reads like a list. True and readable, but flat and shallow."
+  },
+  {
+   "work": {
+    "storyboard": {
+     "title": "How new firmware reaches every thermostat",
+     "dek": "A bad firmware could turn off the heating in every home. The rollout and the switch-over make sure it can't.",
+     "flow": "A firmware's way in",
+     "question": "How does new firmware reach every thermostat and switch over without losing anyone's heating?",
+     "opening": "A new firmware is ready. How does it reach every thermostat, and switch over without losing anyone's heating?",
+     "stops": [
+      {
+       "part": "agent",
+       "say": "It starts with the device agent on each thermostat.",
+       "move": "cycle",
+       "laps": 1,
+       "beats": [
+        {
+         "label": "Checks in",
+         "say": "Every hour, the agent checks in."
+        },
+        {
+         "label": "Reports its version",
+         "say": "It reports the firmware it runs."
+        },
+        {
+         "label": "Waits an hour",
+         "say": "So the rollout service knows when it is behind."
+        }
+       ]
+      },
+      {
+       "part": "rollout",
+       "via": "check-in",
+       "say": "The rollout service decides when each thermostat gets the release.",
+       "move": "fanout",
+       "source": "New firmware",
+       "beats": [
+        {
+         "label": "Canary thermostats",
+         "count": 3,
+         "say": "First, a few canary thermostats get it, the first to try a release."
+        },
+        {
+         "label": "First wave",
+         "count": 6,
+         "say": "If their reports stay healthy, a first wave follows."
+        },
+        {
+         "label": "Everyone else",
+         "count": 12,
+         "tone": "good",
+         "say": "Then the rest follow, wave by wave."
+        }
+       ],
+       "today": [
+        52
+       ]
+      },
+      {
+       "part": "links",
+       "via": "asks",
+       "say": "Next, the link service gives each thermostat a way to fetch it.",
+       "move": "steps",
+       "beats": [
+        {
+         "label": "Reads the request",
+         "say": "It reads the thermostat's request."
+        },
+        {
+         "label": "Finds its release",
+         "say": "It finds the release this thermostat should run."
+        },
+        {
+         "label": "Signs a link",
+         "tone": "good",
+         "say": "Then it signs a link to that release in the firmware store."
+        }
+       ]
+      },
+      {
+       "part": "agent",
+       "via": "downloads",
+       "say": "The device agent downloads the release and switches over.",
+       "move": "steps",
+       "beats": [
+        {
+         "label": "Checks the signature",
+         "fail": "Not started",
+         "say": "First, it checks the signature; if that fails, nothing starts."
+        },
+        {
+         "label": "Old version hands over",
+         "say": "The old version hands its schedule to the new one."
+        },
+        {
+         "label": "Old version stops",
+         "tone": "good",
+         "say": "Then the old version finishes its work and stops."
+        }
+       ]
+      },
+      {
+       "part": "thermostat",
+       "via": "runs",
+       "say": "The new version runs on trial, a health check first.",
+       "move": "gate",
+       "check": "Health check",
+       "beats": [
+        {
+         "label": "New version runs",
+         "say": "The agent watches it."
+        },
+        {
+         "label": "Crash: back to old",
+         "tone": "bad",
+         "say": "A crash or a hang sends it back to the old version."
+        },
+        {
+         "label": "Passes: it stays",
+         "tone": "good",
+         "say": "If it passes, it stays."
+        }
+       ]
+      }
+     ],
+     "closing": "Canaries go first, every file is checked, and a crash goes back to the old version. So no home loses its heating."
+    },
+    "todaysReels": {
+     "stories": [
+      "Rollouts pause on failures"
+     ],
+     "reels": [
+      "A failing canary now stops the rollout"
+     ]
+    },
+    "pictures": [
+     "the opening map",
+     "stop 2 (rollout), its fanout played",
+     "stop 4 (agent), its steps played, the failure branch lit",
+     "stop 5 (thermostat), its gate played",
+     "the closing pull-back"
+    ]
+   },
+   "scores": {
+    "how": 4,
+    "deep": 4,
+    "clear": 5,
+    "big": 5,
+    "engaging": 5,
+    "fresh": 4,
+    "honest": 4,
+    "legible": 4
+   },
+   "why": "It starts with the event that sets the flow moving and asks a question with stakes; the closing answers it by naming the mechanism's moves. The tour runs from the thermostat's check-in, through the rollout's waves and the signed link, to the switch-over and its trial, so the newcomer sees the whole road. Each stop's shape is its mechanism's: a check-in as a loop, the rollout as a fan-out, the switch-over as steps with a red failure branch, the trial as a gate. The narration names each actor once, then \"it\", and moves with first, then, if, so; \"a canary, the first to try a release\" gives the term its meaning. How and deep are 4, not 5: the link service's beats are thin. \"No home loses its heating\" is stronger than the parts say, so honest is 4; the rollout echoes today's reel, so fresh is 4."
+  }
+ ]
+}

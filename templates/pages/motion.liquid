@@ -1,0 +1,28 @@
+<section id="page-motion" hidden aria-label="{{ motion.label }}" data-dek="How {{ project.name }} fits together, one flow across it, in {{ motion.length }}. Play it, or read it below.">
+  <div class="mgrid">
+    <figure class="mvideo">
+      {%- if motion.video %}
+      <video id="motion-video" controls playsinline preload="metadata" poster="{{ motion.poster }}" width="1080" height="1350" aria-describedby="motion-words">
+        <source src="{{ motion.video }}" type="video/mp4">
+      </video>
+      {%- else %}
+      <div class="mnone">The video is made when the issue is rendered. Its words are beside it.</div>
+      {%- endif %}
+    </figure>
+    <div class="mcopy">
+      <div class="kicker"><span class="swatch" style="background:var(--accent)"></span>{{ motion.label }} · {{ motion.flow }} · {{ motion.length }}</div>
+      <h2>{{ motion.title }}</h2>
+      <p class="dek">{{ motion.dek | inline | raw }}</p>
+      <p class="mparts">{% for p in motion.parts %}{% unless forloop.first %} → {% endunless %}{{ p }}{% endfor %}</p>
+      {%- if motion.chips.size > 0 %}
+      <div class="prs"><span class="label">New today</span>{% for c in motion.chips %}<a class="pr" href="{{ c.url }}" target="_blank"><span class="n">{{ c.n | ref }}</span>{% if c.core %}<span class="core">Core</span>{% endif %}</a>{% endfor %}</div>
+      {%- endif %}
+      <p class="label">What it says</p>
+      <ol class="narration" id="motion-words">
+        {%- for s in motion.lines %}
+        <li data-start="{{ s.start }}">{% if motion.video %}<button class="at" type="button" data-seek="{{ s.start }}" aria-label="Play from {{ s.at }}">{{ s.at }}</button>{% else %}<span class="at">{{ s.at }}</span>{% endif %}<span>{{ s.text | inline | raw }}</span></li>
+        {%- endfor %}
+      </ol>
+    </div>
+  </div>
+</section>

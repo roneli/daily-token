@@ -1,0 +1,499 @@
+{
+  "$id": "motion",
+  "description": "The Cutaway's storyboard: a tour of the whole system along one flow, stop by stop across the parts of system.json. The engine lays out the map, moves the camera and times every beat by the spoken narration.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "title",
+    "dek",
+    "flow",
+    "question",
+    "opening",
+    "stops",
+    "closing"
+  ],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "What the tour explains, in plain words: \"How new firmware reaches every thermostat\"."
+    },
+    "dek": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 220,
+      "description": "Why it matters, in one or two sentences, for someone who doesn't read the code."
+    },
+    "flow": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40,
+      "description": "The flow the tour follows, as a name: \"A request's journey\", \"A new version's way out\"."
+    },
+    "question": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 110,
+      "description": "The question the tour answers, with its stakes, in plain words, shown under the title: \"How does new firmware reach every thermostat without turning off anyone's heating?\"."
+    },
+    "opening": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "description": "Spoken over the title and the whole map: the event that starts the flow, in the active voice, then the question. At most 30 words."
+    },
+    "stops": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "part",
+          "say"
+        ],
+        "properties": {
+          "part": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$",
+            "description": "A part's id in system.json."
+          },
+          "via": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60,
+            "description": "How the tour got here from the stop before: the label of the system.json edge between the two parts, as written, or \"inside\" for two parts in one frame of the map. Not on the first stop."
+          },
+          "say": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 220,
+            "description": "The stop's first sentence, spoken as the camera arrives: what this part changes or decides, and why. Simplified Technical English: one idea, at most 20 words, active voice, present tense."
+          },
+          "move": {
+            "enum": [
+              "steps",
+              "fanout",
+              "cycle",
+              "layers",
+              "compare",
+              "gate",
+              "free"
+            ],
+            "description": "How the opened part shows its mechanism: steps (a sequence), fanout (one sends to many, in waves), cycle (a loop that repeats), layers (nested rings, outer to inner), compare (the same moment two ways), gate (a request meets a check: refused or let through), free (none fits: compose from primitives)."
+          },
+          "beats": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 6,
+            "description": "The move's beats in order, each with the one sentence spoken while it plays. steps: 3–5, `label` each, `fail` for a step that can fail. fanout: 2–4, `label` and `count` (receivers it reaches). cycle: 3–5 `label`s around the loop. layers: 2–4, a `label` and a `ring` each (1 outermost). compare: 2–4 rows, `label` on the first side, `other` on the second. gate: 2–4: one neutral (the request arriving), then a bad one (refused, `label` the reason) and a good one (let through). free: 2–6 sentences, the primitives come in on them.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "say"
+              ],
+              "properties": {
+                "say": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 140,
+                  "description": "The sentence spoken while this beat plays."
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 26
+                },
+                "tone": {
+                  "enum": [
+                    "good",
+                    "bad",
+                    "neutral"
+                  ]
+                },
+                "fail": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 26
+                },
+                "other": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 26
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 12
+                },
+                "ring": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 4,
+                  "description": "layers: which ring this beat is, 1 the outermost. The engine draws the rings from the outside in, whatever order they are spoken in."
+                }
+              }
+            }
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 26,
+            "description": "fanout: who sends."
+          },
+          "sides": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 20
+            },
+            "description": "compare: the two sides' titles, the wrong way first (\"Without the check\", \"With it\")."
+          },
+          "check": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 24,
+            "description": "gate: what the request is checked for."
+          },
+          "laps": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3,
+            "description": "cycle: how many more times the loop runs after its beats."
+          },
+          "free": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "why",
+              "nodes"
+            ],
+            "description": "move free: the engine's primitives on a 4 by 4 grid of slots. At most 40 elements in all.",
+            "properties": {
+              "why": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160,
+                "description": "Why no move fits, in a sentence."
+              },
+              "nodes": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 10,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "at"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9-]{0,15}$"
+                    },
+                    "label": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 20
+                    },
+                    "shape": {
+                      "enum": [
+                        "box",
+                        "dot"
+                      ]
+                    },
+                    "at": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 3
+                      },
+                      "description": "[column, row] on the card's grid of 4 by 4 slots."
+                    },
+                    "beat": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 5,
+                      "description": "The beat (sentence) it comes in on, from 0."
+                    },
+                    "tone": {
+                      "enum": [
+                        "good",
+                        "bad",
+                        "neutral"
+                      ]
+                    }
+                  }
+                }
+              },
+              "links": {
+                "type": "array",
+                "maxItems": 10,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "from",
+                    "to"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9-]{0,15}$"
+                    },
+                    "from": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9-]{0,15}$"
+                    },
+                    "to": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9-]{0,15}$"
+                    },
+                    "label": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 18
+                    },
+                    "beat": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 5,
+                      "description": "The beat (sentence) it comes in on, from 0."
+                    },
+                    "dashed": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              },
+              "copies": {
+                "type": "array",
+                "maxItems": 4,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "of",
+                    "n",
+                    "arrange"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9-]{0,15}$"
+                    },
+                    "of": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9-]{0,15}$"
+                    },
+                    "n": {
+                      "type": "integer",
+                      "minimum": 2,
+                      "maximum": 12
+                    },
+                    "arrange": {
+                      "enum": [
+                        "row",
+                        "ring",
+                        "grid"
+                      ]
+                    },
+                    "beat": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 5,
+                      "description": "The beat (sentence) it comes in on, from 0."
+                    }
+                  }
+                }
+              },
+              "tokens": {
+                "type": "array",
+                "maxItems": 6,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "along",
+                    "beat"
+                  ],
+                  "properties": {
+                    "along": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9-]{0,15}$"
+                    },
+                    "beat": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 5,
+                      "description": "The beat (sentence) it comes in on, from 0."
+                    },
+                    "back": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              },
+              "texts": {
+                "type": "array",
+                "maxItems": 4,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "text",
+                    "at"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9-]{0,15}$"
+                    },
+                    "text": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 22
+                    },
+                    "at": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 3
+                      },
+                      "description": "[column, row] on the card's grid of 4 by 4 slots."
+                    },
+                    "beat": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 5,
+                      "description": "The beat (sentence) it comes in on, from 0."
+                    }
+                  }
+                }
+              },
+              "effects": {
+                "type": "array",
+                "maxItems": 8,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "effect",
+                    "target",
+                    "beat"
+                  ],
+                  "properties": {
+                    "effect": {
+                      "enum": [
+                        "pulse",
+                        "fade",
+                        "draw",
+                        "zoom",
+                        "orbit"
+                      ]
+                    },
+                    "target": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9-]{0,15}$"
+                    },
+                    "beat": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 5,
+                      "description": "The beat (sentence) it comes in on, from 0."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "steps": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 5,
+            "description": "Before moves: a steps move's beats. New storyboards use move and beats.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "label",
+                "say"
+              ],
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 26
+                },
+                "say": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 140,
+                  "description": "The sentence spoken while this step lights: the actor first, one action, at most 20 words. With a `fail`, it also says what happens when the step fails."
+                },
+                "tone": {
+                  "enum": [
+                    "good",
+                    "bad",
+                    "neutral"
+                  ],
+                  "description": "good: the step that means it worked; bad: one that refuses or fails. Default neutral."
+                },
+                "fail": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 26,
+                  "description": "What happens instead when this step fails: a branch off it, drawn in red after the step."
+                }
+              }
+            }
+          },
+          "today": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 4,
+            "uniqueItems": true,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "string",
+                  "pattern": "^[\\w.-]+#\\d+$"
+                },
+                {
+                  "type": "string",
+                  "pattern": "^([\\w.-]+@)?[0-9a-f]{7}$"
+                }
+              ]
+            },
+            "description": "Today's PRs or commits that changed this part, for its New today badge."
+          }
+        }
+      }
+    },
+    "closing": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "description": "Spoken as the camera pulls back over the whole path: the answer to the question, in one line. At most 30 words."
+    }
+  }
+}

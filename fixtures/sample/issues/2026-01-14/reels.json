@@ -1,0 +1,353 @@
+{
+ "threads": [
+  {
+   "id": "launch",
+   "name": "Launch",
+   "shorts": [
+    {
+     "id": "launch-cover",
+     "template": "counter-timeline",
+     "seg": "Liftoff",
+     "desk": "Front page",
+     "epic": [],
+     "headline": "4 changes and a launch",
+     "caption": "The rocket shipped v1.0.0 after four changes.",
+     "why": "",
+     "refs": [
+      11
+     ],
+     "ms": 4000,
+     "fields": {
+      "counters": [
+       {
+        "value": 4,
+        "label": "PRs merged"
+       },
+       {
+        "value": 424,
+        "prefix": "+",
+        "label": "lines changed",
+        "minus": 234
+       },
+       {
+        "value": 2,
+        "label": "core changes"
+       }
+      ],
+      "axis": {
+       "from": "2026-01-15T09:00:00Z",
+       "to": "2026-01-15T17:00:00Z"
+      },
+      "tags": [
+       {
+        "name": "rocket/v1.0.0",
+        "at": "2026-01-15T15:00:00Z"
+       }
+      ],
+      "note": "1 release"
+     }
+    },
+    {
+     "id": "launch-pipeline",
+     "template": "pipeline",
+     "seg": "Launch",
+     "desk": "Launch desk",
+     "epic": [
+      7
+     ],
+     "headline": "From countdown to liftoff, without a scrub",
+     "caption": "Two fixes on the way up: the spark retries, and the pad waits for the gyro.",
+     "why": "",
+     "refs": [
+      11,
+      12,
+      13
+     ],
+     "ms": 8000,
+     "fields": {
+      "steps": [
+       {
+        "name": "test",
+        "sub": "countdown"
+       },
+       {
+        "name": "fuel",
+        "sub": "tanks"
+       },
+       {
+        "name": "ignite",
+        "sub": "engine"
+       },
+       {
+        "name": "release",
+        "sub": "clamps"
+       }
+      ],
+      "events": [
+       {
+        "step": 2,
+        "kind": "bad",
+        "text": "first spark misses"
+       },
+       {
+        "step": 2,
+        "kind": "good",
+        "text": "ignition retries",
+        "ref": 11
+       },
+       {
+        "step": 3,
+        "kind": "good",
+        "text": "clamps wait for the gyro",
+        "ref": 12
+       }
+      ],
+      "metrics": [
+       {
+        "label": "scrubbed launches",
+        "before": "1 in 9",
+        "after": "none in 40",
+        "ref": 11
+       }
+      ]
+     }
+    },
+    {
+     "id": "launch-countdown",
+     "template": "state-machine",
+     "seg": "Countdown",
+     "desk": "Launch desk",
+     "epic": [
+      7
+     ],
+     "headline": "The pad waits for the gyro before it lets go",
+     "caption": "Clamps stay closed until guidance is steady, so a wobble scrubs nothing.",
+     "why": "The status lines are examples.",
+     "refs": [
+      12
+     ],
+     "ms": 6000,
+     "fields": {
+      "states": [
+       {
+        "id": "fuel",
+        "name": "fuel",
+        "sub": "tanks full"
+       },
+       {
+        "id": "ignite",
+        "name": "ignite",
+        "sub": "engine lit"
+       },
+       {
+        "id": "liftoff",
+        "name": "liftoff",
+        "sub": "clamps open"
+       }
+      ],
+      "branch": {
+       "id": "hold",
+       "name": "hold",
+       "sub": "gyro settling",
+       "from": "ignite",
+       "label": "wobble"
+      },
+      "loop": "next launch",
+      "status": "Pad · LC-1",
+      "runs": [
+       {
+        "caption": "a clean launch",
+        "start": {
+         "state": "fuel",
+         "line": "T-60"
+        },
+        "steps": [
+         {
+          "to": "ignite",
+          "state": "ignite",
+          "line": "T-5"
+         },
+         {
+          "to": "liftoff",
+          "state": "liftoff",
+          "line": "T+0",
+          "tone": "good"
+         }
+        ]
+       },
+       {
+        "caption": "a wobble",
+        "start": {
+         "state": "fuel",
+         "line": "T-60"
+        },
+        "steps": [
+         {
+          "to": "ignite",
+          "state": "ignite",
+          "line": "T-5"
+         },
+         {
+          "to": "hold",
+          "state": "hold",
+          "line": "gyro settling"
+         },
+         {
+          "to": "ignite",
+          "state": "ignite",
+          "line": "gyro settled"
+         },
+         {
+          "to": "liftoff",
+          "state": "liftoff",
+          "line": "T+0",
+          "tone": "good"
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "id": "launch-spark",
+     "template": "sequence",
+     "seg": "Spark",
+     "desk": "Engine desk",
+     "epic": [
+      7
+     ],
+     "headline": "A missed spark gets a second try",
+     "caption": "The engine asks for a spark again when the first one misses.",
+     "why": "",
+     "refs": [
+      11
+     ],
+     "ms": 4000,
+     "fields": {
+      "actors": [
+       {
+        "name": "Pad"
+       },
+       {
+        "name": "Engine"
+       }
+      ],
+      "messages": [
+       {
+        "from": 0,
+        "to": 1,
+        "label": "ignite",
+        "tone": "ink"
+       },
+       {
+        "from": 1,
+        "to": 0,
+        "label": "spark missed",
+        "tone": "bad",
+        "tag": "before #11",
+        "struck": true,
+        "flash": {
+         "actor": 1,
+         "tone": "bad"
+        }
+       },
+       {
+        "from": 1,
+        "to": 0,
+        "label": "lit on retry",
+        "tone": "good",
+        "tag": "now",
+        "result": {
+         "text": "✓ lit",
+         "tone": "good"
+        },
+        "flash": {
+         "actor": 1,
+         "tone": "good"
+        }
+       }
+      ],
+      "note": "three tries, 200 ms apart"
+     }
+    }
+   ]
+  },
+  {
+   "id": "other",
+   "name": "Also",
+   "shorts": [
+    {
+     "id": "other-stages",
+     "template": "before-after",
+     "seg": "Stages",
+     "desk": "Style desk",
+     "epic": [],
+     "headline": "Boosters are called stages now",
+     "caption": "The word changes everywhere; nothing else does.",
+     "why": "",
+     "refs": [
+      14
+     ],
+     "ms": 4000,
+     "fields": {
+      "call": "parts.list() →",
+      "prefix": "{ \"name\": \"",
+      "before": "booster-1",
+      "after": "stage-1",
+      "suffix": "\" }",
+      "chips": [
+       {
+        "text": "stage"
+       }
+      ],
+      "notes": [
+       "renamed across 40 files"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "next",
+   "name": "Coming up",
+   "shorts": [
+    {
+     "id": "next-open",
+     "template": "stack",
+     "seg": "Up next",
+     "desk": "Coming up",
+     "epic": [],
+     "headline": "A second stage is next",
+     "caption": "One PR is open: a second stage.",
+     "why": "",
+     "refs": [
+      14
+     ],
+     "ms": 4000,
+     "fields": {
+      "barsTitle": "Epic progress",
+      "bars": [
+       {
+        "label": "#7 Reach orbit",
+        "done": 3,
+        "total": 5
+       }
+      ],
+      "queueTitle": "In review",
+      "queue": {
+       "count": 1,
+       "label": "1 PR open",
+       "sub": "#15 second stage"
+      },
+      "card": {
+       "title": "CHECK",
+       "lines": [
+        "fuel the second stage first"
+       ]
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

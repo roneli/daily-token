@@ -1,0 +1,10 @@
+{
+  "description": "The story's title and one sentence on why it matters, in large type. For a story with nothing to draw, or to open a thread before the shorts that show it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "dek"],
+  "properties": {
+    "title": { "type": "string", "minLength": 1, "maxLength": 70 },
+    "dek": { "type": "string", "maxLength": 160 }
+  }
+}

@@ -1,0 +1,6 @@
+node_modules/
+out/
+.env
+.wrangler/
+.claude/worktrees/
+.idea/

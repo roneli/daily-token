@@ -1,0 +1,232 @@
+{
+  "$id": "stories",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "headline",
+    "sections",
+    "rail"
+  ],
+  "properties": {
+    "headline": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 90
+    },
+    "recap": {
+      "type": "object",
+      "description": "Thursday only: the week, Friday to Thursday, from data.week.",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "dek",
+        "points"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "maxLength": 70
+        },
+        "dek": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "points": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 5,
+          "items": {
+            "type": "string",
+            "maxLength": 220
+          }
+        }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "story",
+          "title",
+          "dek",
+          "lead",
+          "cards"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$",
+            "not": {
+              "enum": [
+                "recap",
+                "next"
+              ]
+            },
+            "description": "recap and next are the reels' own threads."
+          },
+          "story": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 70
+          },
+          "dek": {
+            "type": "string",
+            "maxLength": 160
+          },
+          "lead": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ref",
+                  "label",
+                  "text"
+                ],
+                "properties": {
+                  "ref": {
+                    "oneOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^[\\w.-]+#\\d+$"
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^([\\w.-]+@)?[0-9a-f]{7}$"
+                      }
+                    ]
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string",
+                    "maxLength": 200
+                  }
+                }
+              }
+            ]
+          },
+          "cards": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "ref",
+                "type",
+                "parts",
+                "headline",
+                "plain",
+                "tech"
+              ],
+              "properties": {
+                "ref": {
+                  "oneOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "string",
+                      "pattern": "^[\\w.-]+#\\d+$"
+                    },
+                    {
+                      "type": "string",
+                      "pattern": "^([\\w.-]+@)?[0-9a-f]{7}$"
+                    }
+                  ]
+                },
+                "with": {
+                  "type": "array",
+                  "description": "Other PRs or commits this card also covers, such as a run of small direct commits.",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^[\\w.-]+#\\d+$"
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^([\\w.-]+@)?[0-9a-f]{7}$"
+                      }
+                    ]
+                  }
+                },
+                "type": {
+                  "enum": [
+                    "feature",
+                    "fix",
+                    "security",
+                    "testing",
+                    "better",
+                    "cleanup",
+                    "rename"
+                  ]
+                },
+                "parts": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "headline": {
+                  "type": "string",
+                  "maxLength": 80
+                },
+                "plain": {
+                  "type": "string",
+                  "maxLength": 260
+                },
+                "tech": {
+                  "type": "string",
+                  "maxLength": 260
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "rail": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "check",
+        "connects"
+      ],
+      "properties": {
+        "check": {
+          "type": "string"
+        },
+        "connects": {
+          "type": "string"
+        }
+      }
+    },
+    "parts": {
+      "type": "object",
+      "description": "Optional: one plain sentence per part on what changed there today, for the Blueprint.",
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 200
+      }
+    }
+  }
+}

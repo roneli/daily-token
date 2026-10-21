@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "shorts"],
+  "properties": {
+    "name": { "$ref": "reels#/properties/threads/items/properties/name" },
+    "shorts": { "$ref": "reels#/properties/threads/items/properties/shorts" }
+  }
+}

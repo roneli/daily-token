@@ -1,0 +1,115 @@
+{
+ "format": 3,
+ "edition": "daily",
+ "issue": 1,
+ "date": "2026-01-14",
+ "window": {
+  "from": "2026-01-13T17:00:00Z",
+  "to": "2026-01-14T17:00:00Z"
+ },
+ "sources": {
+  "github": {
+   "repo": "acme/rocket",
+   "prs": [
+    {
+     "number": 11,
+     "title": "Retry ignition when the first spark misses",
+     "url": "https://github.com/acme/rocket/pull/11",
+     "mergedAt": "2026-01-14T09:10:00Z",
+     "additions": 120,
+     "deletions": 14,
+     "files": [
+      "engine/main.go"
+     ],
+     "closes": [],
+     "epicPath": [
+      7
+     ],
+     "core": true,
+     "author": "Sam",
+     "coauthors": [
+      "Opus 5.5"
+     ],
+     "body": "Made-up PR for the fixture."
+    },
+    {
+     "number": 12,
+     "title": "Hold the clamps until the gyro settles",
+     "url": "https://github.com/acme/rocket/pull/12",
+     "mergedAt": "2026-01-14T10:40:00Z",
+     "additions": 64,
+     "deletions": 8,
+     "files": [
+      "engine/main.go"
+     ],
+     "closes": [],
+     "epicPath": [
+      7
+     ],
+     "core": true,
+     "author": "Sam",
+     "coauthors": [
+      "Opus 5.5"
+     ],
+     "body": "Made-up PR for the fixture."
+    },
+    {
+     "number": 13,
+     "title": "Run the countdown test on every change",
+     "url": "https://github.com/acme/rocket/pull/13",
+     "mergedAt": "2026-01-14T12:05:00Z",
+     "additions": 30,
+     "deletions": 2,
+     "files": [
+      "engine/main.go"
+     ],
+     "closes": [],
+     "epicPath": [
+      7
+     ],
+     "core": false,
+     "author": "Sam",
+     "coauthors": [
+      "Sonnet 5.5"
+     ],
+     "body": "Made-up PR for the fixture."
+    },
+    {
+     "number": 14,
+     "title": "Rename boosters to stages",
+     "url": "https://github.com/acme/rocket/pull/14",
+     "mergedAt": "2026-01-14T14:30:00Z",
+     "additions": 210,
+     "deletions": 210,
+     "files": [
+      "engine/main.go"
+     ],
+     "closes": [],
+     "epicPath": [],
+     "core": false,
+     "author": "Sam",
+     "coauthors": [
+      "Haiku 5.5"
+     ],
+     "body": "Made-up PR for the fixture."
+    }
+   ],
+   "tags": [],
+   "epics": [
+    {
+     "number": 7,
+     "title": "Reach orbit",
+     "closed": 3,
+     "total": 5
+    }
+   ],
+   "openPrs": [
+    {
+     "number": 15,
+     "title": "Add a second stage"
+    }
+   ],
+   "openPrCount": 1
+  }
+ }
+}

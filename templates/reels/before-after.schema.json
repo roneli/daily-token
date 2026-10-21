@@ -1,0 +1,19 @@
+{
+  "description": "A card with one value: the old one is struck through and the new one is typed in below it. Then up to 7 chips appear one by one, then up to 2 note lines.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["call", "prefix", "before", "after", "suffix", "chips", "notes"],
+  "properties": {
+    "call": { "type": "string", "maxLength": 28, "description": "What returned the value, e.g. a call or a page." },
+    "prefix": { "type": "string", "maxLength": 12 },
+    "before": { "type": "string", "maxLength": 22 },
+    "after": { "type": "string", "maxLength": 30 },
+    "suffix": { "type": "string", "maxLength": 4 },
+    "chips": {
+      "type": "array",
+      "maxItems": 7,
+      "items": { "type": "object", "additionalProperties": false, "required": ["text"], "properties": { "text": { "type": "string", "maxLength": 6 } } }
+    },
+    "notes": { "type": "array", "maxItems": 2, "items": { "type": "string", "maxLength": 72 } }
+  }
+}

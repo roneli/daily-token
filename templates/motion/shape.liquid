@@ -1,0 +1,8 @@
+{%- comment -%} One shape of a move, as moves.ts laid it out; a group draws its children the same way. {%- endcomment -%}
+{%- case s.kind -%}
+{%- when "rect" -%}<rect{% if s.id %} id="{{ s.id }}"{% endif %} class="{{ s.cls }}" x="{{ s.x }}" y="{{ s.y }}" width="{{ s.w }}" height="{{ s.h }}" rx="{{ s.rx | default: 0 }}"{% if s.hidden %} style="opacity:0"{% endif %}/>
+{%- when "circle" -%}<circle{% if s.id %} id="{{ s.id }}"{% endif %} class="{{ s.cls }}" cx="{{ s.cx }}" cy="{{ s.cy }}" r="{{ s.r }}"{% if s.hidden %} style="opacity:0"{% endif %}/>
+{%- when "path" -%}<path{% if s.id %} id="{{ s.id }}"{% endif %} class="{{ s.cls }}" d="{{ s.d }}"{% if s.length %} pathLength="1"{% endif %}{% if s.hidden %} style="opacity:0"{% endif %}/>
+{%- when "text" -%}<text{% if s.id %} id="{{ s.id }}"{% endif %} class="{{ s.cls }}" x="{{ s.x }}" y="{{ s.y }}" text-anchor="{{ s.anchor | default: "start" }}" style="font-size:{{ s.size }}px{% if s.hidden %};opacity:0{% endif %}">{{ s.text }}</text>
+{%- when "g" -%}<g id="{{ s.id }}" class="{{ s.cls }}"{% if s.hidden %} style="opacity:0"{% endif %}>{% for c in s.children %}{% render "motion/shape", s: c %}{% endfor %}</g>
+{%- endcase -%}

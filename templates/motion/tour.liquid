@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ f.look.label }} · {{ f.look.project }}</title>
+<style>{{ fonts | raw }}</style>
+<style>{{ css | raw }}</style>
+</head>
+<body>
+<div id="stage">
+  <svg id="map" width="1080" height="1350" viewBox="0 0 1080 1350" aria-hidden="true">
+    <defs>
+      <radialGradient id="bg" cx="50%" cy="38%" r="75%"><stop offset="0" stop-color="var(--bg-2)"/><stop offset="1" stop-color="var(--bg)"/></radialGradient>
+      <radialGradient id="vignette" cx="50%" cy="45%" r="70%"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient>
+      <linearGradient id="edge-left"><stop offset="0" stop-color="var(--bg)"/><stop offset=".35" stop-color="var(--bg)" stop-opacity=".85"/><stop offset="1" stop-color="var(--bg)" stop-opacity="0"/></linearGradient>
+      <linearGradient id="edge-right" x1="1" x2="0"><stop offset="0" stop-color="var(--bg)"/><stop offset=".35" stop-color="var(--bg)" stop-opacity=".85"/><stop offset="1" stop-color="var(--bg)" stop-opacity="0"/></linearGradient>
+      <pattern id="dots" width="44" height="44" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="2" fill="var(--grid)"/></pattern>
+      <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="9"/></filter>
+      <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4"/></filter>
+    </defs>
+    <rect width="1080" height="1350" fill="url(#bg)"/>
+    <g id="cam">
+      <rect x="-4000" y="-4000" width="10000" height="10000" fill="url(#dots)"/>
+      {%- for g in f.groups %}
+      <g id="{{ g.id }}" class="grp {{ g.kind }}"><rect x="{{ g.x }}" y="{{ g.y }}" width="{{ g.w }}" height="{{ g.h }}" rx="26"/><text x="{{ g.x | plus: 28 }}" y="{{ g.ly }}">{{ g.label }}</text></g>
+      {%- endfor %}
+      {%- for e in f.edges %}
+      <path id="{{ e.id }}" class="edge{% if e.dashed %} dashed{% endif %}" d="{{ e.d }}" pathLength="1"/>
+      {%- endfor %}
+      {%- for t in f.trails %}
+      <path id="trailglow-{{ t.i }}" class="trailglow" d="{{ t.d }}" pathLength="1"/>
+      <path id="trail-{{ t.i }}" class="trail" d="{{ t.d }}" pathLength="1"/>
+      {%- endfor %}
+      {%- for e in f.edges %}
+      <text id="{{ e.label }}" class="elabel" x="{{ e.x }}" y="{{ e.y }}" text-anchor="{{ e.anchor }}">{{ e.text }}</text>
+      {%- endfor %}
+      {%- for p in f.parts %}
+      <g id="part-{{ p.id }}" class="part t">
+        <rect class="box" x="{{ p.x }}" y="{{ p.y }}" width="{{ p.w }}" height="{{ p.h }}" rx="20"/>
+        <text id="nm-{{ p.id }}" class="name" x="{{ p.cx }}" y="{{ p.nameY }}" text-anchor="middle">{{ p.name }}</text>
+        {%- if p.sub != "" %}<text id="sub-{{ p.id }}" class="sub" x="{{ p.cx }}" y="{{ p.subY }}" text-anchor="middle">{{ p.sub }}</text>{% endif %}
+      </g>
+      {%- endfor %}
+      {%- for h in f.hls %}
+      <rect id="{{ h.id }}" class="hl" x="{{ h.x }}" y="{{ h.y }}" width="{{ h.w }}" height="{{ h.h }}" rx="20"/>
+      {%- endfor %}
+      {%- for h in f.hls %}
+      <rect id="{{ h.ring }}" class="ring t" x="{{ h.x }}" y="{{ h.y }}" width="{{ h.w }}" height="{{ h.h }}" rx="20"/>
+      {%- endfor %}
+      {%- for p in f.parts %}{% if p.badge %}
+      <g id="badge-{{ p.id }}" class="badge t"><rect x="{{ p.badge.x | minus: 172 }}" y="{{ p.badge.y }}" width="186" height="40" rx="20"/><text x="{{ p.badge.x | minus: 79 }}" y="{{ p.badge.y | plus: 27 }}" text-anchor="middle">NEW TODAY</text></g>
+      {%- endif %}{% endfor %}
+      {%- for n in f.nums %}
+      <g id="num-{{ n.i }}" class="num t"><circle cx="{{ n.x }}" cy="{{ n.y }}" r="25"/><text x="{{ n.x }}" y="{{ n.y | plus: 9 }}" text-anchor="middle">{{ n.n }}</text></g>
+      {%- endfor %}
+      <rect id="scrim" x="-4000" y="-4000" width="10000" height="10000" fill="var(--bg)" style="opacity:0"/>
+      {%- for c in f.cards %}
+      <g id="card-{{ c.i }}" class="card t move-{{ c.move }}">
+        <g transform="translate({{ c.x }} {{ c.y }})">
+          <rect class="shadow" x="0" y="14" width="{{ c.w }}" height="{{ c.h }}" rx="26"/>
+          <rect class="sheet" x="0" y="0" width="{{ c.w }}" height="{{ c.h }}" rx="26"/>
+          <text class="cname" x="30" y="54">{{ c.name }}</text>
+          {%- for s in c.shapes %}{% render "motion/shape", s: s %}{% endfor %}
+        </g>
+      </g>
+      {%- endfor %}
+      <g id="packet" style="opacity:0"><circle class="pglow" r="30"/><circle class="pcore" r="12"/></g>
+    </g>
+    <rect width="1080" height="1350" fill="url(#vignette)"/>
+    <rect width="80" height="1350" fill="url(#edge-left)"/>
+    <rect x="1000" width="80" height="1350" fill="url(#edge-right)"/>
+  </svg>
+
+  <div class="topfade"></div>
+  <header class="mast"><b class="nameplate">The Daily Token</b><span>{{ f.look.label }} · {{ f.look.project }} · {{ f.look.dateLabel }}</span></header>
+  <div id="flowbar" class="flowbar">{{ f.flow }}</div>
+  <div class="title">
+    <div id="kick" class="kick">{{ f.title.kicker }}</div>
+    <h1>{% for w in f.title.words %}<span id="{{ w.id }}" class="w">{{ w.text }}</span> {% endfor %}</h1>
+    <p id="question" class="question">{{ f.title.question }}</p>
+  </div>
+  <div class="foot">
+    {%- for h in f.heads %}
+    <div id="{{ h.id }}" class="head"><span class="n">{{ h.n }}<i>/{{ h.of }}</i></span><b>{{ h.name }}</b><span class="via">{{ h.via }}</span>{% if h.today != "" %}<span class="new">New today · {{ h.today }}</span>{% endif %}</div>
+    {%- endfor %}
+    {%- for c in f.captions %}
+    <p id="{{ c.id }}" class="cap">{{ c.text }}</p>
+    {%- endfor %}
+    <div class="dots">{% for d in f.dots %}<i id="{{ d.id }}"></i>{% endfor %}</div>
+  </div>
+  <div id="endcard" class="end"><div class="kick">{{ f.flow }}</div><div class="etitle">{{ f.end.title }}</div><div class="emeta"><b class="nameplate">The Daily Token</b> · {{ f.look.label }}</div></div>
+</div>
+<script type="application/json" id="tracks">{{ tracks | raw }}</script>
+<script>{{ js | raw }}</script>
+</body>
+</html>

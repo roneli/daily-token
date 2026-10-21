@@ -1,0 +1,78 @@
+{
+ "headline": "The countdown learns to wait for the gyro",
+ "sections": [
+  {
+   "id": "launch",
+   "story": "launch",
+   "title": "Launch gets reliable",
+   "dek": "Two fixes stop the countdown from failing for no reason.",
+   "lead": {
+    "ref": 11,
+    "label": "Why it matters",
+    "text": "A missed spark used to scrub the whole launch."
+   },
+   "cards": [
+    {
+     "ref": 11,
+     "type": "fix",
+     "parts": [
+      "engine"
+     ],
+     "headline": "A missed spark no longer scrubs the launch",
+     "plain": "The engine tries again when the first spark misses.",
+     "tech": "`ignite()` retries three times, 200 ms apart."
+    },
+    {
+     "ref": 12,
+     "type": "fix",
+     "parts": [
+      "launchpad",
+      "guidance"
+     ],
+     "headline": "The pad waits for the gyro",
+     "plain": "The clamps stay closed until guidance is steady.",
+     "tech": "Clamp release waits for `gyro.settled`."
+    },
+    {
+     "ref": 13,
+     "type": "testing",
+     "parts": [
+      "ci"
+     ],
+     "headline": "The countdown is tested on every change",
+     "plain": "A test now runs the whole countdown each time code changes.",
+     "tech": "New `countdown_test.go` in CI."
+    }
+   ]
+  },
+  {
+   "id": "other",
+   "story": "other",
+   "title": "Also merged",
+   "dek": "A rename.",
+   "lead": null,
+   "cards": [
+    {
+     "ref": 14,
+     "type": "rename",
+     "parts": [
+      "engine"
+     ],
+     "headline": "Boosters are called stages now",
+     "plain": "The word changes everywhere; nothing else does.",
+     "tech": "Renamed across 40 files."
+    }
+   ]
+  }
+ ],
+ "rail": {
+  "check": "",
+  "connects": "All three launch fixes sit under #7."
+ },
+ "parts": {
+  "engine": "It retries ignition when the first spark misses, and boosters are called stages now.",
+  "launchpad": "The clamps wait for the gyro before letting go.",
+  "guidance": "The pad now waits for it to settle.",
+  "ci": "The whole countdown is tested on every change."
+ }
+}

@@ -1,0 +1,71 @@
+<section id="page-digest" hidden aria-label="Digest">
+  <div class="dgrid">
+    <div id="sections">
+      {%- if stories.recap and week %}
+      <section class="section recap" id="d-week">
+        <header>
+          <div class="kicker"><span class="swatch" style="background:var(--accent)"></span>This week · {{ week.range }}</div>
+          <h2>{{ stories.recap.title }}</h2>
+          <p class="dek">{{ stories.recap.dek | inline | raw }}</p>
+          {%- if recapThread %}
+          <a class="watch" href="#reels" data-thread="recap">▶ Watch the story</a>
+          {%- endif %}
+        </header>
+        <div class="weekbars" role="img" aria-label="Changes per day this week">
+          {%- for b in week.bars %}
+          <div class="wb{% if b.today %} today{% endif %}"><span class="d">{{ b.label }}</span><span class="t"><i style="width:{{ b.pct }}%"></i></span><span class="n">{{ b.n }}</span></div>
+          {%- endfor %}
+        </div>
+        <ul class="points">
+          {%- for p in stories.recap.points %}<li>{{ p | inline | raw }}</li>{% endfor %}
+        </ul>
+        <p class="wk-totals">{{ week.totals.prs }} PRs · {{ week.totals.commits }} direct commits · {{ week.totals.issuesClosed }} issues closed · {{ week.totals.tags }} tags</p>
+      </section>
+      {%- endif %}
+      {%- for s in sections %}
+      <section class="section" id="d-{{ s.id }}">
+        <header>
+          <div class="kicker"><span class="swatch" style="background:var({{ s.color }})"></span>{{ s.story | capitalize }}</div>
+          <h2>{{ s.title }}</h2>
+          <p class="dek">{{ s.dek | inline | raw }}</p>
+          <a class="watch" href="#reels" data-thread="{{ s.id }}">▶ Watch the story</a>
+        </header>
+        <div class="cards">
+          {%- for c in s.cards %}{% include "partials/card", c: c %}{% endfor %}
+        </div>
+      </section>
+      {%- endfor %}
+    </div>
+    <aside id="rail">
+      <section class="who">
+        <p class="label">Who shipped it</p>
+        {%- for w in who %}
+        <div class="row"><span>{{ w.label }}</span><span>{{ w.n }} PR{% if w.n != 1 %}s{% endif %}</span></div>
+        {%- endfor %}
+      </section>
+      {%- if rail.check %}
+      <section class="todo"><b>Check before the next release.</b> {{ rail.check | inline | raw }}</section>
+      {%- endif %}
+      {%- if rail.connects %}
+      <section><p class="label">How today connects</p><p class="src">{{ rail.connects | inline | raw }}</p></section>
+      {%- endif %}
+      <section>
+        <p class="label">Epic progress</p>
+        <div class="epics">
+          {%- for e in epics %}
+          <div class="epic"><div class="top"><a href="{{ e.url }}" target="_blank">{{ e.ref | ref }} {{ e.title }}</a><span>{{ e.closed }}/{{ e.total }}</span></div><div class="track" role="img" aria-label="{{ e.closed }} of {{ e.total }} closed"><i style="width:{{ e.closed | times: 100.0 | divided_by: e.total }}%"></i></div></div>
+          {%- endfor %}
+        </div>
+      </section>
+      <section>
+        <p class="label">Up next · {{ github.openPrCount }} open PRs</p>
+        <ul class="queue">
+          {%- for o in openPrs limit: 8 %}
+          <li><a href="{{ o.url }}" target="_blank">{{ o.ref | ref }}</a><span>{{ o.title }}{% if o.isNew %} <em>new</em>{% elsif o.draft %} <em>draft</em>{% endif %}</span></li>
+          {%- endfor %}
+        </ul>
+      </section>
+    </aside>
+  </div>
+  <p class="src">Sources: merged PRs on {{ project.repos | join: ", " }} from {{ data.window.from }} to {{ data.window.to }}, release tags, GitHub sub-issues for epics, commit co-author trailers for who.</p>
+</section>

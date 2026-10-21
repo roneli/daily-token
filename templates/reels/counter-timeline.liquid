@@ -1,0 +1,23 @@
+<svg class="scene" viewBox="0 0 640 360" role="img" aria-label="{{ reel.headline }}">
+  {%- for c in f.counters %}
+  <text x="{{ c.x }}" y="78" class="big" data-anim="count" data-at="0" data-ms="1300" data-from="0" data-to="{{ c.value }}" data-prefix="{{ c.prefix }}" data-suffix="{{ c.suffix }}">{{ c.display }}</text>
+  {%- if c.minus %}
+  <text x="{{ c.x }}" y="100" class="bad" data-anim="count" data-at="0" data-ms="1300" data-from="0" data-to="{{ c.minus }}" data-prefix="−">{{ c.minusText }}</text>
+  {%- endif %}
+  <text x="{{ c.labelX }}" y="100">{{ c.label }}</text>
+  {%- endfor %}
+  <line x1="40" x2="600" y1="270" y2="270" class="line"/>
+  {%- for k in f.ticks %}
+  <line x1="{{ k.x }}" x2="{{ k.x }}" y1="266" y2="274" class="line"/><text x="{{ k.x }}" y="292" text-anchor="middle">{{ k.label }}</text>
+  {%- endfor %}
+  {%- for g in f.tags %}
+  <g id="{{ reel.id }}-tag{{ forloop.index0 }}" data-anim="drop" data-at="{{ g.at }}" data-ms="450">
+    <line x1="{{ g.x }}" x2="{{ g.x }}" y1="{{ g.y | plus: 6 }}" y2="270" class="line" style="stroke-dasharray:2 3"/>
+    <circle cx="{{ g.x }}" cy="270" r="6" class="tok" style="fill:var({{ g.color }})"/>
+    <text x="{{ g.lx }}" y="{{ g.y }}" class="ink" text-anchor="{{ g.anchor }}">{{ g.name }}</text>
+  </g>
+  {%- endfor %}
+  {%- if f.note %}
+  <text x="320" y="330" text-anchor="middle" class="ink" style="font-size:14px" data-anim="fade" data-at="{{ f.noteAt }}">{{ f.note }}</text>
+  {%- endif %}
+</svg>

@@ -1,0 +1,65 @@
+{
+  "$id": "system",
+  "description": "The parts of one source repo's system: names for the Digest, layout for the Blueprint, paths for collect.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["size", "groups", "parts", "edges"],
+  "definitions": {
+    "box": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4 },
+    "point": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }
+  },
+  "properties": {
+    "size": { "$ref": "#/definitions/point" },
+    "ignore": { "type": "array", "items": { "type": "string" }, "description": "Globs for files that belong to no part, such as docs; collect doesn't list them as unmatched." },
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["label", "kind", "box"],
+        "properties": {
+          "label": { "type": "string" },
+          "kind": { "enum": ["zone", "frame"] },
+          "box": { "$ref": "#/definitions/box" },
+          "members": { "type": "array", "items": { "type": "string" }, "description": "Part ids inside it, for the layout." },
+          "parent": { "type": "string", "description": "The label of the group it sits in, for the layout." }
+        }
+      }
+    },
+    "parts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "sub", "what", "box"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "name": { "type": "string", "maxLength": 24 },
+          "sub": { "type": "string", "maxLength": 34 },
+          "what": { "type": "string", "maxLength": 140 },
+          "box": { "$ref": "#/definitions/box" },
+          "paths": { "type": "array", "items": { "type": "string" } },
+          "core": { "type": "boolean", "description": "A PR touching this part is marked Core." }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["d", "label", "at"],
+        "properties": {
+          "d": { "type": "string", "pattern": "^[MLHVCSQTAZmlhvcsqtaz0-9 ,.-]+$" },
+          "label": { "type": "string" },
+          "at": { "$ref": "#/definitions/point" },
+          "anchor": { "enum": ["start", "middle", "end"] },
+          "from": { "type": "string", "description": "Part id, for the layout." },
+          "to": { "type": "string", "description": "Part id, for the layout." },
+          "dashed": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

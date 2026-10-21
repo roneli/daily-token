@@ -1,0 +1,64 @@
+name: publish
+
+# Makes R2 match this repo: renders every issue again and uploads what changed. It runs when the engine is
+# upgraded (package.json), so a new look reaches the whole archive without a new issue.
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "package.json"
+      - "bun.lock"
+      - "project.json"
+      - "system.json"
+  workflow_dispatch:
+    inputs:
+      announce:
+        description: Also post this issue (YYYY-MM-DD) to Slack
+      dry_run:
+        description: Print what would be uploaded and posted
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+# Shared with daily: two runs writing R2 at once could leave the index behind.
+concurrency:
+  group: daily
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      # The motion: ffmpeg films it (Ubuntu's package, GPL, with libx264; the runner image has none), Node runs its
+      # voice (Kokoro: its ONNX runtime doesn't load under Bun), and the voice model (about 90 MB) and the lines it
+      # spoke are kept between runs, as are the videos already rendered, named by their content.
+      - run: sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends ffmpeg
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/daily-token
+          key: daily-token-voice-${{ github.run_id }}
+          restore-keys: daily-token-voice-
+      - uses: actions/cache@v4
+        with:
+          path: out/*/*/motion.*
+          key: motion-videos-${{ github.run_id }}
+          restore-keys: motion-videos-
+      - run: bunx daily-token render --all
+      - run: bunx daily-token publish ${{ inputs.announce && format('--announce {0}', inputs.announce) || '' }} ${{ inputs.dry_run && '--dry-run' || '' }}
+        env:
+          R2_ENDPOINT: ${{ vars.R2_ENDPOINT }}
+          R2_BUCKET: ${{ vars.R2_BUCKET }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          SITE_URL: ${{ vars.SITE_URL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

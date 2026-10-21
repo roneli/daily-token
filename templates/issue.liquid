@@ -1,0 +1,52 @@
+{%- assign no = data.issue | prepend: "00" | slice: -3, 3 -%}
+{%- assign day = data.date | date: "%A %-d %b %Y" -%}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Daily Token · {{ project.name }} · {{ data.date | date: "%-d %b %Y" }}</title>
+<meta name="description" content="{{ stories.headline }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=UnifrakturMaguntia&display=swap">
+<link rel="stylesheet" href="{{ assets.css }}">
+<link rel="stylesheet" href="{{ assets.bpCss }}">
+</head>
+<body>
+{% include "partials/editions" %}
+<div class="app" data-edition="{{ data.edition }}">
+  <div class="top">
+    <div class="topline">
+      <div class="masthead"><button class="ed-open" type="button" data-editions="open" aria-controls="editions" aria-label="Editions">☰</button><div class="issue"><b class="nameplate">The Daily Token</b><span>No. {{ no }}</span><span>{{ project.name }}</span><span>{{ day }}</span>{% if data.edition == "thursday" %}<span class="weekly">Weekly edition</span>{% endif %}<span>{{ total.prs }} PRs{% if total.commits > 0 %} · {{ total.commits }} commits{% endif %} · {{ github.tags.size }} tags</span></div></div>
+      <div class="tabs" role="tablist" aria-label="Page">
+        <button role="tab" id="tab-reels" type="button" aria-selected="true">Reels</button>
+        <button role="tab" id="tab-digest" type="button" aria-selected="false">Digest</button>
+        <button role="tab" id="tab-blueprint" type="button" aria-selected="false">Blueprint</button>
+        {%- if motion %}
+        <button role="tab" id="tab-motion" type="button" aria-selected="false">{{ motion.label }}</button>
+        {%- endif %}
+      </div>
+    </div>
+    <div class="pagehead">
+      <h1 class="ph-title">{{ stories.headline }}</h1>
+      <p class="ph-dek" id="ph-dek">{{ overview }}</p>
+    </div>
+    <ol class="tray" id="tray" aria-label="Stories">
+      {%- for t in threads %}
+      <li><button class="circle" type="button" data-to-thread="{{ t.index }}" style="--c:var({{ t.color }})" aria-label="{{ t.name }}: {{ t.title }}, {{ t.shorts.size }} short{% if t.shorts.size != 1 %}s{% endif %}"><span class="ring"><span class="dot">{{ t.name | slice: 0 | upcase }}</span></span><span class="cname">{{ t.name }}</span></button></li>
+      {%- endfor %}
+    </ol>
+  </div>
+  {% include "pages/reels" %}
+  <div class="controls">
+    <button class="primary" id="play" type="button"><svg viewBox="0 0 12 12" aria-hidden="true"><path id="play-icon" d="M2 1 H5 V11 H2 Z M7 1 H10 V11 H7 Z"/></svg><span id="play-label">Pause</span></button>
+    <span class="hint">click the card or ← → for shorts · the sides or shift ← → for stories · ↑ read · space pause</span>
+  </div>
+  {% include "pages/digest" %}
+  {% include "pages/blueprint" %}
+  {%- if motion %}{% include "pages/motion" %}{% endif %}
+</div>
+<script src="{{ assets.js }}" defer></script>
+<script src="{{ assets.bpJs }}" defer></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["brief", "notes"],
+  "properties": {
+    "brief": { "$ref": "brief" },
+    "notes": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["change", "why"], "properties": { "change": { "type": "string" }, "why": { "type": "string" } } } }
+  }
+}

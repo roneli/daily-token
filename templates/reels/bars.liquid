@@ -1,0 +1,27 @@
+<svg class="scene" viewBox="0 0 640 360" role="img" aria-label="{{ reel.headline }}">
+  {%- for d in f.days %}{% if d.today %}
+  <rect x="{{ d.x | minus: 10 }}" y="44" width="{{ f.bw | plus: 20 }}" height="{{ f.base | minus: 26 }}" rx="6" style="fill:var(--tint)"/>
+  {%- endif %}{% endfor %}
+  {%- for g in f.grid %}
+  <line x1="70" x2="620" y1="{{ g.y }}" y2="{{ g.y }}" style="stroke:var({% if g.v == 0 %}--faint{% else %}--rule{% endif %})"/><text x="62" y="{{ g.y | plus: 4 }}" text-anchor="end">{{ g.v }}</text>
+  {%- endfor %}
+  {%- for s in f.series %}
+  <rect x="{{ s.lx }}" y="16" width="10" height="10" rx="2" style="fill:var({{ s.color }})"/><text x="{{ s.lx | plus: 16 }}" y="25" class="ink">{{ s.name }}</text>
+  {%- endfor %}
+  {%- for d in f.days %}
+  <g id="{{ reel.id }}-col{{ forloop.index0 }}" style="transform-box:fill-box;transform-origin:50% 100%" data-anim="grow" data-at="{{ d.at }}" data-ms="480">
+    {%- for s in d.segs %}<rect x="{{ d.x }}" y="{{ s.y }}" width="{{ f.bw }}" height="{{ s.h }}" rx="3" style="fill:var({{ s.color }})"><title>{{ s.tip }}</title></rect>{% endfor %}
+  </g>
+  <text x="{{ d.cx }}" y="{{ d.totalY }}" text-anchor="middle" class="ink" style="font-weight:500" data-anim="fade" data-at="{{ d.at | plus: 350 }}">{{ d.total }}</text>
+  <text x="{{ d.cx }}" y="{{ f.base | plus: 18 }}" text-anchor="middle"{% if d.today %} class="ink"{% endif %}>{{ d.label }}</text>
+  {%- endfor %}
+  {%- for m in f.milestones %}
+  <g data-anim="fade" data-at="{{ m.at }}">
+    <text x="{{ m.x }}" y="{{ m.y }}" text-anchor="middle" class="ink">{{ m.text }}</text>
+    {%- if m.lineTo %}<line x1="{{ m.x }}" x2="{{ m.x }}" y1="{{ m.y | plus: 4 }}" y2="{{ m.lineTo }}" style="stroke:var(--s1);stroke-dasharray:2 2"/>{% endif %}
+  </g>
+  {%- endfor %}
+  {%- if f.note %}
+  <text x="320" y="352" text-anchor="middle" data-anim="fade" data-at="{{ f.noteAt }}">{{ f.note }}</text>
+  {%- endif %}
+</svg>

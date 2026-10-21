@@ -1,0 +1,10 @@
+{
+ "criteria": [
+  { "id": "true", "describe": "Every number, name, PR, epic and quote matches the data. A PR's epic is its epicPath; no path means no epic.", "weight": 3, "threshold": 5 },
+  { "id": "covered", "describe": "Every merged PR has a card; every direct commit is a card's ref or in some card's with.", "weight": 2, "threshold": 5 },
+  { "id": "grouped", "describe": "Sections group changes by meaning and come in the order a teammate would care about them.", "weight": 2, "threshold": 4 },
+  { "id": "plain", "describe": "Headlines and plain text make sense to someone who doesn't read the code; paths, flags and test names are in tech.", "weight": 3, "threshold": 4 },
+  { "id": "tight", "describe": "Short sentences, no hype or filler, right types and parts, house style for links and code.", "weight": 1, "threshold": 4 }
+ ],
+ "examples": []
+}

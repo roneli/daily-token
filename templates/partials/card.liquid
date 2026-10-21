@@ -1,0 +1,14 @@
+<article class="card{% if c.lead %} lead{% endif %}">
+  <span class="type" style="color:var({{ c.typeColor }})"><i style="background:var({{ c.typeColor }})"></i>{{ c.typeLabel }}</span>
+  <h3>{{ c.headline }}</h3>
+  <p>{{ c.plain | inline | raw }}</p>
+  <details><summary>Under the hood</summary><p>{{ c.tech | inline | raw }}</p></details>
+  <div class="foot">
+    {%- for p in c.parts %}<button class="place" type="button" data-part="{{ p.id }}" title="See {{ p.name }} on the Blueprint">{{ p.name }}</button>{% endfor -%}
+    {%- if c.core %}<span class="core">Core</span>{% endif -%}
+    <a href="{{ c.url }}" target="_blank">{{ c.ref | ref }}</a>{% for w in c.also %}<a href="{{ w.url }}" target="_blank">{{ w.ref | ref }}</a>{% endfor %}<span class="by">{{ c.who }}</span>
+  </div>
+  {%- if c.lead %}
+  <div class="side"><p><b>{{ c.lead.label }}.</b> {{ c.lead.text | inline | raw }}</p></div>
+  {%- endif %}
+</article>

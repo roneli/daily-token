@@ -1,0 +1,133 @@
+{
+  "$id": "reels",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "threads"
+  ],
+  "properties": {
+    "threads": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "shorts"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$",
+            "description": "The section's id, or recap or next."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 14,
+            "description": "1\u20132 words under the thread's circle."
+          },
+          "shorts": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 5,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "template",
+                "seg",
+                "desk",
+                "epic",
+                "headline",
+                "caption",
+                "why",
+                "refs",
+                "ms",
+                "fields"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9-]+$"
+                },
+                "template": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9-]+$"
+                },
+                "seg": {
+                  "type": "string",
+                  "maxLength": 16
+                },
+                "desk": {
+                  "type": "string",
+                  "maxLength": 24
+                },
+                "epic": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^[\\w.-]+#\\d+$"
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^([\\w.-]+@)?[0-9a-f]{7}$"
+                      }
+                    ]
+                  }
+                },
+                "headline": {
+                  "type": "string",
+                  "maxLength": 70
+                },
+                "caption": {
+                  "type": "string",
+                  "maxLength": 240
+                },
+                "why": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "refs": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^[\\w.-]+#\\d+$"
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^([\\w.-]+@)?[0-9a-f]{7}$"
+                      }
+                    ]
+                  },
+                  "minItems": 1
+                },
+                "ms": {
+                  "type": "integer",
+                  "minimum": 3000,
+                  "maximum": 12000
+                },
+                "fields": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

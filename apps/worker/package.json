@@ -1,0 +1,16 @@
+{
+  "name": "@daily-token/worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "4.20260702.1",
+    "wrangler": "4.147.0"
+  },
+  "dependencies": {
+    "jose": "6.2.12"
+  }
+}

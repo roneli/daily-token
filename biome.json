@@ -1,0 +1,15 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
+	"formatter": { "enabled": false },
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"preset": "recommended",
+			"suspicious": { "noExplicitAny": "error" }
+		}
+	},
+	"assist": { "enabled": false },
+	"files": {
+		"includes": ["src/**/*.ts", "templates/**/*.ts", "templates/**/*.js", "src/**/*.mjs", "static/**/*.js", "apps/*/src/**/*.ts", "!!.claude"]
+	}
+}

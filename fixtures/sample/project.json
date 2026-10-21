@@ -1,0 +1,12 @@
+{
+ "id": "rocket",
+ "name": "Rocket",
+ "sources": {
+  "github": {
+   "repos": [
+    "acme/rocket",
+    "acme/ground"
+   ]
+  }
+ }
+}

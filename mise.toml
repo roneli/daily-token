@@ -1,0 +1,64 @@
+# The Daily Token: a daily digest of what the agents merged.
+#
+#   mise install     # fetch pinned tools
+#   mise run setup   # bun install
+#   mise run preview # render the example issue and serve it on :5173
+
+[tools]
+bun = "1.3.14"
+
+[env]
+_.file = ".env"
+
+[tasks.setup]
+description = "Install dependencies"
+run = "bun install"
+
+[tasks.collect]
+description = "Write one day of every source to <root>/issues/<date>/data.json (--force to redo a draft)"
+run = "bun src/cli.ts collect"
+
+[tasks.issue]
+description = "Make one day's issue end to end: collect, Writer ⇄ Editor, Director ⇄ Readers, check (--from to restart at a stage)"
+run = "bun src/cli.ts run"
+
+[tasks.map]
+description = "The Cartographer proposes system.json from recent changes (--accept to put the proposal in place)"
+run = "bun src/cli.ts project cartographer"
+
+[tasks.test]
+description = "Unit tests"
+run = "bun test"
+
+[tasks.render]
+description = "Render one issue folder to out/<date>/index.html"
+run = "bun src/render.ts"
+
+[tasks.check]
+description = "Validate an issue: schemas, cited PRs, parts, reel timing"
+run = "bun src/check.ts"
+
+[tasks.preview]
+description = "Render the example issue and serve out/ on :5173"
+run = "bun src/preview.ts"
+
+[tasks.lint]
+description = "Biome lint and TypeScript"
+run = ["bunx biome check", "bunx tsc --noEmit"]
+
+[tasks."worker:dev"]
+description = "Run the Worker locally against a local R2 bucket"
+dir = "apps/worker"
+run = "bunx wrangler dev"
+
+[tasks."worker:deploy"]
+description = "Deploy the Worker on WORKER_DOMAIN behind Access (ACCESS_TEAM_DOMAIN, ACCESS_AUD from .env)"
+dir = "apps/worker"
+run = """
+: "${WORKER_DOMAIN:?set WORKER_DOMAIN in .env}" "${ACCESS_TEAM_DOMAIN:?set ACCESS_TEAM_DOMAIN in .env}" "${ACCESS_AUD:?set ACCESS_AUD in .env}"
+bunx wrangler deploy --domain "$WORKER_DOMAIN" --var "ACCESS_TEAM_DOMAIN:$ACCESS_TEAM_DOMAIN" --var "ACCESS_AUD:$ACCESS_AUD"
+"""
+
+[tasks.publish]
+description = "Make R2 match the data root and out/; --announce DATE posts it to Slack (--dry-run to print only)"
+run = "bun src/publish.ts"

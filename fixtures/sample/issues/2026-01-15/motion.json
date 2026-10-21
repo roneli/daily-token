@@ -1,0 +1,47 @@
+{
+  "title": "How a rocket gets off the pad in one go",
+  "dek": "Four parts take turns in every launch. Follow one countdown through all of them, and see what each one waits for before it hands over.",
+  "flow": "A launch, end to end",
+  "question": "A launch has one chance. How does every part know it is safe to go?",
+  "opening": "A launch has one chance, and any part can stop it. So how does each part know that it is safe to go?",
+  "stops": [
+    {
+      "part": "launchpad",
+      "say": "The launch pad decides when the rocket can leave.",
+      "move": "gate",
+      "check": "Guidance steady?",
+      "beats": [
+        { "label": "Countdown runs", "say": "First, the countdown runs to zero." },
+        { "label": "Gyro not settled", "tone": "bad", "say": "If the gyro still moves, the clamps hold the rocket down." },
+        { "label": "Clamps open", "tone": "good", "say": "Once guidance is steady, they open." }
+      ],
+      "today": ["ground#11"]
+    },
+    {
+      "part": "engine",
+      "via": "holds",
+      "say": "Next, the engine lights.",
+      "move": "steps",
+      "beats": [
+        { "label": "Spark", "fail": "Tries again", "say": "It makes a spark, and if the spark misses, it tries again." },
+        { "label": "Burns fuel", "say": "Then it burns the fuel." },
+        { "label": "Pushes the rocket", "tone": "good", "say": "So the thrust pushes the rocket up." }
+      ]
+    },
+    { "part": "guidance", "via": "steers", "say": "Guidance keeps the rocket pointed the right way. The pad waits for its gyro to settle." },
+    { "part": "engine", "via": "steers", "say": "As the rocket climbs, guidance steers the push where it must go." },
+    {
+      "part": "ci",
+      "via": "tests",
+      "say": "Before any of this, CI tests every change.",
+      "move": "fanout",
+      "source": "A new change",
+      "beats": [
+        { "label": "Engine tests", "count": 3, "say": "First, it runs the engine tests." },
+        { "label": "Countdown tests", "count": 5, "say": "Then it runs the countdown tests." },
+        { "label": "Every test", "count": 8, "tone": "good", "say": "Once every test passes, the change can fly." }
+      ]
+    }
+  ],
+  "closing": "Each part waits for the part before it. That is how the rocket goes in one try."
+}

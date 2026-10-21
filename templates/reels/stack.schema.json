@@ -1,0 +1,46 @@
+{
+  "$id": "stack",
+  "description": "Up to 5 progress bars fill, queued items drop into a grid (up to 12 named, or up to 14 by count), then an optional warning card.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["bars"],
+  "properties": {
+    "barsTitle": { "type": "string", "maxLength": 28 },
+    "bars": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["label", "done", "total"],
+        "properties": {
+          "label": { "type": "string", "maxLength": 30 },
+          "done": { "type": "integer", "minimum": 0 },
+          "total": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "queueTitle": { "type": "string", "maxLength": 24 },
+    "queue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label"],
+      "anyOf": [{ "required": ["count"] }, { "required": ["items"] }],
+      "properties": {
+        "count": { "type": "integer", "minimum": 0, "maximum": 14, "description": "Empty boxes, when the items have no names worth showing." },
+        "items": { "type": "array", "maxItems": 12, "items": { "type": "string", "maxLength": 5 }, "description": "One box each, named: a PR or ticket number like #432. Prefer this to count." },
+        "label": { "type": "string", "maxLength": 34 },
+        "sub": { "type": "string", "maxLength": 34 }
+      }
+    },
+    "card": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "lines"],
+      "properties": {
+        "title": { "type": "string", "maxLength": 28 },
+        "lines": { "type": "array", "maxItems": 2, "items": { "type": "string", "maxLength": 32 } }
+      }
+    }
+  }
+}
