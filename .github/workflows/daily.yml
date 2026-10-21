@@ -36,6 +36,8 @@ env:
 
 jobs:
   gate:
+    # A fork with no data repo has nothing to make.
+    if: vars.DATA_REPO != ''
     runs-on: ubuntu-latest
     outputs:
       run: ${{ steps.gate.outputs.run }}

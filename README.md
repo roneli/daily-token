@@ -157,7 +157,7 @@ Publishing is optional. Without it, `preview` renders every issue and serves it 
 | `SITE_URL` | variable | the site's address, for the Slack post |
 | `SLACK_WEBHOOK_URL` | secret | optional: incoming webhook for the allowed channel |
 | `DIGEST_TZ`, `CUTOFF` | variable | the window's time zone and cutoff, e.g. `Europe/Berlin`, `18:00` (daily) |
-| `DATA_REPO` | variable | the private data repo, `owner/name` (daily) |
+| `DATA_REPO` | repository variable | the private data repo, `owner/name`; without it this repo's workflows skip |
 | `DATA_TOKEN` | secret | contents read and write on the data repo (daily) |
 | `SOURCE_TOKEN` | secret | read-only on the project's repos: contents, pull requests, issues (daily) |
 | `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN` | secret | for the agents; the CLI is pinned to Claude Code 2.1.289 (daily) |

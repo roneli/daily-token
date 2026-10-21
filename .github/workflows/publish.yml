@@ -34,6 +34,8 @@ concurrency:
 
 jobs:
   publish:
+    # A fork with no data repo has nothing to publish.
+    if: vars.DATA_REPO != ''
     runs-on: ubuntu-latest
     environment: publish
     steps:
