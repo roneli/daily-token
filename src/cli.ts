@@ -185,8 +185,7 @@ async function script(name: string, argv: string[]) {
   process.exitCode = await proc.exited;
 }
 
-if (import.meta.main) {
-  const [command, ...argv] = process.argv.slice(2);
+async function main(command: string, argv: string[]) {
   switch (command) {
     case "run":
       await runDaily(argv[0] === "daily" ? argv.slice(1) : argv);
@@ -233,6 +232,18 @@ if (import.meta.main) {
       console.log(HELP);
       if (command && command !== "help" && command !== "--help") process.exitCode = 1;
   }
+}
+
+if (import.meta.main) {
+  const [command, ...argv] = process.argv.slice(2);
+  try {
+    await main(command, argv);
+  } catch (e) {
+    // What went wrong in one line; DEBUG=1 shows where.
+    console.error(`error: ${(e as Error).message ?? e}`);
+    if (process.env.DEBUG) console.error((e as Error).stack);
+    process.exitCode = 1;
+  }
   // A finished run exits even if a child Bun lost track of still holds the event loop.
-  if (["run", "replay", "project"].includes(command)) process.exit();
+  if (["run", "cutaway", "replay", "project"].includes(command)) process.exit();
 }
