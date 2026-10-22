@@ -3,14 +3,13 @@ import { join, normalize } from "node:path";
 import { $ } from "bun";
 import { ENGINE } from "./issue";
 
-const port = Number(process.env.PORT ?? 5173);
 const args = process.argv.slice(2);
 await $`bun ${join(ENGINE, "src", "render.ts")} --all ${args}`;
 
 const isDate = (d: string) => /^\d{4}-\d{2}-\d{2}$/.test(d);
 const latest = async (project: string) => (await readdir(join("out", project))).filter(isDate).sort().at(-1);
 
-Bun.serve({
+const serve = (port: number) => Bun.serve({
   port,
   async fetch(req) {
     let path = normalize(decodeURIComponent(new URL(req.url).pathname));
@@ -26,4 +25,16 @@ Bun.serve({
     return (await file.exists()) ? new Response(file) : new Response("Not found", { status: 404 });
   },
 });
-console.log(`preview on http://localhost:${port}/`);
+
+// Another preview may hold the port, maybe of another root: take the next free one.
+const first = Number(process.env.PORT ?? 5173);
+let server: ReturnType<typeof serve> | undefined;
+for (let port = first; !server; port++) {
+  try {
+    server = serve(port);
+  } catch (e) {
+    if ((e as { code?: string }).code !== "EADDRINUSE" || port > first + 20) throw e;
+  }
+}
+if (server.port !== first) console.log(`port ${first} is taken, maybe by another preview`);
+console.log(`preview on http://localhost:${server.port}/`);
