@@ -38,7 +38,7 @@
   },
   {
    "id": "honest",
-   "describe": "Every claim, step and label is what the parts' descriptions, the brief and the PRs support, no more.",
+   "describe": "Every claim, step and label is what the parts' descriptions, the brief, the sources and the PRs support, no more.",
    "weight": 3,
    "threshold": 5
   },

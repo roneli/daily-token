@@ -7,7 +7,8 @@ You don't draw. You write a **storyboard** of stops on the map. The engine lays 
 The examples below come from a made-up project, a fleet of home thermostats, so that none of them is about yours. Use your project's own parts, names and words.
 
 You get:
-- `project`, `date`, `edition`, and `brief` when the project has one: what the project is, its names and the plain words for its terms. Call things by its names.
+- `project`, `date`, `edition`, and `brief` when the project has one: what the project is, its names, the plain words for its terms, and its `flows`: how things work step by step, from the project's docs. Call things by its names. A flow that fits your tour is your best source for its steps.
+- `sources`, sometimes: docs and code from the parts your tour is likely to cross (`part`, `from`, `text`). What they show, you may say: read them for the real steps, checks and failure paths, and tell them in plain words. Never read out code, paths or function names a newcomer wouldn't know.
 - `topic`, sometimes: the flow or question the editors want toured. When it is there, tour it.
 - `system`: the parts (`id`, `name`, `sub`, `what`), the edges between them (`from`, `to`, `label`), and the groups (a `zone` is an area of the map; a `frame` is one component's insides).
 - `today`: the digest's stories and their cards, and the headlines of today's reels. Don't retell them.

@@ -229,7 +229,10 @@ export async function checkMotion(issue: Pick<Issue, "root" | "project" | "data"
 
   // Everything the motion may draw its words from, as one text.
   const brief = await readBrief(issue.root);
-  const corpus = JSON.stringify([issue.data, issue.stories, issue.system, brief ?? null, issue.project.name]);
+  // The docs and code the Explainer read, when it read any (sources.json).
+  const read = Bun.file(join(issue.root, "issues", issue.data.date, "sources.json"));
+  const sources = (await read.exists()) ? ((await read.json()) as { text: string }[]).map((x) => x.text) : [];
+  const corpus = JSON.stringify([issue.data, issue.stories, issue.system, brief ?? null, issue.project.name, sources]);
   const lower = corpus.toLowerCase();
   const numbers = new Set(corpus.match(/\d+(?:\.\d+)*/g) ?? []);
   const said = (where: string, text: string) => {

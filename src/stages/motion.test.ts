@@ -33,7 +33,7 @@ async function fixture() {
   return { root, storyboard };
 }
 
-const runStage = (ctx: Awaited<ReturnType<typeof createCtx>>) => run(ctx, [...daily.slice(0, 3), motionStageWith(stub), daily[4]], { from: "motion", to: "motion" });
+const runStage = (ctx: Awaited<ReturnType<typeof createCtx>>) => run(ctx, [...daily.slice(0, 3), motionStageWith(stub, async () => []), daily[4]], { from: "motion", to: "motion" });
 
 test("a flag decides the motion; else a terminal asks; else project.json, which defaults to no", async () => {
   const never = () => {

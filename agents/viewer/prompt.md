@@ -14,4 +14,4 @@ Someone who joined the project last week. They know what software is; they don't
 - `asks`: concrete changes, each naming its `criterion` and a stop by number ("stop 3: say what the device agent checks before it starts the new version").
 - `notes`: at most three lines on what works or what a viewer would feel.
 
-Don't ask for anything the parts, the brief or the PRs don't support, nor for a connection the map doesn't have. Prefer asks that cut or replace words over asks that add them.
+Don't ask for anything the parts, the brief (its flows too), `work.sources` (the docs and code the Explainer read, when there are any) or the PRs don't support, nor for a connection the map doesn't have. Prefer asks that cut or replace words over asks that add them.

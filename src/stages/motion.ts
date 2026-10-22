@@ -2,6 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { checkMotion, type Recent } from "../check";
+import { type Excerpt, type Reader, readRepos } from "../excerpts";
 import { type Gate, refine, type Reviewer } from "../harness/loop";
 import { loadRubric } from "../harness/rubric";
 import type { Stage } from "../harness/runner";
@@ -40,8 +41,8 @@ export async function recent(root: string, date: string, n = 10): Promise<Recent
   return out;
 }
 
-// The stage, with the voice it speaks with: Kokoro, or a stand-in in tests.
-export function motionStageWith(speak: Speaker): Stage {
+// The stage, with the voice it speaks with and how it reads the repos: Kokoro and GitHub, or stand-ins in tests.
+export function motionStageWith(speak: Speaker, read: Reader): Stage {
   return {
     name: "motion",
     // Optional: a run restarted after it doesn't make it again.
@@ -70,6 +71,19 @@ export function motionStageWith(speak: Speaker): Stage {
       const shots = await mkdtemp(join(tmpdir(), "daily-motion-stills-"));
       const before = await recent(ctx.root, ctx.date);
       // What today's reels already say, so the tour says something else.
+      // The docs and code of the parts the tour is likely about; without them the tour has only the map and the brief.
+      let sources: Excerpt[] = [];
+      try {
+        const touched = [...new Set(stories.sections.flatMap((s) => s.cards.flatMap((c) => c.parts)))];
+        sources = await read({ system: ctx.system, repos: reposOf(ctx.project), topic: config.topic, touched });
+      } catch (e) {
+        log(`read no sources from the repos (${(e as Error).message}); the tour has the map and the brief`);
+      }
+      const kept = Bun.file(join(ctx.dir, "sources.json"));
+      if (sources.length) {
+        await ctx.write("sources.json", sources);
+        log(`read ${sources.length} files: ${sources.map((s) => s.from).join(", ")}`);
+      } else if (await kept.exists()) await kept.delete();
       const told = { stories: stories.sections.map((s) => s.title), reels: shortsOf(reels).map((r) => r.headline) };
       let spoken = 0;
 
@@ -113,6 +127,7 @@ export function motionStageWith(speak: Speaker): Stage {
             return {
               input: {
                 ...(ctx.brief ? { brief: ctx.brief } : {}),
+                ...(sources.length ? { sources } : {}),
                 storyboard: sb,
                 seconds: spoken,
                 newToday: refsOf(sb).map((ref) => ({ ref, title: titled.get(ref)?.title ?? "", body: (titled.get(ref)?.body ?? "").slice(0, 1500) })),
@@ -132,6 +147,7 @@ export function motionStageWith(speak: Speaker): Stage {
         // The editors' choice, for this run or the project: the Explainer tours it.
         ...(config.topic ? { topic: config.topic } : {}),
         ...(ctx.brief ? { brief: ctx.brief } : {}),
+        ...(sources.length ? { sources } : {}),
         date: ctx.date,
         edition: data.edition,
         system: {
@@ -184,4 +200,4 @@ export function motionStageWith(speak: Speaker): Stage {
   };
 }
 
-export const motionStage = motionStageWith(kokoro);
+export const motionStage = motionStageWith(kokoro, readRepos);
