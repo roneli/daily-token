@@ -135,18 +135,18 @@ test("speech sets the time: each stop lasts its spoken line plus the camera's mo
 test("a voice that runs long or short is fitted: the moves and pauses shrink or stretch, the words don't, and what can't fit fails saying so", () => {
   const sb = { title: "t", dek: "d", flow: "f", question: "q", opening: "o", closing: "c", stops: ["a", "b", "c", "d"].map((part, i) => ({ part, say: "s", ...(i ? { via: "e" } : {}) })) };
   const at = (n: number) => sb.stops.map(() => n);
-  const ok = fitted(sb, [4, ...at(9), 4]);
+  const ok = fitted(sb, [1, 4, ...at(9), 4]);
   expect(ok.slack).toBe(1);
-  const long = fitted(sb, [6, ...at(17.5), 6]);
+  const long = fitted(sb, [1, 6, ...at(17.5), 6]);
   expect(long.slack).toBeLessThan(1);
   expect(long.seconds).toBeLessThanOrEqual(90);
   expect(long.seconds).toBeGreaterThan(88);
   // Each line still gets its whole spoken length.
   for (const b of long.beats) expect(b.end - b.speak).toBeGreaterThanOrEqual(b.speech);
-  const short = fitted(sb, [2, ...at(4), 2]);
+  const short = fitted(sb, [1, 2, ...at(4), 2]);
   expect(short.slack).toBeGreaterThan(1);
   expect(short.seconds).toBeGreaterThanOrEqual(40);
-  expect(() => fitted(sb, [10, ...at(20), 10])).toThrow(/even with its pauses and moves trimmed to the least; a motion runs 40–90 s, so its words need cutting/);
+  expect(() => fitted(sb, [1, 10, ...at(20), 10])).toThrow(/even with its pauses and moves trimmed to the least; a motion runs 40–90 s, so its words need cutting/);
 });
 
 test("check holds a tour to the map and the data: parts, edges, frames, today's refs, numbers, names, and its steps and failures", async () => {
@@ -307,13 +307,14 @@ test("the fixture tour renders: pictures for the Viewer, an H.264 MP4 with its v
 test("an issue with a motion gets the Cutaway tab, with its video and its spoken lines to read at their times; one without has no tab", async () => {
   const { renderIssue } = await import("../render");
   const root = join(ENGINE, "fixtures", "sample");
-  // A line for every sentence: the opening, each stop's first sentence and its steps', the closing.
-  const files = { video: "motion.0123456789.mp4", poster: "motion.0123456789.jpg", seconds: 61.5, starts: Array.from({ length: 16 }, (_, i) => 0.8 + i * 3.7) };
+  // A line for every sentence: the title, the opening, each stop's first sentence and its steps', the closing.
+  const files = { video: "motion.0123456789.mp4", poster: "motion.0123456789.jpg", seconds: 61.5, starts: Array.from({ length: 17 }, (_, i) => 0.8 + i * 3.7) };
   const { html } = await renderIssue(await loadIssue(root, DATE), { css: "", js: "" }, files);
   expect(html).toContain('<button role="tab" id="tab-motion" type="button" aria-selected="false">Cutaway</button>');
   expect(html).toContain('<source src="motion.0123456789.mp4" type="video/mp4">');
-  expect(html).toContain('data-seek="4.5" aria-label="Play from 0:04">0:04</button><span>The launch pad decides when the rocket can leave.');
-  expect(html).toContain('data-seek="8.2" aria-label="Play from 0:08">0:08</button><span>First, the countdown runs to zero.');
+  expect(html).toContain('data-seek="0.8" aria-label="Play from 0:00">0:00</button><span>How a rocket gets off the pad in one go.</span>');
+  expect(html).toContain('data-seek="8.2" aria-label="Play from 0:08">0:08</button><span>The launch pad decides when the rocket can leave.');
+  expect(html).toContain('data-seek="11.9" aria-label="Play from 0:11">0:11</button><span>First, the countdown runs to zero.');
   expect(html).toContain("Launch pad → Engine → Guidance → CI");
   expect(html).toContain("Cutaway · A launch, end to end · 1:01");
   expect(html).toContain("<span>A launch has one chance, and any part can stop it.");

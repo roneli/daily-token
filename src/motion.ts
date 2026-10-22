@@ -88,13 +88,15 @@ const HEIGHT = 1350;
 export const MIN_SECONDS = 40;
 export const MAX_SECONDS = 90;
 
-// What is spoken in each beat, sentence by sentence: the opening; each stop's line, then its steps' sentences, each
+// What is spoken in each beat, sentence by sentence: the title, then the opening; each stop's line, then its steps' sentences, each
 // spoken as its step lights; the closing. Each is a clip of its own, so the steps light exactly as they are said.
 export const spoken = (s: Stop) => {
   const m = moveOf(s);
   return m?.beats.every((x) => x.say) ? m.beats.map((x) => x.say as string) : [];
 };
-export const groupsOf = (sb: Storyboard) => [[sb.opening], ...sb.stops.map((s) => [s.say, ...spoken(s)]), [sb.closing]];
+// The title is read as a sentence, so the voice ends it like one.
+const titled = (title: string) => (/[.?!]$/.test(title) ? title : `${title}.`);
+export const groupsOf = (sb: Storyboard) => [[titled(sb.title), sb.opening], ...sb.stops.map((s) => [s.say, ...spoken(s)]), [sb.closing]];
 export const linesOf = (sb: Storyboard) => groupsOf(sb).flat();
 export const refsOf = (sb: Storyboard) => [...new Set(sb.stops.flatMap((s) => s.today ?? []))];
 
@@ -138,7 +140,7 @@ export function timeline(sb: Storyboard, seconds: number[], slack = 1): Timeline
     return { segs, speak: from, speech: t - GAP * slack - from };
   };
   const speak0 = 0.8 * Math.min(1, slack);
-  const first = said(1, speak0);
+  const first = said(groups[0].length, speak0);
   beats.push({ kind: "open", index: 0, start: 0, travel: 0, ...first, end: Math.max(OPEN_MIN * Math.min(1, slack), speak0 + first.speech + BEAT * slack) });
   let at = beats[0].end;
   for (const [i, s] of sb.stops.entries()) {

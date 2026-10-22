@@ -437,6 +437,8 @@ export async function tour(o: { storyboard: Storyboard; system: System; look: Lo
   const said = groupsOf(sb);
   for (const [n, b] of tl.beats.entries()) {
     for (const [g, seg] of b.segs.entries()) {
+      // The title is on screen already as it is read.
+      if (b.kind === "open" && g === 0) continue;
       const pieces = chunks(said[n][g]);
       const total = pieces.reduce((a, p) => a + p.length, 0);
       const next = b.segs[g + 1]?.speak;
