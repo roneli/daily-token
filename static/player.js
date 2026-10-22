@@ -132,6 +132,30 @@
     to.animate([{ transform: `translateX(${dir * 100}%)` }, { transform: "none" }], { duration: ms, easing: curve });
   }
 
+  // On a phone a short's words never scroll: they shrink a little, then the PR chips go (the story sheet has them),
+  // then they shrink to about three quarters, then the why goes, and what still runs over fades out at the foot.
+  function fit(page) {
+    const copy = page.querySelector(".copy");
+    if (!copy) return;
+    copy.classList.remove("lean", "terse", "clipped");
+    copy.style.removeProperty("--fit");
+    if (!phone.matches || page.hidden) return;
+    const over = () => copy.scrollHeight > copy.clientHeight + 1;
+    let f = 1;
+    const shrink = (least) => {
+      while (over() && f > least + 0.001) {
+        f -= 0.04;
+        copy.style.setProperty("--fit", f.toFixed(2));
+      }
+    };
+    shrink(0.88);
+    if (over()) copy.classList.add("lean");
+    shrink(0.72);
+    if (over()) copy.classList.add("terse");
+    if (over()) copy.classList.add("clipped");
+  }
+  const fitShown = () => { for (const p of pages) if (!p.hidden && p.closest(".thread:not([hidden])")) fit(p); };
+
   function go(i, still) {
     const next = Math.max(0, Math.min(pages.length - 1, i));
     const prev = pages[cur];
@@ -142,6 +166,7 @@
     dropSheet();
     place();
     pages.forEach((p, k) => { if (threadOf[k] === tNow()) p.hidden = k !== cur; });
+    fitShown();
     // Within a story the next short cuts in at once, as stories do; a new story comes in whole.
     if (!still && moved && threadOf[cur] !== from) swapThread(threads[from], threads[tNow()], cur < pages.indexOf(prev));
     // A short plays at once; a new story once its card has come to the front.
@@ -232,7 +257,7 @@
   });
 
   // Phones: swipe left or right for the next or the previous story, the neighbour following the finger; swipe up
-  // for the story in the digest. Words that scroll scroll first.
+  // for the story in the digest.
   let swipe = null;
   const peekAt = (s, dx) => {
     s.from.style.transform = `translateX(${dx}px)`;
@@ -241,8 +266,7 @@
   book.addEventListener("touchstart", (e) => {
     if (!phone.matches || app.classList.contains("on-page") || e.touches.length > 1 || sheetOpen()) return;
     const p = e.touches[0];
-    const copy = e.target.closest(".copy");
-    swipe = { x: p.clientX, y: p.clientY, at: performance.now(), dx: 0, on: false, copy: copy && copy.scrollHeight > copy.clientHeight + 8 ? copy : null };
+    swipe = { x: p.clientX, y: p.clientY, at: performance.now(), dx: 0, on: false };
   }, { passive: true });
   book.addEventListener("touchmove", (e) => {
     if (!swipe) return;
@@ -250,10 +274,8 @@
     if (!swipe.on) {
       if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
       if (Math.abs(dy) > Math.abs(dx)) {
-        // Up, past any words left to scroll, opens the story.
-        const c = swipe.copy;
-        const scrolls = c && c.scrollTop + c.clientHeight < c.scrollHeight - 4;
-        if (dy < -40 && !scrolls) { swipe = null; openSheet(true); }
+        // Up opens the story.
+        if (dy < -40) { swipe = null; openSheet(true); }
         else if (Math.abs(dy) > 40) swipe = null;
         return;
       }
@@ -267,6 +289,7 @@
         swipe.peek.hidden = false;
         swipe.peek.classList.add("peek");
         for (let k = firstOf[swipe.target]; k <= lastOf[swipe.target]; k++) pages[k].hidden = k !== firstOf[swipe.target];
+        fit(pages[firstOf[swipe.target]]);
         seek(tls[firstOf[swipe.target]], 0);
       }
       swipe.wasPlaying = playing;
@@ -379,6 +402,9 @@
       go(back ? cur - 1 : cur + 1);
     });
   }
+
+  addEventListener("resize", fitShown);
+  document.fonts?.ready.then(fitShown);
 
   // The first reel on a phone shows once where to tap, until the first tap or a few seconds.
   const hintKey = "daily-token:tap-hint";
