@@ -25,8 +25,24 @@ export async function wantMotion(o: { flag?: boolean; configured?: boolean; ask?
   return o.configured ?? false;
 }
 
-// The question a terminal run asks; anything but y or yes is no.
-export const askMotion = () => /^y(es)?$/i.test((prompt(`Make a ${MOTION_TAB} for this edition? [y/N]`) ?? "").trim());
+// The question a terminal run asks; anything but y or yes is no. With a topic waiting in the queue, it names it,
+// and anything but n or no is yes.
+export const askMotion = (waiting?: string) => {
+  if (!waiting) return /^y(es)?$/i.test((prompt(`Make a ${MOTION_TAB} for this edition? [y/N]`) ?? "").trim());
+  return !/^no?$/i.test((prompt(`Make a ${MOTION_TAB} on the queue's next topic, "${waiting}"? [Y/n]`) ?? "").trim());
+};
+
+// The queue's next topic: the first of `topics` no other issue's Cutaway toured, as its meta.json records.
+export async function queued(root: string, date: string, topics?: string[]): Promise<string | undefined> {
+  if (!topics?.length) return undefined;
+  const toured = new Set<string>();
+  for (const d of (await issueDates(root)).filter((x) => x !== date)) {
+    const file = Bun.file(join(root, "issues", d, "meta.json"));
+    const topic = (await file.exists()) ? ((await file.json()) as { motion?: { topic?: string } }).motion?.topic : undefined;
+    if (topic) toured.add(topic);
+  }
+  return topics.find((t) => !toured.has(t));
+}
 
 // The recent motions' flows, so the Explainer takes another one.
 export async function recent(root: string, date: string, n = 10): Promise<Recent[]> {
@@ -54,6 +70,9 @@ export function motionStageWith(speak: Speaker, read: Reader): Stage {
         log(`no ${MOTION_TAB} motion for this edition (--motion, or pipeline.motion.enabled in project.json)`);
         return;
       }
+      // This run's topic, else the queue's next.
+      const topic = config.topic ?? (await queued(ctx.root, ctx.date, config.topics));
+      if (topic && !config.topic) log(`the queue's next topic: ${topic}`);
       const [data, stories] = await Promise.all([ctx.read<Data>("data.json"), ctx.read<Stories>("stories.json")]);
       const reels = (await ctx.has("reels.json")) ? await ctx.read<Reels>("reels.json") : { threads: [] };
       const issue = issueOf(ctx, data, stories, reels.threads);
@@ -75,7 +94,7 @@ export function motionStageWith(speak: Speaker, read: Reader): Stage {
       let sources: Excerpt[] = [];
       try {
         const touched = [...new Set(stories.sections.flatMap((s) => s.cards.flatMap((c) => c.parts)))];
-        sources = await read({ system: ctx.system, repos: reposOf(ctx.project), topic: config.topic, touched });
+        sources = await read({ system: ctx.system, repos: reposOf(ctx.project), topic, touched });
       } catch (e) {
         log(`read no sources from the repos (${(e as Error).message}); the tour has the map and the brief`);
       }
@@ -145,7 +164,7 @@ export function motionStageWith(speak: Speaker, read: Reader): Stage {
       const input = {
         project: { id: ctx.project.id, name: ctx.project.name },
         // The editors' choice, for this run or the project: the Explainer tours it.
-        ...(config.topic ? { topic: config.topic } : {}),
+        ...(topic ? { topic } : {}),
         ...(ctx.brief ? { brief: ctx.brief } : {}),
         ...(sources.length ? { sources } : {}),
         date: ctx.date,
@@ -190,7 +209,7 @@ export function motionStageWith(speak: Speaker, read: Reader): Stage {
         // Which move each stop used, and why a free beat fit no move: patterns that recur become moves.
         const moves = storyboard.stops.map((s) => moveOf(s)?.move ?? null);
         const free = storyboard.stops.flatMap((s, i) => (moveOf(s)?.move === "free" ? [{ stop: i + 1, part: s.part, why: s.free?.why ?? "" }] : []));
-        ctx.meta.motion = { made: true, title: storyboard.title, flow: storyboard.flow, why, seconds, estimated: spoken, moves, ...(free.length ? { free } : {}), ...(slack !== 1 ? { slack: Math.round(slack * 100) / 100 } : {}) };
+        ctx.meta.motion = { made: true, ...(topic ? { topic } : {}), title: storyboard.title, flow: storyboard.flow, why, seconds, estimated: spoken, moves, ...(free.length ? { free } : {}), ...(slack !== 1 ? { slack: Math.round(slack * 100) / 100 } : {}) };
         await ctx.write("motion.json", storyboard);
         log(`"${storyboard.title}" (${storyboard.flow}): ${storyboard.stops.length} stops, ${seconds} s spoken (estimated ${spoken} s; voiced in ${voiced} s)`);
       } finally {

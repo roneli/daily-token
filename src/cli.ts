@@ -70,8 +70,10 @@ async function runDaily(argv: string[]) {
   const names = daily.map((s) => s.name);
   const at = names.indexOf("motion");
   if (names.indexOf(values.from ?? names[0]) <= at && at <= names.indexOf(values.to ?? names.at(-1) ?? "")) {
-    const { askMotion, wantMotion } = await import("./stages/motion");
-    const enabled = await wantMotion({ flag: values.motion ?? set.motion?.enabled, configured: ctx.pipeline.motion?.enabled, ask: process.stdin.isTTY ? askMotion : undefined });
+    const { askMotion, queued, wantMotion } = await import("./stages/motion");
+    // A topic waiting in the queue turns the Cutaway on.
+    const waiting = await queued(ctx.root, ctx.date, ctx.pipeline.motion?.topics);
+    const enabled = await wantMotion({ flag: values.motion ?? set.motion?.enabled, configured: ctx.pipeline.motion?.enabled || waiting !== undefined, ask: process.stdin.isTTY ? () => askMotion(waiting) : undefined });
     ctx.pipeline.motion = { ...ctx.pipeline.motion, enabled };
   }
   const { meta, costUsd } = await run(ctx, daily, { from: values.from, to: values.to });

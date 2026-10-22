@@ -10,7 +10,7 @@ import { ENGINE, loadIssue } from "../issue";
 import { estimate, estimated, fitted, linesOf, lookOf, type Storyboard, startsOf, timeline } from "../motion";
 import { daily } from "../pipeline";
 import type { Speaker } from "../voice";
-import { motionStageWith, wantMotion } from "./motion";
+import { motionStageWith, queued, wantMotion } from "./motion";
 
 const DATE = "2026-01-15";
 const VIEWER = ["how", "deep", "clear", "big", "engaging", "fresh", "honest", "legible"];
@@ -528,4 +528,17 @@ test("check numbers a layers move's rings and warns on a stop that only says whe
   expect((await checkMotion(issue, layered([1, 1, 3]))).errors).toEqual(["motion stop 3 (guidance) numbers its rings 1, 1, 3; they are 1 to 3, 1 the outermost, each once"]);
   const stored = at(2, { say: "Guidance contains the gyro." });
   expect((await checkMotion(issue, stored)).warnings).toContain('motion stop 3 (guidance) only says where something sits; fold it into the stop before or after it as one beat ("…downloads it from the guidance")');
+});
+
+test("the topic queue gives the first topic no other issue's Cutaway toured, and its own day's again", async () => {
+  const root = await mkdtemp(join(tmpdir(), "queue-"));
+  await cp(join(ENGINE, "fixtures", "sample"), root, { recursive: true });
+  const topics = ["How the clamps let go", "How the gyro steadies the climb"];
+  expect(await queued(root, "2026-01-16", topics)).toBe(topics[0]);
+  await Bun.write(join(root, "issues", "2026-01-14", "meta.json"), JSON.stringify({ motion: { made: true, topic: topics[0] } }));
+  expect(await queued(root, "2026-01-16", topics)).toBe(topics[1]);
+  // Making the 14th's Cutaway again tours its own topic again.
+  expect(await queued(root, "2026-01-14", topics)).toBe(topics[0]);
+  expect(await queued(root, "2026-01-16", [topics[0]])).toBeUndefined();
+  expect(await queued(root, "2026-01-16", undefined)).toBeUndefined();
 });

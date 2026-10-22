@@ -16,7 +16,7 @@ export type Project = {
   weekly?: "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat";
   // Per stage: rounds, budget, and which reviewers and gates run
   brief?: { docs?: string[] };
-  pipeline?: Record<string, { enabled?: boolean; rounds?: number; budgetUsd?: number; reviewers?: string[]; gates?: string[]; parallel?: number; maxShorts?: number; voice?: string; voiceover?: boolean; speed?: number; topic?: string }>;
+  pipeline?: Record<string, { enabled?: boolean; rounds?: number; budgetUsd?: number; reviewers?: string[]; gates?: string[]; parallel?: number; maxShorts?: number; voice?: string; voiceover?: boolean; speed?: number; topic?: string; topics?: string[] }>;
 };
 
 // A PR or issue as stories and reels cite it: 123 in the home repo, "name#123" in any other.

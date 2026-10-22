@@ -36,6 +36,7 @@
           "voice": { "type": "string", "pattern": "^[a-z]{2}_[a-z]+$", "description": "motion: the Kokoro voice that reads the narration (af_heart)." },
           "speed": { "type": "number", "minimum": 0.8, "maximum": 1.3, "description": "motion: how fast the voice reads (1.08)." },
           "topic": { "type": "string", "minLength": 1, "maxLength": 200, "description": "motion: the flow or question the Explainer must tour, e.g. set for one run with --set motion.topic=\"...\"." },
+          "topics": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 200 }, "description": "motion: a queue of topics. A run without a topic of its own tours the first one no issue's Cutaway has toured, and a topic waiting turns the Cutaway on." },
           "voiceover": { "type": "boolean", "description": "motion: speak the narration (true). Off, the video is silent and each line is timed by its length." },
           "maxShorts": { "type": "integer", "minimum": 1, "maximum": 5, "description": "reels: the most shorts any thread may have. Unset, a story gets one per two cards, up to 4." }
         }
