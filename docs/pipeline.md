@@ -51,6 +51,7 @@ The bucket is the archive: `projects.json`, and per project every issue's JSON a
 
 - PRs merged into each repo's default branch from the previous issue day's `CUTOFF` to this day's, in `DIGEST_TZ` (DST included), each tagged with its repo. With `"days": ["sun", "mon", "tue", "wed", "thu"]` in `project.json`, Sunday's issue reaches back to Thursday, so the weekend's work isn't lost; without `days`, every day is an issue day;
 - each PR's files, every page of them, mapped to parts by the globs in `system.json`. Globs match home paths as written and another repo's as `name:path/**`. A part with `"core": true` marks the PR Core;
+- each PR's and direct commit's `diff`: its changed lines, file by file, code before tests and docs, without lockfiles or generated files. A day's diffs share about 60,000 characters, 600 to 4,000 a change. The Writer reads them for "Under the hood", and `check` counts them as the data;
 - **direct commits**: commits on the default branch in the window that no merged PR carries, with their files (from the REST API), closing keywords and `Part of #N`;
 - co-authors from `Co-authored-by` trailers;
 - its epic path: the closing issue's (or a `Part of #N` issue's) sub-issue parents, root first, which may live in another repo. No chain means no epic; a reference to a PR or a missing number is skipped;

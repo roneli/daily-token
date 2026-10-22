@@ -45,6 +45,8 @@ export type PR = {
   author: string;
   coauthors: string[];
   body: string;
+  // The changed lines, file by file, cut to a budget; optional for issues collected before it
+  diff?: string;
 };
 
 // A commit pushed to the default branch that no merged PR carries.
@@ -64,6 +66,7 @@ export type Commit = {
   author: string;
   coauthors: string[];
   body: string;
+  diff?: string;
 };
 
 // An open PR, for what's coming. `isNew`: opened in the window; `active`: updated in it.

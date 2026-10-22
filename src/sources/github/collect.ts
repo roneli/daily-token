@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import { daysBefore, iso, weekdayOf, window } from "../../time";
 import { type Commit, commitRef, type Data, type DataV1, type GithubDay, githubOf, type IssueEvent, issueDates, need, type OpenPR, type PR, type Project, type Ref, readJson, refOf, type System, type Week } from "../../issue";
+import { diffBudget, diffOf, type FilePatch } from "./diff";
 
 // One day of a project's GitHub repos: merged PRs, direct commits, issues, tags, open PRs. No judgment, no model.
 // The repos come from project.json's sources.github and the parts from system.json; everything else is GitHub's.
@@ -145,7 +146,7 @@ type RawCommit = {
 
 // Commits on the default branch in the window that no merged PR carries: work pushed straight to it.
 async function directCommits(owner: string, name: string, branch: string, from: string, to: string) {
-  const out: (RawCommit & { files: string[] })[] = [];
+  const out: (RawCommit & { files: string[]; patches: FilePatch[] })[] = [];
   for (let after: string | null = null; ; ) {
     const r: { repository: { ref: { target: { history: { nodes: RawCommit[]; pageInfo: { hasNextPage: boolean; endCursor: string } } } } } } = await gql(
       `query($o: String!, $n: String!, $ref: String!, $from: GitTimestamp!, $to: GitTimestamp!, $after: String) { repository(owner: $o, name: $n) { ref(qualifiedName: $ref) { target { ... on Commit {
@@ -160,8 +161,8 @@ async function directCommits(owner: string, name: string, branch: string, from: 
     const h = r.repository.ref.target.history;
     for (const c of h.nodes) {
       if (c.associatedPullRequests.nodes.some((p) => p.merged)) continue;
-      const files = (await rest<{ files?: { filename: string }[] }>(`repos/${owner}/${name}/commits/${c.oid}`)).files ?? [];
-      out.push({ ...c, files: files.map((f) => f.filename) });
+      const files = (await rest<{ files?: FilePatch[] }>(`repos/${owner}/${name}/commits/${c.oid}`)).files ?? [];
+      out.push({ ...c, files: files.map((f) => f.filename), patches: files });
     }
     if (!h.pageInfo.hasNextPage) break;
     after = h.pageInfo.endCursor;
@@ -243,13 +244,23 @@ export function weekOf(date: string, earlier: { date: string; headline: string; 
   };
 }
 
-async function collectRepo(repo: string, home: string, system: System, win: { from: string; to: string }) {
+// Each PR's patches, a few at a time: GraphQL lists a PR's files but not their changes.
+async function prPatches(owner: string, name: string, numbers: number[]) {
+  const out = new Map<number, FilePatch[]>();
+  for (let i = 0; i < numbers.length; i += 6)
+    await Promise.all(numbers.slice(i, i + 6).map(async (n) => out.set(n, await rest<FilePatch[]>(`repos/${owner}/${name}/pulls/${n}/files?per_page=100`))));
+  return out;
+}
+
+async function collectRepo(repo: string, home: string, system: System, win: { from: string; to: string }, diffs: boolean) {
   const [owner, name] = repo.split("/");
   const prefix = repo === home ? "" : `${name}:`;
   const state = await repoState(owner, name);
   const branch = state.repository.defaultBranchRef.name;
   const raw = await mergedPrs(owner, name, branch, win.from, win.to);
   const pushed = await directCommits(owner, name, branch, win.from, win.to);
+  const patches = diffs ? await prPatches(owner, name, raw.map((p) => p.number)) : new Map<number, FilePatch[]>();
+  const budget = diffBudget(raw.length + pushed.length);
   const open = await openPrs(owner, name);
   const rawIssues = await issueEvents(owner, name, win.from, win.to);
 
@@ -282,6 +293,7 @@ async function collectRepo(repo: string, home: string, system: System, win: { fr
       files, parts, closes, epicPath: pathOf(closes, partOf(p.body ?? "")), core, author,
       coauthors: coauthors(p.commits.nodes.map((c) => c.commit.message), author),
       body: p.body ?? "",
+      ...(patches.has(p.number) ? { diff: diffOf(patches.get(p.number) ?? [], budget) } : {}),
     };
   });
 
@@ -294,6 +306,7 @@ async function collectRepo(repo: string, home: string, system: System, win: { fr
       files: c.files, parts, closes, epicPath: pathOf(closes, partOf(c.message)), core, author,
       coauthors: coauthors([c.message], author),
       body: c.message.slice(c.messageHeadline.length).trim(),
+      ...(diffs ? { diff: diffOf(c.patches, budget) } : {}),
     };
   });
 
@@ -341,7 +354,8 @@ export async function collect(opts: CollectOpts, withWeek = true): Promise<Githu
   const { project, system, repos } = opts;
   const home = repos[0];
   const win = window(opts.date, opts.cutoff, opts.tz, project.days);
-  const each = await Promise.all(repos.map((repo) => collectRepo(repo, home, system, win)));
+  // A past day collected only to count it in the week needs no diffs.
+  const each = await Promise.all(repos.map((repo) => collectRepo(repo, home, system, win, withWeek)));
 
   const epics = new Map(each.flatMap((r) => r.epics).map((e) => [refOf(e.repo, e.number, home), e]));
   const earlier = (await issueDates(opts.root)).filter((d) => d < opts.date);
