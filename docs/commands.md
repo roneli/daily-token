@@ -5,6 +5,7 @@
 ```
 init      [DIR] [--yes --name --repos a/b,c/d --tz --cutoff --days --model --publish none|r2]
 run       [--date D] [--from STAGE] [--to STAGE] [--rounds N] [--set stage.key=value] [--motion | --no-motion]
+cutaway   "TOPIC" [--date D] [--force]: the Cutaway alone on the latest issue, touring that topic
 replay    STAGE --date D [--set stage.key=value]
 project   cartographer [--days N] [--accept]
 project   brief [--days N] [--accept]

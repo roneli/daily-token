@@ -6,7 +6,7 @@ import { createCtx, type StageConfig } from "./harness/context";
 import type { Prompter } from "./harness/plugin";
 import { claudeCli } from "./harness/model";
 import { run } from "./harness/runner";
-import { defaultRoot, ENGINE, type Project, readJson, type System, writeJson } from "./issue";
+import { defaultRoot, ENGINE, issueDates, type Project, readJson, type System, writeJson } from "./issue";
 import { daily } from "./pipeline";
 
 // daily-token: every command the engine has, run from a data root (or --root / DATA_DIR).
@@ -16,6 +16,7 @@ const HELP = `daily-token <command> [options]
   run       Make one day's issue: collect → stories → reels → motion → verify
             --date D  --cutoff HH:MM  --from STAGE  --to STAGE  --rounds N  --set stage.key=value
             --motion / --no-motion  make a Cutaway; unset, a terminal asks and CI reads pipeline.motion.enabled
+  cutaway   Make the Cutaway alone on the latest issue: "TOPIC" [--date D] [--force to replace one]
   collect   Collect one day alone to data.json (--force to redo a draft)
   replay    Make one stage of a past issue again in a scratch root and compare: STAGE --date D --set stage.key=value
   project   Run a project collector: cartographer | brief [--days N] [--accept]
@@ -76,6 +77,32 @@ async function runDaily(argv: string[]) {
   const { meta, costUsd } = await run(ctx, daily, { from: values.from, to: values.to });
   console.log(`${ctx.runs.length} agent runs, $${costUsd.toFixed(2)}`);
   if ((meta.check as { errors: string[] } | undefined)?.errors.length) process.exitCode = 1;
+}
+
+// cutaway "TOPIC": the Cutaway alone, on the latest issue or --date, touring that topic; then that issue renders again.
+async function runCutaway(argv: string[]) {
+  const { values, positionals } = parseArgs({
+    args: argv,
+    allowPositionals: true,
+    options: { root: { type: "string", default: await defaultRoot() }, date: { type: "string" }, force: { type: "boolean", default: false }, set: { type: "string", multiple: true, default: [] } },
+  });
+  const topic = positionals.join(" ").trim();
+  const has = (date: string, file: string) => Bun.file(join(values.root, "issues", date, file)).exists();
+  const date = values.date ?? (await issueDates(values.root)).at(-1);
+  if (!date) throw new Error("no issue to add a Cutaway to; make one with `daily-token run`");
+  if (!(await has(date, "reels.json"))) throw new Error(`issue ${date} has no digest and reels yet; make it with \`daily-token run --date ${date}\``);
+  if ((await has(date, "motion.json")) && !values.force) throw new Error(`issue ${date} has a Cutaway already; --force replaces it`);
+  const set = settings(values.set);
+  set.motion = { ...set.motion, enabled: true, ...(topic ? { topic } : {}) };
+  const ctx = await createCtx({ root: values.root, date, cutoff: process.env.CUTOFF ?? "00:00", tz: process.env.DIGEST_TZ ?? "UTC", model: claudeCli, set });
+  console.log(`[cutaway] issue ${date}${topic ? `: ${topic}` : ""}`);
+  const { meta, costUsd } = await run(ctx, daily, { from: "motion" });
+  console.log(`${ctx.runs.length} agent runs, $${costUsd.toFixed(2)}`);
+  if ((meta.check as { errors: string[] } | undefined)?.errors.length) process.exitCode = 1;
+  else if (await has(date, "motion.json")) {
+    await script("render", ["--root", values.root, "--dates", date]);
+    console.log("watch it: daily-token preview, then the issue's Cutaway tab");
+  }
 }
 
 async function runReplay(argv: string[]) {
@@ -163,6 +190,9 @@ if (import.meta.main) {
   switch (command) {
     case "run":
       await runDaily(argv[0] === "daily" ? argv.slice(1) : argv);
+      break;
+    case "cutaway":
+      await runCutaway(argv);
       break;
     case "replay":
       await runReplay(argv);
