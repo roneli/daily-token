@@ -13,7 +13,7 @@ const PER_FILE = 6_000;
 const TOTAL = 48_000;
 
 const COMMON = new Set(["about", "after", "also", "does", "each", "every", "from", "gets", "have", "into", "its", "makes", "more", "only", "over", "that", "their", "them", "then", "there", "they", "this", "through", "what", "when", "where", "which", "while", "with", "without", "your"]);
-// Words of four letters or more, a plural's s dropped, so "credentials" meets "credential".
+// Words of four letters or more, a plural's s dropped, so "readings" meets "reading".
 export const words = (s: string) => new Set((s.toLowerCase().match(/[a-z][a-z0-9]{3,}/g) ?? []).filter((w) => !COMMON.has(w)).map((w) => w.replace(/s$/, "")));
 
 // The parts to read: those the topic's words name, most first; without a topic, or none named, those today's
