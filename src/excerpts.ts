@@ -37,14 +37,18 @@ export function partsFor(system: System, topic: string | undefined, touched: str
 const TEXT = /\.(md|mdx|ts|tsx|js|mjs|go|rs|py|rb|java|kt|swift|cs|c|h|cc|cpp|proto|sql|ya?ml|toml)$/i;
 const SKIP = /(^|\/)(node_modules|vendor|dist|build|gen|generated|__snapshots__|testdata|fixtures|migrations)\/|[._-](test|spec)\.|\.d\.ts$|\.min\./i;
 
-// A part's files, most telling first: its docs, then files whose path names the topic, then the shallowest.
+// A part's files, most telling first: those whose path names the topic, a rare word of it counting more than a
+// common one (a word in every other path tells little), then the part's docs, then the rest, shallowest first.
 export function filesFor(paths: string[], globs: string[], topic?: string): string[] {
   const matchers = globs.map((g) => new Bun.Glob(g));
   const want = topic ? words(topic) : new Set<string>();
-  const rank = (p: string) => (/\.mdx?$/i.test(p) ? 0 : 2) - ([...words(p.replace(/[/_.:-]/g, " "))].some((w) => want.has(w)) ? 1 : 0);
-  return paths
-    .filter((p) => TEXT.test(p) && !SKIP.test(p) && matchers.some((m) => m.match(p)))
-    .sort((a, b) => rank(a) - rank(b) || a.split("/").length - b.split("/").length || a.length - b.length);
+  const mine = paths.filter((p) => TEXT.test(p) && !SKIP.test(p) && matchers.some((m) => m.match(p)));
+  const named = new Map(mine.map((p) => [p, [...words(p.replace(/[/_.:$-]/g, " "))].filter((w) => want.has(w))]));
+  const seen = new Map<string, number>();
+  for (const ws of named.values()) for (const w of ws) seen.set(w, (seen.get(w) ?? 0) + 1);
+  const score = (p: string) => (named.get(p) ?? []).reduce((n, w) => n + Math.log(1 + mine.length / (seen.get(w) ?? 1)), 0);
+  const doc = (p: string) => (/\.mdx?$/i.test(p) ? 0 : 1);
+  return mine.sort((a, b) => score(b) - score(a) || doc(a) - doc(b) || a.split("/").length - b.split("/").length || a.length - b.length);
 }
 
 const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n)}\n… (cut)` : s);
