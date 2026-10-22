@@ -20,7 +20,8 @@ const DEFAULT_SPEED = 1.08;
 export type Voice = { voiceover: boolean; voice: string; speed: number };
 // Each line's samples (mono float32 at `rate`) and length; a line not spoken has none.
 export type Speech = { rate: number; seconds: number[]; samples: Float32Array[] };
-export type Speaker = (lines: string[], voice: string, speed: number) => Promise<Speech>;
+// `paces` scale the speed line by line; none means every line at `speed`.
+export type Speaker = (lines: string[], voice: string, speed: number, paces?: number[]) => Promise<Speech>;
 
 export const voiceOf = (c?: { voice?: string; voiceover?: boolean; speed?: number }): Voice => ({ voiceover: c?.voiceover ?? true, voice: c?.voice ?? DEFAULT_VOICE, speed: c?.speed ?? DEFAULT_SPEED });
 
@@ -31,18 +32,22 @@ export const cacheDir = () => process.env.DAILY_TOKEN_CACHE || join(homedir(), "
 // An installed package's name and version.
 export const versionOf = async (name: string) => `${name}@${(await readJson<{ version: string }>(Bun.resolveSync(`${name}/package.json`, ENGINE))).version}`;
 
-// What else changes how a line sounds: the package and the model.
-export const voiceVersion = async () => `${await versionOf("kokoro-js")} ${MODEL} ${DTYPE}`;
+// How speak.mjs says a word the voice blurs: it reads "a" after a vowel sound in full ("how a" said "how ay").
+const PRONOUNCE = "strong a after a vowel";
 
-export const kokoro: Speaker = async (lines, voice, speed) => {
+// What else changes how a line sounds: the package, the model and the pronunciation rules.
+export const voiceVersion = async () => `${await versionOf("kokoro-js")} ${MODEL} ${DTYPE} ${PRONOUNCE}`;
+
+export const kokoro: Speaker = async (lines, voice, base, paces) => {
   const dir = join(cacheDir(), "speech");
   await mkdir(dir, { recursive: true });
   const version = await voiceVersion();
-  const files = lines.map((text) => join(dir, `${createHash("sha256").update(`${version}\n${voice}\n${speed}\n${text}`).digest("hex").slice(0, 16)}.f32`));
-  const missing: { text: string; out: string }[] = [];
-  for (const [i, out] of files.entries()) if (!(await Bun.file(out).exists())) missing.push({ text: lines[i], out });
+  const speeds = lines.map((_, i) => base * (paces?.[i] ?? 1));
+  const files = lines.map((text, i) => join(dir, `${createHash("sha256").update(`${version}\n${voice}\n${speeds[i]}\n${text}`).digest("hex").slice(0, 16)}.f32`));
+  const missing: { text: string; out: string; speed: number }[] = [];
+  for (const [i, out] of files.entries()) if (!(await Bun.file(out).exists())) missing.push({ text: lines[i], out, speed: speeds[i] });
   if (missing.length) {
-    const job = { kokoro: Bun.resolveSync("kokoro-js", ENGINE), cache: join(cacheDir(), "models"), model: MODEL, dtype: DTYPE, rate: RATE, voice, speed, lines: missing };
+    const job = { kokoro: Bun.resolveSync("kokoro-js", ENGINE), cache: join(cacheDir(), "models"), model: MODEL, dtype: DTYPE, rate: RATE, voice, lines: missing };
     // Through files, not pipes: Bun has been seen to miss a child's exit (see spawnIn).
     const { code, err } = await spawnText([process.env.NODE || "node", join(ENGINE, "src", "speak.mjs")], JSON.stringify(job), { ms: 15 * 60_000 });
     if (code === 127) throw new Error("the voiceover needs Node 20 or later on the PATH (Kokoro doesn't run under Bun); install it, or set pipeline.motion.voiceover to false");

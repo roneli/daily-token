@@ -98,6 +98,9 @@ export const spoken = (s: Stop) => {
 const titled = (title: string) => (/[.?!]$/.test(title) ? title : `${title}.`);
 export const groupsOf = (sb: Storyboard) => [[titled(sb.title), sb.opening], ...sb.stops.map((s) => [s.say, ...spoken(s)]), [sb.closing]];
 export const linesOf = (sb: Storyboard) => groupsOf(sb).flat();
+// Each line's pace against the voice's speed: the title is read a little slower, like a heading.
+const TITLE_PACE = 0.85;
+export const pacesOf = (sb: Storyboard) => linesOf(sb).map((_, i) => (i === 0 ? TITLE_PACE : 1));
 export const refsOf = (sb: Storyboard) => [...new Set(sb.stops.flatMap((s) => s.today ?? []))];
 
 // A sentence's spoken length, estimated from its words: Kokoro's af_heart with the silence around a clip trimmed,
@@ -194,12 +197,15 @@ export const lookOf = (project: string, date: string): Look => ({ label: MOTION_
 export type MotionProps = { storyboard: Storyboard; system: System; look: Look; voice: Voice };
 
 // The lines' lengths estimated from their words, with nothing to hear: review rounds, and a silent motion.
-export const estimated = (sb: Storyboard, speed = 1): Speech => ({ rate: 24000, seconds: linesOf(sb).map((l) => estimate(l, speed)), samples: [] });
+export const estimated = (sb: Storyboard, speed = 1): Speech => {
+  const paces = pacesOf(sb);
+  return { rate: 24000, seconds: linesOf(sb).map((l, i) => estimate(l, speed * paces[i])), samples: [] };
+};
 
 // The spoken lines, or their estimated lengths when the voiceover is off.
 export async function speechOf(props: MotionProps, speak: Speaker): Promise<Speech> {
   if (!props.voice.voiceover) return estimated(props.storyboard, props.voice.speed);
-  return speak(linesOf(props.storyboard), props.voice.voice, props.voice.speed);
+  return speak(linesOf(props.storyboard), props.voice.voice, props.voice.speed, pacesOf(props.storyboard));
 }
 
 // The moment for the poster and the last picture: the whole path traced, the closing line said, the end card up.
