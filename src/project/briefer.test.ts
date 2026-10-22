@@ -15,11 +15,11 @@ mock.module("../sources/github/collect", () => ({
   rest: async (path: string) =>
     path.includes("/git/trees/") ? { tree: [{ path: "src/engine/burn.ts", type: "blob" }, { path: "README.md", type: "blob" }] } : { content: Buffer.from(README).toString("base64"), encoding: "base64" },
 }));
-const { briefer, docPaths, ungrounded } = await import("./briefer");
+const { briefer, docPaths, ungrounded, unsourced } = await import("./briefer");
 
 test("docs are picked by name and ranked: a glossary, the root README, then deeper docs", () => {
-  const paths = ["src/a.ts", "README.md", "docs/GLOSSARY.md", "apps/web/README.md", "docs/architecture.md", "node_modules/x/README.md", "a/b/c/README.md", "CLAUDE.md", ".github/README.md"];
-  expect(docPaths(paths)).toEqual(["docs/GLOSSARY.md", "README.md", "CLAUDE.md", "docs/architecture.md", "apps/web/README.md"]);
+  const paths = ["src/a.ts", "README.md", "docs/GLOSSARY.md", "apps/web/README.md", "docs/architecture.md", "docs/ignition.md", "node_modules/x/README.md", "a/b/c/README.md", "CLAUDE.md", ".github/README.md"];
+  expect(docPaths(paths)).toEqual(["docs/GLOSSARY.md", "README.md", "CLAUDE.md", "docs/architecture.md", "docs/ignition.md", "apps/web/README.md"]);
 });
 
 test("a name or term must appear in what was read, once", () => {
@@ -27,6 +27,23 @@ test("a name or term must appear in what was read, once", () => {
   expect(ungrounded(brief, "Rocket and its countdown")).toEqual([
     '"rkt" appears in none of the docs or recent PRs; drop it or use the word they use',
     '"Countdown" is listed twice; keep one entry',
+  ]);
+});
+
+test("a flow comes from a doc that was read, crosses the map's parts, and names only the docs' identifiers", () => {
+  const brief = {
+    about: "x".repeat(20),
+    names: [],
+    terms: [],
+    flows: [
+      { name: "Ignition", parts: ["engine"], steps: ["The countdown hits zero.", "The engine calls `ignite()` and retries once."], from: "acme/rocket:docs/ignition.md" },
+      { name: "Made up", parts: ["warp"], steps: ["It calls `warp()`.", "It jumps."], from: "a blog" },
+    ],
+  };
+  expect(unsourced(brief, [{ from: "acme/rocket:docs/ignition.md" }], ["engine", "pad"], "the engine runs ignite() at zero")).toEqual([
+    'flow "Made up" cites a blog, which isn\'t one of the docs; cite the doc it comes from, as given',
+    'flow "Made up" crosses "warp", which isn\'t a part of the system map; use its part ids',
+    'flow "Made up" names `warp()`, which is in none of the docs; use the docs\' own words',
   ]);
 });
 

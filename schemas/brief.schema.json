@@ -35,6 +35,22 @@
         }
       }
     },
+    "flows": {
+      "type": "array",
+      "maxItems": 8,
+      "description": "How the project works, step by step, as its docs describe it: what happens to a request, a release, a record. The Explainer tours them; every agent may use them.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "steps", "from"],
+        "properties": {
+          "name": { "type": "string", "maxLength": 60, "description": "What flows, in plain words: \"A sensor reading's way to the dashboard\"." },
+          "parts": { "type": "array", "items": { "type": "string" }, "description": "The system map's part ids it crosses, in order." },
+          "steps": { "type": "array", "minItems": 2, "maxItems": 10, "items": { "type": "string", "maxLength": 160 }, "description": "One plain sentence a step: who does what, and what happens when it fails, where the docs say." },
+          "from": { "type": "string", "description": "The doc it is drawn from, as given in `docs`." }
+        }
+      }
+    },
     "from": { "type": "array", "items": { "type": "string" }, "description": "The docs it was drawn from." }
   }
 }

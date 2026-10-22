@@ -7,6 +7,7 @@ export type Brief = {
   about: string;
   names: { name: string; is: string; aka?: string[] }[];
   terms: { term: string; plain: string }[];
+  flows?: { name: string; parts?: string[]; steps: string[]; from: string }[];
   from?: string[];
 };
 
