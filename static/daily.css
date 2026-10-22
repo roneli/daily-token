@@ -169,6 +169,19 @@ button svg { width: 12px; height: 12px; fill: currentColor; }
 
 @media (max-width: 700px) { html:has(.app:not(.on-page)) { overscroll-behavior-y: none; } }
 .viz { touch-action: manipulation; user-select: none; }
+@media (max-width: 700px) { .reel .stage { touch-action: manipulation; user-select: none; -webkit-user-select: none; } }
+
+/* Phones: where to tap, once, and a chevron at the edge tapped. */
+.tap-hint { position: absolute; inset: 56px 0 72px; display: grid; grid-template-columns: 1fr 2fr; pointer-events: none; z-index: 3; animation: tap-in 300ms ease-out; transition: opacity 400ms; }
+.tap-hint span { display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--surface) 70%, transparent); }
+.tap-hint b { padding: 8px 14px; border: 1px solid var(--rule); border-radius: 999px; background: var(--surface); font: 600 15px var(--f-body); color: var(--ink); box-shadow: 0 2px 10px rgb(0 0 0 / 0.08); }
+.tap-hint .back { border-right: 1px dashed var(--rule); }
+.tap-hint.gone { opacity: 0; }
+.tap-flash { position: absolute; top: 40%; z-index: 3; pointer-events: none; font: 700 40px/1 var(--f-body); color: var(--ink); opacity: 0; animation: tap-flash 450ms ease-out; }
+.tap-flash.back { left: 10px; }
+.tap-flash.next { right: 10px; }
+@keyframes tap-in { from { opacity: 0; } }
+@keyframes tap-flash { 30% { opacity: .55; } to { opacity: 0; } }
 
 /* Phones: a vertical reel that fills the screen, picture on top, words below. */
 @media (max-width: 700px) {

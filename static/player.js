@@ -351,19 +351,48 @@
     sheet.addEventListener("touchcancel", settle);
   }
 
-  // Tap the left third to go back, elsewhere to go on; hold to pause.
-  for (const viz of document.querySelectorAll(".viz")) {
+  // Tap the left third to go back, elsewhere to go on; hold to pause. On a phone the whole card does it, picture
+  // and words, as a story does; on a wide screen the picture, the rest of the card having its own clicks.
+  const tappable = (e) => !e.target.closest("a, button, summary, details, .prs") && (phone.matches || e.target.closest(".viz"));
+  // A chevron at the edge tapped, so a step back is seen.
+  const flash = (th, back) => {
+    if (reduced) return;
+    const c = document.createElement("span");
+    c.className = `tap-flash ${back ? "back" : "next"}`;
+    c.textContent = back ? "‹" : "›";
+    th.append(c);
+    setTimeout(() => c.remove(), 450);
+  };
+  for (const stage of document.querySelectorAll(".reel .stage")) {
     let hold = null, held = false, wasPlaying = false;
     // A hold the sheet interrupts leaves the play state to the sheet.
-    viz.addEventListener("pointerdown", () => { held = false; wasPlaying = playing; hold = setTimeout(() => { if (sheetOpen()) return; held = true; setPlaying(false); }, 250); });
-    viz.addEventListener("pointercancel", () => { clearTimeout(hold); if (held && wasPlaying && !sheetOpen() && !swipe?.on) setPlaying(true); held = false; });
-    viz.addEventListener("pointerup", (e) => {
+    stage.addEventListener("pointerdown", (e) => { if (!tappable(e)) return; held = false; wasPlaying = playing; hold = setTimeout(() => { if (sheetOpen()) return; held = true; setPlaying(false); }, 250); });
+    stage.addEventListener("pointercancel", () => { clearTimeout(hold); if (held && wasPlaying && !sheetOpen() && !swipe?.on) setPlaying(true); held = false; });
+    stage.addEventListener("pointerup", (e) => {
       clearTimeout(hold);
-      if (swipe?.on || sheetOpen() || viz.closest(".thread") !== threads[tNow()]) return;
+      const th = stage.closest(".thread");
+      if (!tappable(e) || swipe?.on || sheetOpen() || th !== threads[tNow()]) return;
       if (held) { if (wasPlaying) setPlaying(true); return; }
-      const r = viz.getBoundingClientRect();
-      go(e.clientX - r.left < r.width / 3 ? cur - 1 : cur + 1);
+      const r = stage.getBoundingClientRect();
+      const back = e.clientX - r.left < r.width / 3;
+      if (phone.matches) flash(th, back);
+      go(back ? cur - 1 : cur + 1);
     });
+  }
+
+  // The first reel on a phone shows once where to tap, until the first tap or a few seconds.
+  const hintKey = "daily-token:tap-hint";
+  let hinted = true;
+  try { hinted = localStorage.getItem(hintKey) === "1"; } catch {}
+  if (phone.matches && !hinted && threads.length) {
+    const hint = document.createElement("div");
+    hint.className = "tap-hint";
+    hint.setAttribute("aria-hidden", "true");
+    hint.innerHTML = '<span class="back"><b>‹ Back</b></span><span class="next"><b>Next ›</b></span>';
+    threads[tNow()].append(hint);
+    const done = () => { hint.classList.add("gone"); setTimeout(() => hint.remove(), 400); try { localStorage.setItem(hintKey, "1"); } catch {} };
+    setTimeout(done, 2600);
+    book.addEventListener("pointerdown", done, { once: true });
   }
 
   // Tabs
