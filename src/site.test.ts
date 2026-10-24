@@ -92,6 +92,8 @@ test("a project's own host serves that project alone", async () => {
   expect((await at("rocket.digest.test", "/")).headers.get("location")).toBe("https://rocket.digest.test/rocket/");
   expect(await (await at("rocket.digest.test", "/rocket/2026-01-15/")).text()).toBe("<h1>Lift-off</h1>");
   expect((await at("rocket.digest.test", "/open/")).status).toBe(404);
+  expect((await at("rocket.digest.test.", "/open/")).status).toBe(404);
+  expect((await at("ROCKET.digest.test", "/open/")).status).toBe(404);
   expect((await at("nope.digest.test", "/")).status).toBe(404);
   // Any other host is for every project.
   expect(await (await at("digest.test", "/")).text()).toContain("Open");

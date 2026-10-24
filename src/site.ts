@@ -82,10 +82,11 @@ const archive = (project: Listed, entries: Entry[]) =>
 
 export type Options = { door?: Door; domain?: string };
 
-// The project a host is for, as <id>.<domain>; any other host is for every project.
+// The project a host is for, as <id>.<domain>; any other host is for every project. A name may end in a dot.
 export function hostProject(hostname: string, domain?: string): string | undefined {
-  if (!domain || !hostname.endsWith(`.${domain}`)) return undefined;
-  return hostname.slice(0, -domain.length - 1);
+  const host = hostname.toLowerCase().replace(/\.+$/, "");
+  if (!domain || !host.endsWith(`.${domain}`)) return undefined;
+  return host.slice(0, -domain.length - 1);
 }
 
 export async function site(req: Request, store: Store, { door, domain }: Options = {}): Promise<Response> {
