@@ -441,6 +441,16 @@
   app.classList.toggle("paused", !playing);
   app.classList.toggle("reduced", reduced);
 
+  // Phones: a downward drag at the top of the reels would reload the issue (pull-to-refresh), and the reels never
+  // scroll, so it is cancelled there. Sideways drags, swiping up and the other tabs keep theirs.
+  let pull = null;
+  document.addEventListener("touchstart", (e) => { pull = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null; }, { passive: true });
+  document.addEventListener("touchmove", (e) => {
+    if (!pull || !phone.matches || app.classList.contains("on-page") || sheetOpen() || !e.cancelable) return;
+    const dx = e.touches[0].clientX - pull.x, dy = e.touches[0].clientY - pull.y;
+    if (dy > 0 && dy > Math.abs(dx) && document.scrollingElement.scrollTop <= 0) e.preventDefault();
+  }, { passive: false });
+
   // The first reel on a phone shows once where to tap, until the first tap or a few seconds.
   const hintKey = "daily-token:tap-hint";
   let hinted = true;

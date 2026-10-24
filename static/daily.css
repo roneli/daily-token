@@ -167,7 +167,8 @@ button svg { width: 12px; height: 12px; fill: currentColor; }
 .scene .tok { stroke: var(--surface); stroke-width: 2; }
 @media (prefers-reduced-motion: reduce) { .scene .box rect { transition: none; } }
 
-@media (max-width: 700px) { html:has(.app:not(.on-page)) { overscroll-behavior-y: none; } }
+/* Phones: no pull-to-refresh over the reels; some browsers read it from html, some from body. */
+@media (max-width: 700px) { html:has(.app:not(.on-page)), html:has(.app:not(.on-page)) body { overscroll-behavior-y: none; } }
 .viz { touch-action: manipulation; user-select: none; }
 @media (max-width: 700px) { .reel .stage { touch-action: manipulation; user-select: none; -webkit-user-select: none; } }
 
