@@ -18,7 +18,7 @@ test("init writes a data root from the answers, and doctor accepts it", async ()
   expect(daily).toContain("bunx daily-token publish");
   expect(daily).not.toContain("# publish:");
   expect(await Bun.file(join(dir, "project.json")).json()).toEqual({ id: "rocket", name: "Rocket", sources: { github: { repos: ["acme/rocket", "acme/ground"] } }, days: ["mon", "tue", "wed", "thu", "fri"], weekly: "fri" });
-  expect(await Bun.file(join(dir, ".env")).text()).toBe("DIGEST_TZ=Europe/Berlin\nCUTOFF=18:30\nAGENT_MODEL=sonnet\n");
+  expect(await Bun.file(join(dir, ".env")).text()).toBe("DIGEST_TZ=Europe/Berlin\nCUTOFF=18:30\nAGENT_MODEL=sonnet\nS3_ENDPOINT=\nS3_BUCKET=daily-token\nS3_ACCESS_KEY_ID=\nS3_SECRET_ACCESS_KEY=\nSITE_URL=\n");
   expect((await Bun.file(join(dir, "package.json")).json()).dependencies["daily-token"]).toBe((await Bun.file(join(ENGINE, "package.json")).json()).version);
   expect(await readdir(join(dir, "issues"))).toEqual([]);
   expect(nextSteps(plan)).toContain("secret   S3_SECRET_ACCESS_KEY");

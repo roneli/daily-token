@@ -4,7 +4,7 @@ import { extname, join } from "node:path";
 import { Liquid } from "liquidjs";
 import type { Browser, Page } from "playwright-core";
 import { ENGINE, githubOf, type Issue } from "./issue";
-import { browser } from "./look";
+import { browser } from "./browser";
 import { fontFaces, MOTION_TAB } from "./motion";
 import { TABS } from "./render";
 import { signInPath } from "./signin";

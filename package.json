@@ -15,6 +15,7 @@
     "src/**/*.ts",
     "src/**/*.mjs",
     "!**/*.test.ts",
+    "deploy/cloudflare/src/index.ts",
     "agents",
     "schemas",
     "templates",

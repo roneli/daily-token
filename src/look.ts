@@ -1,7 +1,7 @@
 import { mkdir, mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { type Browser, chromium } from "playwright-core";
+import { browser } from "./browser";
 import { ENGINE, type Issue, issueArgs, loadIssue } from "./issue";
 import { renderIssue } from "./render";
 
@@ -10,18 +10,6 @@ import { renderIssue } from "./render";
 // so the pictures show every element; text that a cue swaps shows its last value.
 
 export type Finding = { reel: string; level: "error" | "warn"; detail: string };
-
-// Playwright's Chromium when installed, else Chrome (CI sets LOOK_BROWSER=chrome). LOOK_BROWSER picks one explicitly.
-export async function browser(): Promise<Browser> {
-  const want = process.env.LOOK_BROWSER;
-  if (want === "chrome") return chromium.launch({ channel: "chrome" });
-  if (want === "chromium") return chromium.launch();
-  try {
-    return await chromium.launch();
-  } catch {
-    return chromium.launch({ channel: "chrome" });
-  }
-}
 
 // Runs in the page: the reel's own SVG moves into a bare host. Moving it, not copying it, keeps its marker ids
 // unique and its arrowheads drawn. Its cues and animations are settled, so text, bars, states and the token show

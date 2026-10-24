@@ -220,7 +220,7 @@ function trackRules(tracks: AnyTrack[]) {
 test("a frame depends only on its time: the token settles at a flow's last step and stays still, whatever was drawn before", async () => {
   const { tour } = await import("../../templates/motion/tour.layout");
   const { page } = await import("../motion");
-  const { browser } = await import("../look");
+  const { browser } = await import("../browser");
   const issue = await loadIssue(join(ENGINE, "fixtures", "sample"), DATE);
   const sb = issue.motion as Storyboard;
   const tl = timeline(sb, estimated(sb).seconds);
@@ -372,7 +372,7 @@ test("every move lays out with ordered, single tracks, words a phone can read, a
 
 test("every move comes to rest: its card's last frames are the same picture", async () => {
   const { laidOut, page } = await import("../motion");
-  const { browser } = await import("../look");
+  const { browser } = await import("../browser");
   const issue = await loadIssue(join(ENGINE, "fixtures", "sample"), DATE);
   const tl = timeline(MOVES_TOUR, estimated(MOVES_TOUR).seconds);
   const props = { storyboard: MOVES_TOUR, system: issue.system, look: lookOf("Rocket", DATE), voice: { voiceover: false, voice: "af_heart", speed: 1 } };

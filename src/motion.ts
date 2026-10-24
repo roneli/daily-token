@@ -284,7 +284,7 @@ type Shooter = { pages: Page[]; close: () => Promise<void> };
 
 // n tabs of one headless Chrome on the page, each at `scale`, every face loaded.
 async function shooter(html: string, scale: number, n: number): Promise<Shooter> {
-  const browser = await (await import("./look")).browser();
+  const browser = await (await import("./browser")).browser();
   const dir = await mkdtemp(join(tmpdir(), "daily-motion-page-"));
   const close = async () => {
     await browser.close();

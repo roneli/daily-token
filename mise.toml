@@ -56,23 +56,8 @@ dir = "deploy/cloudflare"
 run = "bunx wrangler dev"
 
 [tasks."worker:deploy"]
-description = "Deploy the Worker on WORKER_DOMAIN (one or more, comma-separated), readers signed in with the GitHub App GITHUB_CLIENT_ID (from .env)"
-dir = "deploy/cloudflare"
-run = """
-: "${WORKER_DOMAIN:?set WORKER_DOMAIN in .env}" "${GITHUB_CLIENT_ID:?set GITHUB_CLIENT_ID in .env}"
-set --
-for d in $(echo "$WORKER_DOMAIN" | tr ',' ' '); do set -- "$@" --domain "$d"; done
-bunx wrangler deploy "$@" --var "GITHUB_CLIENT_ID:$GITHUB_CLIENT_ID" --var "SITE_DOMAIN:${SITE_DOMAIN:-}"
-"""
-
-[tasks."worker:secrets"]
-description = "Store the GitHub App's client secret and the session key in the Worker (GITHUB_CLIENT_SECRET, SESSION_SECRET from .env)"
-dir = "deploy/cloudflare"
-run = """
-: "${GITHUB_CLIENT_SECRET:?set GITHUB_CLIENT_SECRET in .env}" "${SESSION_SECRET:?set SESSION_SECRET in .env: openssl rand -hex 32}"
-printf %s "$GITHUB_CLIENT_SECRET" | bunx wrangler secret put GITHUB_CLIENT_SECRET
-printf %s "$SESSION_SECRET" | bunx wrangler secret put SESSION_SECRET
-"""
+description = "Put the site on Cloudflare from .env (daily-token deploy)"
+run = "bun src/cli.ts deploy"
 
 [tasks.publish]
 description = "Make the issues bucket match the data root and out/; --announce DATE posts it to Slack (--dry-run to print only)"

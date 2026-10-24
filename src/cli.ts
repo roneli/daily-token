@@ -30,6 +30,7 @@ const HELP = `daily-token <command> [options]
   preview   Render every issue and serve out/ on :5173
   serve     Serve the site from the issues bucket (--port 8787, --host 127.0.0.1)
   github-app  Make the GitHub App readers sign in with, and put its keys in .env (--site URL, --org NAME)
+  deploy    Put the site on Cloudflare from .env: the bucket, the Worker on its domain, the sign-in (--dry-run)
 
   --root DIR  the data root; default: the current folder if it has project.json, else DATA_DIR`;
 
@@ -230,6 +231,7 @@ async function main(command: string, argv: string[]) {
     case "preview":
     case "serve":
     case "github-app":
+    case "deploy":
       await script(command, argv);
       break;
     default:

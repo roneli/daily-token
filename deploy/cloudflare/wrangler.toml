@@ -4,9 +4,8 @@ compatibility_date = "2026-10-01"
 workers_dev = false
 preview_urls = false
 
-# The domains and the GitHub App are a deployment's, not the engine's: `mise run worker:deploy` passes WORKER_DOMAIN,
-# SITE_DOMAIN and GITHUB_CLIENT_ID from .env, and `mise run worker:secrets` stores GITHUB_CLIENT_SECRET and
-# SESSION_SECRET. Without them no one signs in, and only public projects and previews show.
+# For `wrangler dev` only. `daily-token deploy` deploys this Worker with a config it writes from .env: the bucket,
+# the domains and the GitHub App. Without the sign-in settings no one signs in, and only public projects and previews show.
 [vars]
 GITHUB_CLIENT_ID = ""
 SITE_DOMAIN = ""

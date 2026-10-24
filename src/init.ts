@@ -74,7 +74,9 @@ export async function ask(dir: string, p: Prompter): Promise<Plan> {
   if (all) delete project.days;
   if (weekly === "none") delete project.weekly;
   delete project.repos;
-  return { dir, project, env: { ...env, DIGEST_TZ: tz, CUTOFF: cutoff, AGENT_MODEL: model }, secrets, vars, publish };
+  // Everything to run it locally goes in one .env, to fill in: the bucket's keys and the site's address with it.
+  const publishing: Record<string, string> = publish === "s3" ? { S3_ENDPOINT: "", S3_BUCKET: "daily-token", S3_ACCESS_KEY_ID: "", S3_SECRET_ACCESS_KEY: "", SITE_URL: "" } : {};
+  return { dir, project, env: { ...env, DIGEST_TZ: tz, CUTOFF: cutoff, AGENT_MODEL: model, ...publishing }, secrets, vars, publish };
 }
 
 function validZone(tz: string) {
@@ -152,11 +154,19 @@ export function nextSteps(plan: Plan) {
     "",
     `Then: cd ${plan.dir}`,
     "  bunx daily-token doctor                      check the setup",
-    "  bunx daily-token project cartographer        draw the project's map, then --accept it",
-    "  bunx daily-token project brief               draft what the project is and its words, then --accept it",
+    "  bunx daily-token project cartographer        draw the project's map; look, then run it again with --accept",
+    "  bunx daily-token project brief               then, with the map in, draft what the project is; --accept it",
     "  bunx daily-token run --date <yesterday>      make a first issue locally",
     "  bunx daily-token preview                     read it on :5173",
   ];
+  if (plan.publish === "s3")
+    lines.push(
+      "",
+      "To put it online (Cloudflare, docs/deploy.md), fill in .env first: SITE_URL, and the bucket's S3_* keys",
+      "  bunx daily-token github-app                  make the GitHub App readers sign in with",
+      "  bunx daily-token deploy                      the bucket and the site on SITE_URL",
+      "  bunx daily-token render --all && bunx daily-token publish",
+    );
   if (reposOf(plan.project).length) lines.push("", `Sources: GitHub ${reposOf(plan.project).join(", ")}`);
   return lines.join("\n");
 }
