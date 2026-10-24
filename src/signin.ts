@@ -1,0 +1,147 @@
+import { GitHub, generateState } from "arctic";
+import { jwtVerify, SignJWT } from "jose";
+
+// Sign-in with GitHub. A reader gets into a project when their GitHub account can see one of its repos with at least
+// its role. GitHub is asked once, at sign-in, with a GitHub App's user token, which reaches only the repos the app is
+// installed on and asks for no scopes. The answer is kept in a signed cookie per project, for SESSION_HOURS.
+
+export type Role = "pull" | "triage" | "push" | "maintain" | "admin";
+// "public": no sign-in. Else the repos whose readers get in; publish fills it from the project's GitHub source.
+export type Access = "public" | { github: string[]; role?: Role };
+export type Listed = { id: string; name: string; access?: Access };
+
+export type SignInEnv = { GITHUB_CLIENT_ID?: string; GITHUB_CLIENT_SECRET?: string; SESSION_SECRET?: string };
+
+// What sign-in asks GitHub; tests stand in for it.
+export type Asker = {
+  token(code: string, redirect: string): Promise<string>;
+  login(token: string): Promise<string>;
+  // The user's permissions on the repo, or null when they can't see it.
+  permissions(token: string, repo: string): Promise<Partial<Record<Role, boolean>> | null>;
+};
+
+// What the site asks: may this request read the project, and the /auth/ routes.
+export type Door = {
+  reads(req: Request, project: Listed): Promise<boolean>;
+  auth(req: Request, projects: Listed[]): Promise<Response>;
+};
+
+export const SESSION_HOURS = 12;
+const STATE = "dt-state";
+const ISSUER = "daily-token";
+// Where sign-in may send a reader on to: a project, an issue or the archive, so it can't be sent off the site.
+const TO = /^\/([a-z0-9-]+)\/(\d{4}-\d{2}-\d{2}\/|archive)?$/;
+
+export const sessionCookie = (project: string) => `dt-${project}`;
+export const signInPath = (to: string) => `/auth/github?to=${encodeURIComponent(to)}`;
+
+function cookieOf(req: Request, name: string): string | undefined {
+  for (const c of req.headers.get("cookie")?.split(/;\s*/) ?? []) if (c.startsWith(`${name}=`)) return c.slice(name.length + 1);
+}
+
+function setCookie(req: Request, name: string, value: string, seconds: number, path = "/") {
+  const secure = new URL(req.url).protocol === "https:" ? "; Secure" : "";
+  return `${name}=${value}; Path=${path}; Max-Age=${seconds}; HttpOnly; SameSite=Lax${secure}`;
+}
+
+const page = (status: number, title: string, text: string, headers: HeadersInit = {}) =>
+  new Response(
+    `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title><style>:root{color-scheme:light dark}body{font:16px/1.5 system-ui,sans-serif;max-width:560px;margin:0 auto;padding:40px 16px}</style><h1>${title}</h1><p>${text}</p>`,
+    { status, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", ...headers } },
+  );
+
+const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
+
+export function github(env: SignInEnv): Asker {
+  const api = async (token: string, path: string) =>
+    fetch(`https://api.github.com${path}`, {
+      headers: { authorization: `Bearer ${token}`, accept: "application/vnd.github+json", "user-agent": "daily-token", "x-github-api-version": "2022-11-28" },
+    });
+  return {
+    async token(code, redirect) {
+      return (await new GitHub(env.GITHUB_CLIENT_ID ?? "", env.GITHUB_CLIENT_SECRET ?? "", redirect).validateAuthorizationCode(code)).accessToken();
+    },
+    async login(token) {
+      const res = await api(token, "/user");
+      if (!res.ok) throw new Error(`GitHub answered ${res.status} for the user`);
+      return ((await res.json()) as { login: string }).login;
+    },
+    async permissions(token, repo) {
+      const res = await api(token, `/repos/${repo}`);
+      if (res.status === 404 || res.status === 403) return null;
+      if (!res.ok) throw new Error(`GitHub answered ${res.status} for ${repo}`);
+      return ((await res.json()) as { permissions?: Partial<Record<Role, boolean>> }).permissions ?? null;
+    },
+  };
+}
+
+// The door for the site. Without all three settings no one signs in, so a project that isn't public stays shut.
+export function door(env: SignInEnv, ask: Asker = github(env)): Door {
+  const ready = Boolean(env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET && env.SESSION_SECRET && env.SESSION_SECRET.length >= 32);
+  const key = new TextEncoder().encode(env.SESSION_SECRET ?? "");
+
+  async function reads(req: Request, project: Listed) {
+    if (project.access === "public") return true;
+    const token = cookieOf(req, sessionCookie(project.id));
+    if (!ready || !token) return false;
+    try {
+      await jwtVerify(token, key, { issuer: ISSUER, audience: project.id, algorithms: ["HS256"] });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function auth(req: Request, projects: Listed[]) {
+    const url = new URL(req.url);
+    if (!ready) return page(503, "Sign-in isn't set up", "This site needs GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET and SESSION_SECRET.");
+    const redirect = `${url.origin}/auth/callback`;
+    const projectOf = (to: string) => {
+      const m = TO.exec(to);
+      const project = m && projects.find((p) => p.id === m[1]);
+      return project && project.access !== "public" ? project : undefined;
+    };
+
+    if (url.pathname === "/auth/github") {
+      const to = url.searchParams.get("to") ?? "";
+      if (!projectOf(to)) return page(400, "Nothing to sign in to", "This link doesn't lead to a digest.");
+      const state = generateState();
+      const location = new GitHub(env.GITHUB_CLIENT_ID ?? "", "", redirect).createAuthorizationURL(state, []).toString();
+      return new Response(null, { status: 302, headers: { location, "set-cookie": setCookie(req, STATE, `${state}~${to}`, 600, "/auth/"), "cache-control": "no-store" } });
+    }
+
+    if (url.pathname === "/auth/callback") {
+      const [state, to = ""] = cookieOf(req, STATE)?.split("~") ?? [];
+      const code = url.searchParams.get("code");
+      const project = projectOf(to);
+      if (!state || state !== url.searchParams.get("state") || !code || !project) return page(400, "Sign-in expired", "Open the link again to sign in.");
+      const done = setCookie(req, STATE, "", 0, "/auth/");
+      let login: string;
+      let allowed = false;
+      try {
+        const token = await ask.token(code, redirect);
+        login = await ask.login(token);
+        const access = project.access as Exclude<Access, "public"> | undefined;
+        for (const repo of access?.github ?? []) {
+          if ((await ask.permissions(token, repo))?.[access?.role ?? "pull"]) {
+            allowed = true;
+            break;
+          }
+        }
+      } catch {
+        return page(502, "GitHub didn't answer", "Try again in a moment.", { "set-cookie": done });
+      }
+      if (!allowed)
+        return page(403, "No access", `Your GitHub account ${escapeHtml(login)} can't see this digest's repos. Ask its owner for access, or sign in to GitHub with another account.`, { "set-cookie": done });
+      const session = await new SignJWT({}).setProtectedHeader({ alg: "HS256" }).setSubject(login).setIssuer(ISSUER).setAudience(project.id).setIssuedAt().setExpirationTime(`${SESSION_HOURS}h`).sign(key);
+      const headers = new Headers({ location: new URL(to, url.origin).toString(), "cache-control": "no-store" });
+      headers.append("set-cookie", done);
+      headers.append("set-cookie", setCookie(req, sessionCookie(project.id), session, SESSION_HOURS * 3600));
+      return new Response(null, { status: 302, headers });
+    }
+
+    return new Response("Not found", { status: 404 });
+  }
+
+  return { reads, auth };
+}

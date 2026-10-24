@@ -1,12 +1,13 @@
 import { expect, test } from "bun:test";
-import { isShare, rangeOf, type Store, site, span } from "./site";
+import type { Door } from "./signin";
+import { rangeOf, type Store, site, span } from "./site";
 
 const objects: Record<string, string> = {
   "projects.json": JSON.stringify([{ id: "rocket", name: "Rocket" }]),
   "rocket/index.json": JSON.stringify([{ date: "2026-01-15", edition: "daily", headline: "Lift-off" }]),
   "rocket/issues/2026-01-15/index.html": "<h1>Lift-off</h1>",
   "rocket/issues/2026-01-15/motion.0123456789.mp4": "0123456789",
-  "rocket/issues/2026-01-15/share.html": "<meta property=og:title>",
+  "rocket/issues/2026-01-15/preview.html": "<meta property=og:title>",
   "rocket/issues/2026-01-15/cover.0123456789.png": "png",
   "rocket/issues/2026-01-15/data.json": "{}",
 };
@@ -49,15 +50,38 @@ test("a range header is read as one span, or ignored", () => {
   expect(span({ suffix: 20 }, 10)).toEqual({ offset: 0, length: 10 });
 });
 
-test("a share link shows an issue's preview page and cover, and nothing else of it", async () => {
-  expect(await (await get("/share/rocket/2026-01-15/")).text()).toBe("<meta property=og:title>");
-  expect(await (await get("/share/rocket/2026-01-15/cover.0123456789.png")).text()).toBe("png");
-  for (const path of ["/share/rocket/2026-01-15/data.json", "/share/rocket/2026-01-15/index.html", "/share/rocket/"]) expect((await get(path)).status).toBe(404);
-  // A dotted path is the plain issue by the time it is read, so it is signed for like one.
-  expect(isShare(new URL("http://site/share/../rocket/2026-01-15/").pathname)).toBe(false);
-  // Only these skip the sign-in.
-  expect(isShare("/share/rocket/2026-01-15/")).toBe(true);
-  expect(isShare("/share/rocket/2026-01-15/cover.0123456789.png")).toBe(true);
-  expect(isShare("/share/rocket/2026-01-15/data.json")).toBe(false);
-  expect(isShare("/rocket/2026-01-15/")).toBe(false);
+// A door that lets anyone into a public project and a request carrying "reader" into any, and answers its own routes.
+const door: Door = {
+  reads: async (req, p) => p.access === "public" || req.headers.get("cookie") === "reader",
+  auth: async () => new Response("auth"),
+};
+const gated = (path: string, cookie?: string) => site(new Request(`http://site${path}`, { headers: cookie ? { cookie } : {} }), store, door);
+
+test("without a sign-in, an issue's address shows its preview and cover, and nothing else of it", async () => {
+  const preview = await gated("/rocket/2026-01-15/");
+  expect(await preview.text()).toBe("<meta property=og:title>");
+  expect(preview.headers.get("cache-control")).toBe("no-store");
+  expect(await (await gated("/rocket/2026-01-15/cover.0123456789.png")).text()).toBe("png");
+  for (const path of ["/rocket/2026-01-15/data.json", "/rocket/2026-01-15/index.html", "/rocket/2026-01-15/motion.0123456789.mp4", "/rocket/index.json"]) expect((await gated(path)).status).toBe(403);
+  expect((await gated("/rocket/archive")).headers.get("location")).toBe("http://site/auth/github?to=%2Frocket%2Farchive");
+  // An issue without a preview yet sends a reader to sign in.
+  objects["rocket/index.json"] = JSON.stringify([{ date: "2026-01-16", edition: "daily", headline: "Orbit" }]);
+  expect((await gated("/rocket/2026-01-16/")).headers.get("location")).toBe("http://site/auth/github?to=%2Frocket%2F2026-01-16%2F");
+});
+
+test("signed in, the issue is the page", async () => {
+  expect(await (await gated("/rocket/2026-01-15/", "reader")).text()).toBe("<h1>Lift-off</h1>");
+  expect(await (await gated("/rocket/2026-01-15/data.json", "reader")).text()).toBe("{}");
+  expect((await gated("/auth/callback")).status).toBe(200);
+  // Without a door the site has no sign-in routes.
+  expect((await get("/auth/callback")).status).toBe(404);
+});
+
+test("the project list shows only what the visitor may read", async () => {
+  objects["projects.json"] = JSON.stringify([{ id: "rocket", name: "Rocket" }, { id: "open", name: "Open", access: "public" }]);
+  const list = await (await gated("/")).text();
+  expect(list).toContain("Open");
+  expect(list).not.toContain("Rocket");
+  expect(await (await gated("/", "reader")).text()).toContain("Rocket");
+  objects["projects.json"] = JSON.stringify([{ id: "rocket", name: "Rocket" }]);
 });

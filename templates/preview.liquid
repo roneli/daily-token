@@ -9,6 +9,9 @@
 <meta property="og:site_name" content="The Daily Token">
 <meta property="og:title" content="{{ title }}">
 <meta property="og:description" content="{{ description }}">
+{%- if url %}
+<meta property="og:url" content="{{ url }}">
+{%- endif %}
 <meta property="og:image" content="{{ image }}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -16,10 +19,17 @@
 <meta name="twitter:title" content="{{ title }}">
 <meta name="twitter:description" content="{{ description }}">
 <meta name="twitter:image" content="{{ image }}">
-<meta http-equiv="refresh" content="0; url={{ issue }}">
-<style>body { font: 16px/1.5 system-ui, sans-serif; margin: 40px 16px; text-align: center; } a { color: #2b5bd7; }</style>
+<style>
+:root { color-scheme: light dark; }
+body { font: 16px/1.5 system-ui, sans-serif; max-width: 720px; margin: 0 auto; padding: 32px 16px; text-align: center; }
+img { width: 100%; height: auto; border-radius: 12px; border: 1px solid #8884; }
+a { display: inline-block; margin-top: 20px; padding: 12px 22px; border-radius: 10px; background: #1f2328; color: #fff; text-decoration: none; font-weight: 600; }
+p { opacity: .7; }
+</style>
 </head>
 <body>
-<p><a href="{{ issue }}">Open {{ title }}</a></p>
+<img src="{{ image }}" alt="{{ title }}">
+<a href="{{ signin }}">Sign in with GitHub to read</a>
+<p>Anyone who can see the project's repo on GitHub can read it.</p>
 </body>
 </html>

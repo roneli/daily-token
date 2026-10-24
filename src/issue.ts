@@ -2,6 +2,7 @@ import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { type ParseArgsConfig, parseArgs } from "node:util";
 import type { Storyboard } from "./motion";
+import type { Access } from "./signin";
 
 // A project is what one digest covers: one or more repos, the first being home.
 export type Project = {
@@ -11,6 +12,8 @@ export type Project = {
   company?: string;
   // The share cover: a logo in the data root, and whether the headline shows
   cover?: { logo?: string; headline?: boolean };
+  // Who may read on the site: "public", or the repos whose readers sign in; else the GitHub source's repos
+  access?: Access;
   // Each source's config, by source name: "github": { "repos": [...] }
   sources?: Record<string, unknown>;
   // Before sources: the GitHub repos, the first being home

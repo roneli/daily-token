@@ -7,11 +7,12 @@ import { ENGINE, githubOf, type Issue } from "./issue";
 import { browser } from "./look";
 import { fontFaces, MOTION_TAB } from "./motion";
 import { TABS } from "./render";
+import { signInPath } from "./signin";
 
-// The share cover: a still picture of an issue for link previews (1200×630), and share.html, the page a share link
-// opens, with the preview tags, that sends a reader on to the issue behind its sign-in. Anyone with the link sees
-// the cover, so by default it shows nothing of the work: the nameplate, the company and its logo, the issue's
-// number, day and edition, and counts. project.json's cover.headline adds the headline.
+// The share cover: a still picture of an issue for link previews (1200×630), and preview.html, what the issue's
+// address shows without a sign-in: the preview tags, the cover and a way to sign in. Anyone with the link sees the
+// cover, so by default it shows nothing of the work: the nameplate, the company and its logo, the issue's number,
+// day and edition, and counts. project.json's cover.headline adds the headline.
 
 const WIDTH = 1200;
 const HEIGHT = 630;
@@ -79,16 +80,17 @@ export async function coverFiles(issue: Issue, rings: string[], dir: string, sho
   for (const f of await readdir(dir)) if (/^cover\.[0-9a-f]{10}\.png$/.test(f) && f !== image) await rm(join(dir, f));
 
   const site = process.env.SITE_URL?.replace(/\/$/, "");
-  const share = `/share/${project.id}/${data.date}/`;
+  const issueAt = `/${project.id}/${data.date}/`;
   const title = `The Daily Token · ${company} · No. ${no}${weekly ? " · Weekly edition" : ""}`;
   await Bun.write(
-    join(dir, "share.html"),
-    await liquid.renderFile("share", {
+    join(dir, "preview.html"),
+    await liquid.renderFile("preview", {
       title,
       description: headline || `${day} · ${counts}`,
-      image: site ? `${site}${share}${image}` : image,
-      issue: `/${project.id}/${data.date}/`,
+      url: site ? `${site}${issueAt}` : null,
+      image: site ? `${site}${issueAt}${image}` : image,
+      signin: signInPath(issueAt),
     }),
   );
-  return { image, share };
+  return { image };
 }

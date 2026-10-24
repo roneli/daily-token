@@ -28,10 +28,12 @@
   "dependencies": {
     "@clack/prompts": "1.8.1",
     "ajv": "8.20.0",
+    "arctic": "3.7.0",
     "dom-serializer": "3.1.1",
     "domhandler": "6.0.1",
     "elkjs": "0.12.0",
     "htmlparser2": "12.0.0",
+    "jose": "6.2.12",
     "kokoro-js": "1.2.1",
     "liquidjs": "10.30.0",
     "playwright-core": "1.63.0"

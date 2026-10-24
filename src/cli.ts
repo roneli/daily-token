@@ -29,6 +29,7 @@ const HELP = `daily-token <command> [options]
   publish   Make the issues bucket match the data root and out/ (--announce DATE, --dry-run)
   preview   Render every issue and serve out/ on :5173
   serve     Serve the site from the issues bucket (--port 8787, --host 127.0.0.1)
+  github-app  Make the GitHub App readers sign in with, and put its keys in .env (--site URL, --org NAME)
 
   --root DIR  the data root; default: the current folder if it has project.json, else DATA_DIR`;
 
@@ -228,6 +229,7 @@ async function main(command: string, argv: string[]) {
     case "publish":
     case "preview":
     case "serve":
+    case "github-app":
       await script(command, argv);
       break;
     default:

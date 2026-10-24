@@ -49,7 +49,7 @@ Your digest is its own repo, the **data root**: `project.json`, a map of the sys
 |---|---|
 | Your machine | nothing: `preview` |
 | A GitHub Action | the workflow `init` writes: makes the issue every issue day and commits it to the data repo |
-| A bucket and a site | any S3-compatible bucket, then `daily-token serve` anywhere, or the optional Cloudflare Worker behind Access |
+| A bucket and a site | any S3-compatible bucket, then `daily-token serve` anywhere, or the optional Cloudflare Worker; readers sign in with GitHub |
 
 See [docs/deploy.md](docs/deploy.md).
 

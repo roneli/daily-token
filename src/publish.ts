@@ -1,7 +1,8 @@
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { bucket } from "./bucket";
-import { issueArgs, issueDates, loadIssue } from "./issue";
+import { issueArgs, issueDates, loadIssue, type Project } from "./issue";
+import type { Listed } from "./signin";
 import { indexOf, TABS } from "./render";
 
 // Publish makes the issues bucket match the data root: every issue's JSON and page, the editions list and the shared assets.
@@ -46,10 +47,12 @@ console.log(`${issues.length} issues, ${changed.length} ${dry ? "files to upload
 
 const readJson = async <T>(key: string, empty: T): Promise<T> => ((await s3.exists(key)) ? ((await s3.file(key).json()) as T) : empty);
 
-type Listed = { id: string; name: string };
+// Who may read: project.json's access, else whoever can see the project's GitHub repos.
+const accessOf = (p: Project): Listed["access"] => p.access ?? { github: ((p.sources?.github as { repos?: string[] } | undefined)?.repos ?? p.repos ?? []), role: "pull" };
+const entry: Listed = { id, name, access: accessOf(issues[0].project) };
 const projects = await readJson<Listed[]>("projects.json", []);
-if (!projects.some((p) => p.id === id && p.name === name)) {
-  const list = [...projects.filter((p) => p.id !== id), { id, name }].sort((a, b) => a.name.localeCompare(b.name));
+if (JSON.stringify(projects.find((p) => p.id === id)) !== JSON.stringify(entry)) {
+  const list = [...projects.filter((p) => p.id !== id), entry].sort((a, b) => a.name.localeCompare(b.name));
   console.log(`${dry ? "would update" : "update"} projects.json (${list.length} projects)`);
   if (!dry) await s3.write("projects.json", JSON.stringify(list, null, 1), { type: "application/json" });
 }
@@ -62,7 +65,7 @@ if (announce && webhook && site) {
   const issue = issues.find((i) => i.data.date === announce);
   if (!issue) throw new Error(`no issue ${announce} to announce`);
   const label = issue.data.edition === "weekly" ? "Weekly edition" : "The Daily Token";
-  const text = `🗞️ *${label} · ${issues[0].project.company ?? name} · ${announce}*\n${issue.stories.headline}\n<${site.replace(/\/$/, "")}/share/${id}/${announce}/|Watch the ${tabName("reels")} and read the ${tabName("digest")}>`;
+  const text = `🗞️ *${label} · ${issues[0].project.company ?? name} · ${announce}*\n${issue.stories.headline}\n<${site.replace(/\/$/, "")}/${id}/${announce}/|Watch the ${tabName("reels")} and read the ${tabName("digest")}>`;
   console.log(`${dry ? "would post" : "post"} to Slack`);
   if (!dry) {
     const res = await fetch(webhook, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text }) });

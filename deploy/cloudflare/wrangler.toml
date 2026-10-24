@@ -4,11 +4,11 @@ compatibility_date = "2026-10-01"
 workers_dev = false
 preview_urls = false
 
-# The domain and the Access values are a deployment's, not the engine's: `mise run worker:deploy` passes them
-# from .env (WORKER_DOMAIN, ACCESS_TEAM_DOMAIN, ACCESS_AUD). Empty values make the Worker refuse every request.
+# The domain and the GitHub App are a deployment's, not the engine's: `mise run worker:deploy` passes WORKER_DOMAIN
+# and GITHUB_CLIENT_ID from .env, and `mise run worker:secrets` stores GITHUB_CLIENT_SECRET and SESSION_SECRET.
+# Without them no one signs in, and only public projects and previews show.
 [vars]
-ACCESS_TEAM_DOMAIN = ""
-ACCESS_AUD = ""
+GITHUB_CLIENT_ID = ""
 
 [[r2_buckets]]
 binding = "ISSUES"

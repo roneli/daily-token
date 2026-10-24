@@ -1,13 +1,18 @@
 // The site: every project, each one's latest issue and archive, and the issues, read from the bucket publish writes.
-// Read-only. It runs as the Cloudflare Worker (deploy/cloudflare) or wherever Bun runs (`daily-token serve`); each hands it a Store.
+// Read-only. It runs as the Cloudflare Worker (deploy/cloudflare) or wherever Bun runs (`daily-token serve`); each hands it a Store,
+// and a Door unless the site is open. Without a sign-in, an issue's address answers with its preview and its cover, so a
+// link unfurls wherever it's shared; the rest of a project that isn't public stays shut.
 //
 // Bucket layout:
-//   projects.json                          [{ id, name }]
+//   projects.json                          [{ id, name, access }]
 //   <project>/index.json                   [{ date, edition, headline }], newest first
 //   <project>/issues/<date>/index.html     the rendered issue
+//   <project>/issues/<date>/preview.html   its preview, and cover.<hash>.png
 //   <project>/issues/<date>/*.json         its data, stories, reels, motion
 //   <project>/issues/<date>/motion.<hash>.* the Cutaway's video, poster and timing
 //   static/<name>.<hash>.<ext>             pinned assets, shared, never overwritten
+
+import { type Door, type Listed, signInPath } from "./signin";
 
 export type Range = { offset: number; length?: number } | { suffix: number };
 export type Stored = { body: BodyInit; size: number; type?: string; etag?: string };
@@ -15,15 +20,12 @@ export type Stored = { body: BodyInit; size: number; type?: string; etag?: strin
 export type Store = { get(key: string, range?: Range): Promise<Stored | null> };
 
 type Entry = { date: string; edition: string; headline: string };
-type Project = { id: string; name: string };
 
 const PROJECT = /^\/([a-z0-9-]+)(\/.*)?$/;
 const DATE = /^\/(\d{4}-\d{2}-\d{2})(\/.*)?$/;
 // The motion's video and poster are named by their content, so they never change under that name.
 const HASHED = /\/motion\.[0-9a-f]{10}\.(mp4|jpg|json)$/;
-// A share link: an issue's preview page and its cover, the only things the site shows without a sign-in.
-const SHARE = /^\/share\/([a-z0-9-]+)\/(\d{4}-\d{2}-\d{2})\/(cover\.[0-9a-f]{10}\.png)?$/;
-export const isShare = (pathname: string) => SHARE.test(pathname);
+const COVER = /^\/cover\.[0-9a-f]{10}\.png$/;
 
 const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
@@ -67,46 +69,57 @@ function page(title: string, intro: string, rows: string): Response {
   return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" } });
 }
 
-const projectList = (projects: Project[]) =>
+const projectList = (projects: Listed[]) =>
   page("The Daily Token", "Every project.", projects.map((p) => `<li><a href="/${p.id}/">${escapeHtml(p.name)}</a></li>`).join(""));
 
-const archive = (project: Project, entries: Entry[]) =>
+const archive = (project: Listed, entries: Entry[]) =>
   page(
     `The Daily Token · ${project.name}`,
     "Every issue, newest first.",
     entries.map((e) => `<li><a href="/${project.id}/${e.date}/"><span>${e.date}</span>${e.edition === "weekly" ? " <b>Weekly edition</b>" : ""}<br>${escapeHtml(e.headline)}</a></li>`).join(""),
   );
 
-export async function site(req: Request, store: Store): Promise<Response> {
+export async function site(req: Request, store: Store, door?: Door): Promise<Response> {
   if (req.method !== "GET" && req.method !== "HEAD") return new Response("Method not allowed", { status: 405 });
   const { pathname } = new URL(req.url);
   const to = (path: string, status = 302) => Response.redirect(new URL(path, req.url).toString(), status);
+  const shut = () => new Response("Forbidden", { status: 403 });
 
   if (pathname.startsWith("/static/")) return serve(store, pathname.slice(1), "public, max-age=31536000, immutable");
-  const share = SHARE.exec(pathname);
-  if (share) return serve(store, `${share[1]}/issues/${share[2]}/${share[3] ?? "share.html"}`, share[3] ? "public, max-age=31536000, immutable" : "public, max-age=300");
-  if (pathname.startsWith("/share/")) return new Response("Not found", { status: 404 });
+  const projects = await json<Listed[]>(store, "projects.json", []);
+  if (pathname.startsWith("/auth/")) return door ? door.auth(req, projects) : new Response("Not found", { status: 404 });
+  const reads = async (project: Listed) => !door || (await door.reads(req, project));
   if (pathname === "/") {
-    const projects = await json<Project[]>(store, "projects.json", []);
-    return projects.length === 1 ? to(`/${projects[0].id}/`) : projectList(projects);
+    if (projects.length === 1) return to(`/${projects[0].id}/`);
+    const shown = [];
+    for (const p of projects) if (await reads(p)) shown.push(p);
+    return projectList(shown);
   }
 
   const p = PROJECT.exec(pathname);
   if (!p) return new Response("Not found", { status: 404 });
-  const project = (await json<Project[]>(store, "projects.json", [])).find((x) => x.id === p[1]);
+  const project = projects.find((x) => x.id === p[1]);
   if (!project) return new Response("Not found", { status: 404 });
   const rest = p[2] ?? "";
+  const open = await reads(project);
 
   if (rest === "") return to(`/${project.id}/`, 301);
   if (rest === "/") {
     const [latest] = await json<Entry[]>(store, `${project.id}/index.json`, []);
-    return latest ? to(`/${project.id}/${latest.date}/`) : archive(project, []);
+    return latest ? to(`/${project.id}/${latest.date}/`) : open ? archive(project, []) : to(signInPath(`/${project.id}/`));
   }
-  if (rest === "/archive") return archive(project, await json<Entry[]>(store, `${project.id}/index.json`, []));
-  if (rest === "/index.json") return serve(store, `${project.id}/index.json`, "no-cache");
+  if (rest === "/archive") return open ? archive(project, await json<Entry[]>(store, `${project.id}/index.json`, [])) : to(signInPath(`/${project.id}/archive`));
+  if (rest === "/index.json") return open ? serve(store, `${project.id}/index.json`, "private, no-cache") : shut();
 
   const d = DATE.exec(rest);
   if (!d) return new Response("Not found", { status: 404 });
   if (!d[2]) return to(`/${project.id}/${d[1]}/`, 301);
-  return serve(store, `${project.id}/issues/${d[1]}${d[2] === "/" ? "/index.html" : d[2]}`, HASHED.test(d[2]) ? "private, max-age=31536000, immutable" : "no-cache", req);
+  const dir = `${project.id}/issues/${d[1]}`;
+  if (COVER.test(d[2])) return serve(store, `${dir}${d[2]}`, "public, max-age=31536000, immutable");
+  if (!open) {
+    if (d[2] !== "/") return shut();
+    const preview = await serve(store, `${dir}/preview.html`, "no-store");
+    return preview.ok ? preview : to(signInPath(`/${project.id}/${d[1]}/`));
+  }
+  return serve(store, `${dir}${d[2] === "/" ? "/index.html" : d[2]}`, HASHED.test(d[2]) ? "private, max-age=31536000, immutable" : "private, no-cache", req);
 }

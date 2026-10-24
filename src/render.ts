@@ -236,8 +236,6 @@ export async function renderIssue(issue: Issue, assets: Record<string, string>, 
     assets,
     total: { prs: gh.prs.length, commits: gh.commits?.length ?? 0 },
     motion,
-    // The issue's share link: its preview, public, which leads on to the issue behind the sign-in.
-    share: `${process.env.SITE_URL?.replace(/\/$/, "") ?? ""}/share/${project.id}/${data.date}/`,
     tabs: [...TABS, ...(motion ? [{ id: "motion", name: MOTION_TAB, line: MOTION_LINE }] : [])],
     // Each tab's name by its id, for the words that point at a tab.
     names: Object.fromEntries(TABS.map((t) => [t.id, t.name])),

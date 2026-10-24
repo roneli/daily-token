@@ -39,7 +39,7 @@ export async function ask(dir: string, p: Prompter): Promise<Plan> {
     id: "id",
     message: "Its id, for the site path /<id>/<date>/",
     initial: current?.id ?? slug(name),
-    validate: (v) => (!/^[a-z0-9-]+$/.test(v) ? "lowercase letters, digits and dashes" : ["static", "archive", "share"].includes(v) ? "that path is taken" : undefined),
+    validate: (v) => (!/^[a-z0-9-]+$/.test(v) ? "lowercase letters, digits and dashes" : ["static", "archive", "auth"].includes(v) ? "that path is taken" : undefined),
   });
 
   const had = current ? Object.fromEntries(configured(current).map((c) => [c.source.name, c.config])) : {};

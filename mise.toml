@@ -56,11 +56,20 @@ dir = "deploy/cloudflare"
 run = "bunx wrangler dev"
 
 [tasks."worker:deploy"]
-description = "Deploy the Worker on WORKER_DOMAIN behind Access (ACCESS_TEAM_DOMAIN, ACCESS_AUD from .env)"
+description = "Deploy the Worker on WORKER_DOMAIN, readers signed in with the GitHub App GITHUB_CLIENT_ID (from .env)"
 dir = "deploy/cloudflare"
 run = """
-: "${WORKER_DOMAIN:?set WORKER_DOMAIN in .env}" "${ACCESS_TEAM_DOMAIN:?set ACCESS_TEAM_DOMAIN in .env}" "${ACCESS_AUD:?set ACCESS_AUD in .env}"
-bunx wrangler deploy --domain "$WORKER_DOMAIN" --var "ACCESS_TEAM_DOMAIN:$ACCESS_TEAM_DOMAIN" --var "ACCESS_AUD:$ACCESS_AUD"
+: "${WORKER_DOMAIN:?set WORKER_DOMAIN in .env}" "${GITHUB_CLIENT_ID:?set GITHUB_CLIENT_ID in .env}"
+bunx wrangler deploy --domain "$WORKER_DOMAIN" --var "GITHUB_CLIENT_ID:$GITHUB_CLIENT_ID"
+"""
+
+[tasks."worker:secrets"]
+description = "Store the GitHub App's client secret and the session key in the Worker (GITHUB_CLIENT_SECRET, SESSION_SECRET from .env)"
+dir = "deploy/cloudflare"
+run = """
+: "${GITHUB_CLIENT_SECRET:?set GITHUB_CLIENT_SECRET in .env}" "${SESSION_SECRET:?set SESSION_SECRET in .env: openssl rand -hex 32}"
+printf %s "$GITHUB_CLIENT_SECRET" | bunx wrangler secret put GITHUB_CLIENT_SECRET
+printf %s "$SESSION_SECRET" | bunx wrangler secret put SESSION_SECRET
 """
 
 [tasks.publish]
