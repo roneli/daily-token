@@ -7,7 +7,7 @@ sources    Writer      Director   Explainer   check
                                   (when asked)
 ```
 
-`daily-token run --date D` runs the stages for one day (`src/pipeline.ts`). Each reads earlier stages' files from the issue folder and writes its own, so `--from STAGE` restarts there and keeps the files before it, and `--to STAGE` stops after one. A day where every source is empty makes no issue.
+`daily-token run --date D` runs the stages for one day (`src/pipeline.ts`). Before each stage it says which step it is and about how long is left, from how long each stage took over the last five issues (`meta.json` keeps every stage's time), and when it is done how long it took. Each reads earlier stages' files from the issue folder and writes its own, so `--from STAGE` restarts there and keeps the files before it, and `--to STAGE` stops after one. A day where every source is empty makes no issue.
 
 Scripts do what's deterministic: collect, links, quotes against PR bodies, the epic graph, `check`. Agents do what needs judgment, and each returns JSON against a schema. An agent is one folder, `agents/<name>/`: its `prompt.md`, and its `output.schema.json` or, for a reviewer, its `rubric.json`.
 
