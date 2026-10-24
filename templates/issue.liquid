@@ -1,5 +1,6 @@
 {%- assign no = data.issue | prepend: "00" | slice: -3, 3 -%}
 {%- assign day = data.date | date: "%A %-d %b %Y" -%}
+{%- assign shortday = data.date | date: "%a %-d %b" -%}
 <!doctype html>
 <html lang="en">
 <head>
@@ -17,7 +18,7 @@
 <div class="app" data-edition="{{ data.edition }}">
   <div class="top">
     <div class="topline">
-      <div class="masthead"><button class="ed-open" type="button" data-editions="open" aria-controls="editions" aria-label="Editions">☰</button><div class="mast-text"><div class="issue"><b class="nameplate">The Daily Token</b><span>No. {{ no }}</span><span>{{ project.name }}</span><span>{{ day }}</span>{% if data.edition == "weekly" %}<span class="weekly">Weekly edition</span>{% endif %}<span>{{ total.prs }} PRs{% if total.commits > 0 %} · {{ total.commits }} commits{% endif %} · {{ github.tags.size }} tags</span></div></div></div>
+      <div class="masthead"><button class="ed-open" type="button" data-editions="open" aria-controls="editions" aria-label="Editions">☰</button><div class="mast-text"><div class="issue"><b class="nameplate">The Daily Token</b><span>No. {{ no }}</span><span>{{ project.name }}</span><span>{{ day }}</span>{% if data.edition == "weekly" %}<span class="weekly">Weekly edition</span>{% endif %}<span>{{ total.prs }} PRs{% if total.commits > 0 %} · {{ total.commits }} commits{% endif %} · {{ github.tags.size }} tags</span></div><span class="dateline">No. {{ no }} · {{ shortday }}{% if data.edition == "weekly" %} · <span class="weekly">Weekly</span>{% endif %}</span></div></div>
       <div class="tabs" role="tablist" aria-label="Page">
         {%- for t in tabs %}
         <button role="tab" id="tab-{{ t.id }}" type="button" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">{{ t.name }}</button>

@@ -380,13 +380,15 @@ button svg { width: 12px; height: 12px; fill: currentColor; }
 
 /* The masthead's text, and the phone's section menu in place of the tabs. On a wide screen the tabs stay. */
 .mast-text { display: contents; }
-.issue-line, .section-pill { display: none; }
+.issue-line, .section-pill, .dateline { display: none; }
 .ph-dek:empty { display: none; }
 .sections[hidden] { display: none; }
 @media (max-width: 700px) {
   .topline { position: relative; flex-wrap: nowrap; gap: 8px; }
   .masthead { flex: 1; min-width: 0; }
-  .mast-text { display: grid; min-width: 0; }
+  .mast-text { display: grid; gap: 3px; min-width: 0; }
+  /* The issue's dateline under the nameplate, as a newspaper's: its number, its day, and the weekly edition. */
+  .dateline { display: block; font: 500 10px/1 var(--f-mono); letter-spacing: .03em; text-transform: uppercase; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .topline .issue span { display: none; }
   .issue .nameplate { font-size: 21px; white-space: nowrap; }
   /* The issue's headline, whole, under the masthead on every tab; the page head's own title isn't repeated. */
@@ -434,3 +436,11 @@ button svg { width: 12px; height: 12px; fill: currentColor; }
 /* A newer issue than the one open: a pill under the masthead. */
 .new-issue { justify-self: start; display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: var(--accent); color: var(--bg); text-decoration: none; font-size: 13.5px; animation: tap-in 300ms ease-out; }
 .new-issue span { opacity: .9; }
+
+/* The week in review: its themes, each with the week's PRs it covers. */
+.themes { display: grid; gap: 14px; margin: 14px 0; }
+.theme { padding: 12px 14px; border: 1px solid var(--rule); border-left: 4px solid var(--accent); border-radius: 10px; background: var(--surface); }
+.theme h3 { margin: 0 0 4px; font: 700 17px/1.25 var(--f-display); }
+.theme p { margin: 0 0 8px; font-size: 14.5px; line-height: 1.45; }
+.theme ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 13.5px; color: var(--muted); }
+.theme li a { font-family: var(--f-mono); margin-right: 6px; }
