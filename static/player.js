@@ -4,10 +4,6 @@
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const phone = matchMedia("(max-width: 700px)");
   const app = document.querySelector(".app");
-  // The issue's own address: links are made from it even once the address bar shows the share link (see the end).
-  const home = new URL(location.pathname, location.origin);
-  const fromHome = (rel) => new URL(rel, home).href;
-  const tabKey = `daily-token:tab:${home.pathname}`;
   // Shown when the last story ends; made further down.
   let endCard = null;
   const book = document.getElementById("book");
@@ -495,8 +491,6 @@
     const shown = which === "reels" ? book : document.getElementById(`page-${which}`);
     if (!reduced && shown.animate) shown.animate([{ opacity: 0, transform: "translateY(6px)" }, { opacity: 1, transform: "none" }], { duration: 260, easing: "cubic-bezier(.2,.8,.2,1)" });
     try { history.replaceState(null, "", `#${ADDRESS[which]}`); } catch {}
-    // A reload comes back through the share page, which drops the #tab: the tab is kept for this browser tab.
-    try { sessionStorage.setItem(tabKey, which); } catch {}
     requestAnimationFrame(() => { const el = anchor && document.getElementById(anchor); if (el) el.scrollIntoView({ block: "start" }); else scrollTo(0, 0); });
   }
   for (const name of Object.keys(DEKS)) document.getElementById(`tab-${name}`).addEventListener("click", () => showTab(name));
@@ -554,9 +548,7 @@
 
   setPlaying(playing);
   go(0);
-  let kept = null;
-  try { kept = sessionStorage.getItem(tabKey); } catch {}
-  const opened = tabAt(location.hash.slice(1)) ?? (kept && kept in DEKS ? kept : undefined);
+  const opened = tabAt(location.hash.slice(1));
   if (opened && opened !== "reels") showTab(opened);
   addEventListener("hashchange", () => { const t = tabAt(location.hash.slice(1)); if (t) showTab(t); });
 
@@ -574,7 +566,7 @@
   const item = (e) => {
     const a = document.createElement("a");
     a.className = "ed-item";
-    a.href = fromHome(`../${e.date}/`);
+    a.href = `../${e.date}/`;
     if (e.date === current) a.setAttribute("aria-current", "page");
     const date = document.createElement("span"); date.className = "ed-date"; date.textContent = fmt(e.date, { weekday: "short", day: "numeric", month: "short" });
     const title = document.createElement("span"); title.className = "ed-title"; title.textContent = e.headline;
@@ -582,7 +574,7 @@
     return a;
   };
   const group = (text) => { const p = document.createElement("p"); p.className = "ed-group"; p.textContent = text; return p; };
-  fetch(fromHome("../index.json")).then((r) => (r.ok ? r.json() : Promise.reject(r.status))).then((entries) => {
+  fetch("../index.json").then((r) => (r.ok ? r.json() : Promise.reject(r.status))).then((entries) => {
     const nodes = [];
     const weekly = entries.filter((e) => e.edition === "weekly");
     if (weekly.length) { nodes.push(group("Weekly editions")); for (const e of weekly.slice(0, 6)) nodes.push(item(e)); }
@@ -598,24 +590,10 @@
     if (newest && newest.date > current) {
       const pill = document.createElement("a");
       pill.className = "new-issue";
-      pill.href = fromHome(`../${newest.date}/`);
+      pill.href = `../${newest.date}/`;
       pill.innerHTML = `<b>New issue</b><span>${fmt(newest.date, { weekday: "short", day: "numeric", month: "short" })} ›</span>`;
       document.querySelector(".topline").after(pill);
     }
   }).catch((err) => console.warn("[daily] editions list unavailable:", err));
   requestAnimationFrame((now) => { last = now; frame(now); });
-
-  // The address bar shows the issue's share link, so the phone's own Share and a copied address send the page anyone
-  // can preview (it leads on to the issue behind the sign-in) rather than the sign-in. The page's relative links are
-  // fixed to the issue's address first, so its video and styles keep loading from where they are.
-  const canonical = document.querySelector('link[rel="canonical"]')?.getAttribute("href");
-  const shareAt = canonical ? new URL(canonical, location.href).pathname : "";
-  if (shareAt.startsWith("/share/") && location.pathname !== shareAt) {
-    for (const [attr, els] of [["src", document.querySelectorAll("[src]")], ["href", document.querySelectorAll("a[href], link[href]")]])
-      for (const el of els) {
-        const v = el.getAttribute(attr);
-        if (v && !v.startsWith("#") && !/^[a-z]+:/i.test(v)) el.setAttribute(attr, fromHome(v));
-      }
-    try { history.replaceState(history.state, "", `${shareAt}${location.hash}`); } catch {}
-  }
 })();
