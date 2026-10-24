@@ -63,11 +63,16 @@ export async function ask(dir: string, p: Prompter): Promise<Plan> {
   const model = await p.select({ id: "model", message: "Which model do the agents use?", options: [{ value: "opus", label: "opus", hint: "best writing and judgment" }, { value: "sonnet", label: "sonnet", hint: "cheaper" }], initial: "opus" });
   const publish = await p.select({ id: "publish", message: "Where do issues go?", options: [{ value: "none", label: "Nowhere yet", hint: "render and preview locally" }, { value: "s3", label: "An S3-compatible bucket", hint: "AWS S3, Cloudflare R2, MinIO; with an optional Slack post" }], initial: "none" });
 
+  const site =
+    publish === "s3"
+      ? await p.text({ id: "site", message: "The site's address, if it goes online: https://digest.example.com (empty for later)", initial: process.env.SITE_URL ?? "", validate: (v) => (!v || /^https?:\/\/[^/\s]+\/?$/.test(v) ? undefined : "an address like https://digest.example.com, or nothing") })
+      : "";
+
   const vars: Record<string, string> = { DIGEST_TZ: tz, CUTOFF: cutoff, AGENT_MODEL: model };
   secrets.push({ name: "ANTHROPIC_API_KEY", why: "or CLAUDE_CODE_OAUTH_TOKEN: the agents run through the claude CLI" });
   if (publish === "s3") {
     secrets.push({ name: "S3_ACCESS_KEY_ID", why: "a write key for the bucket" }, { name: "S3_SECRET_ACCESS_KEY", why: "and its secret" }, { name: "SLACK_WEBHOOK_URL", why: "optional: posts each issue to a channel" });
-    Object.assign(vars, { S3_ENDPOINT: "", S3_BUCKET: "daily-token", SITE_URL: "" });
+    Object.assign(vars, { S3_ENDPOINT: "", S3_BUCKET: "daily-token", SITE_URL: site.replace(/\/$/, "") });
   }
   const all = days.length === DAYS.length;
   const project: Project = { ...current, id, name, sources, ...(all ? {} : { days }), ...(weekly === "none" ? {} : { weekly: weekly as Day }) };
@@ -75,7 +80,7 @@ export async function ask(dir: string, p: Prompter): Promise<Plan> {
   if (weekly === "none") delete project.weekly;
   delete project.repos;
   // Everything to run it locally goes in one .env, to fill in: the bucket's keys and the site's address with it.
-  const publishing: Record<string, string> = publish === "s3" ? { S3_ENDPOINT: "", S3_BUCKET: "daily-token", S3_ACCESS_KEY_ID: "", S3_SECRET_ACCESS_KEY: "", SITE_URL: "" } : {};
+  const publishing: Record<string, string> = publish === "s3" ? { S3_ENDPOINT: "", S3_BUCKET: "daily-token", S3_ACCESS_KEY_ID: "", S3_SECRET_ACCESS_KEY: "", SITE_URL: site.replace(/\/$/, "") } : {};
   return { dir, project, env: { ...env, DIGEST_TZ: tz, CUTOFF: cutoff, AGENT_MODEL: model, ...publishing }, secrets, vars, publish };
 }
 
@@ -162,7 +167,7 @@ export function nextSteps(plan: Plan) {
   if (plan.publish === "s3")
     lines.push(
       "",
-      "To put it online (Cloudflare, docs/deploy.md), fill in .env first: SITE_URL, and the bucket's S3_* keys",
+      "To put it online (Cloudflare, docs/deploy.md), with SITE_URL in .env; publishing also needs the bucket's S3_* keys",
       "  bunx daily-token github-app                  make the GitHub App readers sign in with",
       "  bunx daily-token deploy                      the bucket and the site on SITE_URL",
       "  bunx daily-token render --all && bunx daily-token publish",

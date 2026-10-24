@@ -143,7 +143,7 @@ export async function runInit(argv: string[]) {
       yes: { type: "boolean", default: false },
       install: { type: "boolean", default: true },
       "gh-token": { type: "boolean", default: false },
-      ...Object.fromEntries(["name", "id", "sources", "repos", "tz", "cutoff", "days", "weekly", "model", "publish"].map((k) => [k, { type: "string" as const }])),
+      ...Object.fromEntries(["name", "id", "sources", "repos", "tz", "cutoff", "days", "weekly", "model", "publish", "site"].map((k) => [k, { type: "string" as const }])),
     },
   });
   const dir = positionals[0] ?? ".";
@@ -153,7 +153,7 @@ export async function runInit(argv: string[]) {
   if (values.yes) {
     const { answering } = await import("./prompter");
     const answers: Record<string, string | boolean> = { migrate: true, "github.useGhToken": values["gh-token"] as boolean };
-    for (const k of ["name", "id", "sources", "tz", "cutoff", "days", "weekly", "model", "publish"]) if (typeof flags[k] === "string") answers[k] = flags[k];
+    for (const k of ["name", "id", "sources", "tz", "cutoff", "days", "weekly", "model", "publish", "site"]) if (typeof flags[k] === "string") answers[k] = flags[k];
     if (typeof flags.repos === "string") answers["github.repos"] = flags.repos;
     p = answering(answers);
   } else {
@@ -168,6 +168,19 @@ export async function runInit(argv: string[]) {
     if (!r.success) console.log("bun install failed; run it in the data root before the commands below");
   }
   console.log(`\n${nextSteps(plan)}`);
+  // Asked, the site goes online now: the GitHub App in the browser, then the Worker. Each reads the data root's .env.
+  if (!values.yes && plan.vars.SITE_URL) {
+    const clack = await import("@clack/prompts");
+    const now = await clack.confirm({ message: `Put the site online at ${plan.vars.SITE_URL} now? This makes a GitHub App for the sign-in, then deploys to Cloudflare`, initialValue: true });
+    if (now === true)
+      for (const command of ["github-app", "deploy"]) {
+        const r = Bun.spawnSync(["bun", join(ENGINE, "src", "cli.ts"), command], { cwd: dir, stdio: ["inherit", "inherit", "inherit"] });
+        if (!r.success) {
+          console.log(`${command} stopped; run \`daily-token ${command}\` in the data root to try again`);
+          break;
+        }
+      }
+  }
 }
 
 // collect alone refuses to overwrite: a published issue's data doesn't change.
