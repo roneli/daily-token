@@ -19,6 +19,8 @@ export type Asker = {
   login(token: string): Promise<string>;
   // The user's permissions on the repo, or null when they can't see it.
   permissions(token: string, repo: string): Promise<Partial<Record<Role, boolean>> | null>;
+  // The app's installations the user can see: on whose account, and the page that sets its repos.
+  installations(token: string): Promise<{ account: string; url: string; app: string }[]>;
 };
 
 // What the site asks: may this request read the project, and the /auth/ routes.
@@ -45,9 +47,12 @@ function setCookie(req: Request, name: string, value: string, seconds: number, p
   return `${name}=${value}; Path=${path}; Max-Age=${seconds}; HttpOnly; SameSite=Lax${secure}`;
 }
 
-const page = (status: number, title: string, text: string, headers: HeadersInit = {}) =>
+type Link = { href: string; label: string };
+
+// A page that says what went wrong, with a button or two to go on.
+const page = (status: number, title: string, text: string, links: Link[] = [], headers: HeadersInit = {}) =>
   new Response(
-    `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title><style>:root{color-scheme:light dark}body{font:16px/1.5 system-ui,sans-serif;max-width:560px;margin:0 auto;padding:40px 16px}</style><h1>${title}</h1><p>${text}</p>`,
+    `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title><style>:root{color-scheme:light dark}body{font:16px/1.5 system-ui,sans-serif;max-width:560px;margin:0 auto;padding:40px 16px}nav{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}a{padding:10px 16px;border-radius:8px;border:1px solid #8886;color:inherit;text-decoration:none;font-weight:600}a:first-child{background:#1f2328;border-color:#1f2328;color:#fff}</style><h1>${title}</h1><p>${text}</p>${links.length ? `<nav>${links.map((l) => `<a href="${escapeHtml(l.href)}">${escapeHtml(l.label)}</a>`).join("")}</nav>` : ""}`,
     { status, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", ...headers } },
   );
 
@@ -72,6 +77,12 @@ export function github(env: SignInEnv): Asker {
       if (res.status === 404 || res.status === 403) return null;
       if (!res.ok) throw new Error(`GitHub answered ${res.status} for ${repo}`);
       return ((await res.json()) as { permissions?: Partial<Record<Role, boolean>> }).permissions ?? null;
+    },
+    async installations(token) {
+      const res = await api(token, "/user/installations");
+      if (!res.ok) return [];
+      const body = (await res.json()) as { installations: { account: { login: string }; html_url: string; app_slug: string }[] };
+      return body.installations.map((i) => ({ account: i.account.login, url: i.html_url, app: i.app_slug }));
     },
   };
 }
@@ -105,7 +116,7 @@ export function door(env: SignInEnv, ask: Asker = github(env)): Door {
 
     if (url.pathname === "/auth/github") {
       const to = url.searchParams.get("to") ?? "";
-      if (!projectOf(to)) return page(400, "Nothing to sign in to", "This link doesn't lead to a digest.");
+      if (!projectOf(to)) return page(400, "Nothing to sign in to", "This link doesn't lead to a digest.", [{ href: "/", label: "Go to the site" }]);
       const state = generateState();
       const location = new GitHub(env.GITHUB_CLIENT_ID ?? "", "", redirect).createAuthorizationURL(state, []).toString();
       return new Response(null, { status: 302, headers: { location, "set-cookie": setCookie(req, STATE, `${state}~${to}`, 600, "/auth/"), "cache-control": "no-store" } });
@@ -115,10 +126,14 @@ export function door(env: SignInEnv, ask: Asker = github(env)): Door {
       const [state, to = ""] = cookieOf(req, STATE)?.split("~") ?? [];
       const code = url.searchParams.get("code");
       const project = projectOf(to);
-      if (!state || state !== url.searchParams.get("state") || !code || !project) return page(400, "Sign-in expired", "Open the link again to sign in.");
+      // The way back in: where the reader was going, when the state cookie still says.
+      const again: Link = { href: project ? signInPath(to) : "/", label: "Sign in again" };
+      if (!state || state !== url.searchParams.get("state") || !code || !project) return page(400, "Sign-in expired", "It took too long, or started in another tab.", [again]);
       const done = setCookie(req, STATE, "", 0, "/auth/");
       let login: string;
       let allowed = false;
+      let missing: string | undefined;
+      let fix: Link | undefined;
       try {
         const token = await ask.token(code, redirect);
         login = await ask.login(token);
@@ -130,14 +145,27 @@ export function door(env: SignInEnv, ask: Asker = github(env)): Door {
           if (permissions?.[role]) continue;
           console.log(`sign-in: ${login} on ${repo}: ${permissions ? JSON.stringify(permissions) : "can't see it"}`);
           allowed = false;
+          missing = repo;
           break;
+        }
+        // The repo's owner can give the app the repo there and then: the installation's page, or a new one.
+        const owner = missing?.split("/")[0];
+        if (owner && owner.toLowerCase() === login.toLowerCase()) {
+          const installs = await ask.installations(token);
+          const mine = installs.find((i) => i.account.toLowerCase() === owner.toLowerCase());
+          if (mine) fix = { href: mine.url, label: `Give the app ${missing}` };
+          else if (installs[0]) fix = { href: `https://github.com/apps/${installs[0].app}/installations/new`, label: `Install the app on ${owner}` };
         }
       } catch (e) {
         console.error(`sign-in: ${e instanceof Error ? e.message : e}`);
-        return page(502, "GitHub didn't answer", "Try again in a moment.", { "set-cookie": done });
+        return page(502, "GitHub didn't answer", "Try again in a moment.", [again], { "set-cookie": done });
       }
-      if (!allowed)
-        return page(403, "No access", `GitHub didn't show your account ${escapeHtml(login)} all of this digest's repos. Either the account can't see them, or the sign-in's GitHub App isn't installed on them yet: the repos' owner installs it. Ask the digest's owner, or sign in to GitHub with another account.`, { "set-cookie": done });
+      if (!allowed) {
+        const text = fix
+          ? `You own ${escapeHtml(missing ?? "")}, but the sign-in's GitHub App isn't installed on it, so GitHub won't show it to the sign-in. Give the app the repo, then sign in again.`
+          : `GitHub didn't show your account ${escapeHtml(login)} all of this digest's repos. Either the account can't see them, or the sign-in's GitHub App isn't installed on them yet: the repos' owner installs it. Ask the digest's owner, or sign in to GitHub with another account.`;
+        return page(403, "No access", text, fix ? [fix, again] : [again], { "set-cookie": done });
+      }
       const session = await new SignJWT({}).setProtectedHeader({ alg: "HS256" }).setSubject(login).setIssuer(ISSUER).setAudience(project.id).setIssuedAt().setExpirationTime(`${SESSION_HOURS}h`).sign(key);
       const headers = new Headers({ location: new URL(to, url.origin).toString(), "cache-control": "no-store" });
       headers.append("set-cookie", done);

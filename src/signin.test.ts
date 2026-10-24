@@ -21,6 +21,7 @@ const ask: Asker = {
   token: async (code) => `token-${code}`,
   login: async (token) => token.replace("token-", ""),
   permissions: async (token, repo) => seen[token.replace("token-", "")]?.[repo] ?? null,
+  installations: async (token) => (token === "token-acme" ? [{ account: "acme", url: "https://github.com/settings/installations/1", app: "the-daily-token" }] : []),
 };
 const gate = door(env, ask);
 
@@ -70,6 +71,15 @@ describe("sign-in", () => {
       expect(res.status).toBe(403);
       expect(cookies(res).some((c) => c.startsWith("dt-") && !c.startsWith("dt-state="))).toBe(false);
     }
+  });
+
+  test("shows the repos' owner where to give the app the repo, and everyone a way to try again", async () => {
+    const owner = await (await signIn("acme")).text();
+    expect(owner).toContain('href="https://github.com/settings/installations/1"');
+    expect(owner).toContain("/auth/github?to=%2Frocket%2F2026-01-15%2F");
+    const stranger = await (await signIn("stranger")).text();
+    expect(stranger).not.toContain("github.com/settings/installations");
+    expect(stranger).toContain("Sign in again");
   });
 
   test("refuses a callback whose state isn't the one it gave", async () => {
