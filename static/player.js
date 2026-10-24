@@ -450,6 +450,18 @@
     const dx = e.touches[0].clientX - pull.x, dy = e.touches[0].clientY - pull.y;
     if (dy > 0 && dy > Math.abs(dx) && document.scrollingElement.scrollTop <= 0) e.preventDefault();
   }, { passive: false });
+  // A clear swipe down opens the Ledger at the story being watched, as a story viewer's swipe down leaves it.
+  document.addEventListener("touchend", (e) => {
+    const start = pull;
+    pull = null;
+    if (!start || !phone.matches || app.classList.contains("on-page") || sheetOpen()) return;
+    const t = e.changedTouches[0], dx = t.clientX - start.x, dy = t.clientY - start.y;
+    if (dy < 70 || dy < Math.abs(dx) * 1.5) return;
+    // The week's recap is d-week in the Ledger; every other story has its own id there.
+    const id = threads[tNow()].id.replace(/^thread-/, "");
+    const story = document.getElementById(`d-${id === "recap" ? "week" : id}`);
+    showTab("digest", story?.id);
+  });
 
   // The first reel on a phone shows once where to tap, until the first tap or a few seconds.
   const hintKey = "daily-token:tap-hint";
