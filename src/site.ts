@@ -91,7 +91,13 @@ export function hostProject(hostname: string, domain?: string): string | undefin
 
 export async function site(req: Request, store: Store, { door, domain }: Options = {}): Promise<Response> {
   if (req.method !== "GET" && req.method !== "HEAD") return new Response("Method not allowed", { status: 405 });
-  const { pathname, hostname } = new URL(req.url);
+  const url = new URL(req.url);
+  const { pathname, hostname } = url;
+  // A host may be written with a final dot. One name only, so sign-in returns where GitHub expects and cookies match.
+  if (hostname.endsWith(".")) {
+    url.hostname = hostname.replace(/\.+$/, "");
+    return Response.redirect(url.toString(), 301);
+  }
   const own = hostProject(hostname, domain);
   const to = (path: string, status = 302) => Response.redirect(new URL(path, req.url).toString(), status);
   const shut = () => new Response("Forbidden", { status: 403 });
