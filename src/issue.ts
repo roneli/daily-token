@@ -115,7 +115,10 @@ export type Week = {
   totals: { prs: number; commits: number; issuesClosed: number; tags: number };
   // closedThisWeek is null when the archive has no earlier count to compare with
   epics: { ref: Ref; title: string; closed: number; total: number; closedThisWeek: number | null }[];
+  // The week's merged PRs, from the archived issues and today: what the weekly edition's themes may cite
+  prs?: WeekPR[];
 };
+export type WeekPR = { ref: Ref; date: string; title: string; parts: string[]; author: string; epic?: Ref; body: string };
 
 // The issue format: what the templates and the player expect from an issue's JSON. A breaking change bumps it
 // and tags the last commit of the old format `format-v<N>`; issues of that format keep rendering with that commit.
@@ -162,10 +165,12 @@ export type Section = {
   cards: Card[];
 };
 
+export type Theme = { title: string; dek: string; refs: Ref[] };
+
 export type Stories = {
   headline: string;
-  // Weekly only: the week in a title, a dek and a few points
-  recap?: { title: string; dek: string; points: string[] };
+  // Weekly only: the week in a title, a dek and its themes, each with the week's PRs it covers (older issues: points)
+  recap?: { title: string; dek: string; points?: string[]; themes?: Theme[] };
   sections: Section[];
   rail: { check: string; connects: string };
   parts?: Record<string, string>;

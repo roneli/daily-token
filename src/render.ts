@@ -4,7 +4,7 @@ import { mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { Liquid } from "liquidjs";
-import { type Commit, commitRef, ENGINE, FORMAT, type GithubDay, githubOf, type Issue, issueArgs, issueDates, loadIssue, type PR, type Ref, refLabel, refOf, repoName, reposOf, shortsOf, writeJson } from "./issue";
+import { type Commit, commitRef, ENGINE, FORMAT, type GithubDay, githubOf, type Issue, issueArgs, issueDates, loadIssue, type PR, type Project, type Ref, refLabel, refOf, repoName, reposOf, shortsOf, writeJson } from "./issue";
 import { estimated, linesOf, lookOf, MOTION_TAB, type MotionFiles, motionFiles, refsOf, startsOf, timeline } from "./motion";
 import { kokoro, voiceOf } from "./voice";
 
@@ -34,7 +34,17 @@ export function inline(s: string, repos: string[]): string {
 }
 
 const issueUrl = (repo: string, n: number) => `https://github.com/${repo}/issues/${n}`;
+const THEME_PRS = 4;
 const pullUrl = (repo: string, n: number) => `https://github.com/${repo}/pull/${n}`;
+// A ref's link, from its shape: a number is a home PR, name#n another repo's PR, a hash a commit.
+function linkOf(project: Project, r: Ref) {
+  const home = reposOf(project)[0];
+  if (typeof r === "number") return pullUrl(home, r);
+  const repos = new Map(reposOf(project).map((x) => [repoName(x), x]));
+  const [, name, sep, id] = r.match(/^([\w.-]+)?([#@])?(\w+)$/) ?? [];
+  const repo = (name && repos.get(name)) || home;
+  return sep === "#" ? pullUrl(repo, Number(id)) : `https://github.com/${repo}/commit/${id ?? r}`;
+}
 
 type Layout = (fields: Record<string, unknown>) => { fields: Record<string, unknown>; ms: number };
 
@@ -209,6 +219,12 @@ export async function renderIssue(issue: Issue, assets: Record<string, string>, 
     openPrs,
     stories,
     week: weekView(gh, data.date),
+    // The recap's themes, each PR with its title and link from the week's list.
+    themes: (stories.recap?.themes ?? []).map((t) => {
+      const prs = t.refs.map((r) => ({ label: refLabel(r), title: gh.week?.prs?.find((p) => p.ref === r)?.title ?? "", url: linkOf(project, r) }));
+      // The first few show; the rest fold under "+N more", so a long theme stays short on a phone.
+      return { ...t, shown: prs.slice(0, THEME_PRS), more: prs.slice(THEME_PRS) };
+    }),
     recapThread: reels.threads.some((t) => t.id === "recap"),
     sections,
     threads,
@@ -232,17 +248,8 @@ const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60))
 function motionView(issue: Issue, cited: Map<Ref, PR | Commit>, files?: MotionFiles) {
   const m = issue.motion;
   if (!m) return null;
-  const home = reposOf(issue.project)[0];
-  const repos = new Map(reposOf(issue.project).map((r) => [repoName(r), r]));
   // A ref from an earlier issue isn't in today's data; its link follows from its shape.
-  const urlOf = (r: Ref) => {
-    const known = cited.get(r)?.url;
-    if (known) return known;
-    if (typeof r === "number") return pullUrl(home, r);
-    const [, name, sep, id] = r.match(/^([\w.-]+)?([#@])?(\w+)$/) ?? [];
-    const repo = (name && repos.get(name)) || home;
-    return sep === "#" ? pullUrl(repo, Number(id)) : `https://github.com/${repo}/commit/${id ?? r}`;
-  };
+  const urlOf = (r: Ref) => cited.get(r)?.url ?? linkOf(issue.project, r);
   // Before the video is made, each line is timed by its length.
   const guess = files ? undefined : timeline(m, estimated(m).seconds);
   const starts = files?.starts ?? (guess ? startsOf(guess) : []);

@@ -229,6 +229,10 @@ export function weekOf(date: string, earlier: { date: string; headline: string; 
     from,
     to: date,
     days: days.map((d) => ({ date: d.date, headline: d.headline, prs: d.data.prs.length, commits: d.data.commits?.length ?? 0, epics: count(d.data) })),
+    // Each day's PRs, from the data already collected for its issue: the themes cite them, so the week needs no fetch.
+    prs: days.flatMap((d) =>
+      d.data.prs.map((p) => ({ ref: refOf(p.repo, p.number, home), date: d.date, title: p.title, parts: p.parts ?? [], author: p.author, ...(p.epicPath?.[0] !== undefined ? { epic: p.epicPath[0] } : {}), body: (p.body ?? "").replace(/\s+/g, " ").slice(0, 300) })),
+    ),
     totals: {
       prs: days.reduce((n, d) => n + d.data.prs.length, 0),
       commits: days.reduce((n, d) => n + (d.data.commits?.length ?? 0), 0),

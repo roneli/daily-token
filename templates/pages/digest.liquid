@@ -16,9 +16,24 @@
           <div class="wb{% if b.today %} today{% endif %}"><span class="d">{{ b.label }}</span><span class="t"><i style="width:{{ b.pct }}%"></i></span><span class="n">{{ b.n }}</span></div>
           {%- endfor %}
         </div>
+        {%- if themes.size > 0 %}
+        <div class="themes">
+          {%- for t in themes %}
+          <article class="theme">
+            <h3>{{ t.title }}</h3>
+            <p>{{ t.dek | inline | raw }}</p>
+            <ul>{% for p in t.shown %}<li><a href="{{ p.url }}" target="_blank">{{ p.label }}</a> {{ p.title }}</li>{% endfor %}</ul>
+            {%- if t.more.size > 0 %}
+            <details><summary>+{{ t.more.size }} more</summary><ul>{% for p in t.more %}<li><a href="{{ p.url }}" target="_blank">{{ p.label }}</a> {{ p.title }}</li>{% endfor %}</ul></details>
+            {%- endif %}
+          </article>
+          {%- endfor %}
+        </div>
+        {%- else %}
         <ul class="points">
           {%- for p in stories.recap.points %}<li>{{ p | inline | raw }}</li>{% endfor %}
         </ul>
+        {%- endif %}
         <p class="wk-totals">{{ week.totals.prs }} PRs · {{ week.totals.commits }} direct commits · {{ week.totals.issuesClosed }} issues closed · {{ week.totals.tags }} tags</p>
       </section>
       {%- endif %}

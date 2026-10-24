@@ -42,6 +42,9 @@ export async function citable(issue: Pick<Issue, "root" | "project" | "data">) {
     ...prs,
     ...earlier,
     ...gh.epics.map((e) => refOf(e.repo, e.number, home)),
+    // The week's PRs and their epics, which a weekly issue's recap talks about.
+    ...(gh.week?.prs ?? []).flatMap((p) => [p.ref, ...(p.epic !== undefined ? [p.epic] : [])]),
+    ...(gh.week?.epics ?? []).map((e) => e.ref),
     ...open,
     ...(gh.issues ?? []).flatMap((i) => [refOf(i.repo, i.number, home), ...i.epicPath]),
     ...linked.flatMap((p) => [...(p.closes ?? []).map((n) => refOf(p.repo, n, home)), ...(p.epicPath ?? [])]),
@@ -82,7 +85,12 @@ export async function check(issue: Issue, stage: "stories" | "thread" | "all" = 
   };
 
   if (data.edition === "weekly" && !stories.recap) errors.push("a weekly issue needs a recap of the week");
-  if (stories.recap) refs("recap", [stories.recap.dek, ...stories.recap.points].join(" "));
+  if (stories.recap && !stories.recap.themes?.length && !stories.recap.points?.length) errors.push("the recap needs its themes");
+  // A theme cites the week's PRs, which the week lists from its issues.
+  const week = new Set<Ref>((gh.week?.prs ?? []).map((p) => p.ref));
+  if (stories.recap) refs("recap", [stories.recap.dek, ...(stories.recap.points ?? []), ...(stories.recap.themes ?? []).map((t) => t.dek)].join(" "));
+  for (const [k, t] of (stories.recap?.themes ?? []).entries())
+    for (const r of t.refs) if (!week.has(r) && !prs.has(r)) errors.push(`recap theme ${k + 1} cites ${refLabel(r)}, which isn't one of the week's PRs (data.week.prs)`);
 
   const carded = new Set<Ref>();
   for (const s of stories.sections) {
@@ -115,7 +123,8 @@ export async function check(issue: Issue, stage: "stories" | "thread" | "all" = 
     if (ids.has(r.id)) errors.push(`reel ${r.id} appears twice; ids are shared by every reel on the page`);
     ids.add(r.id);
     // A reel about what's coming may show open PRs; cards cover only what landed.
-    for (const n of r.refs) if (!open.has(n)) needRef(`reel ${r.id}`, n);
+    // The week's thread may show any PR of the week.
+    for (const n of r.refs) if (!open.has(n) && !(r.thread === "recap" && week.has(n))) needRef(`reel ${r.id}`, n);
     for (const e of r.epic) if (!known.has(e)) warnings.push(`reel ${r.id} names epic ${refLabel(e)}, which data.json doesn't know`);
     refs(`reel ${r.id}`, `${r.caption} ${r.why}`);
     const tpl = join(ENGINE, "templates", "reels", r.template);

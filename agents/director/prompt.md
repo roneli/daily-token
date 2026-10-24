@@ -5,7 +5,7 @@ You get:
 - `story` for a story thread: the edited section, with its title, dek and cards. `recap` for the week's thread.
 - `issue`: the day's headline and every thread's title, so you can see what the others cover. Don't show what another thread shows.
 - `brief` when the project has one: call things by its names. On screen, use a term's plain words, not the term.
-- `data`: the slice of the day your thread needs: your story's PRs and commits, the epics, and the open PRs (in full for `next`; titles only otherwise). The `recap` gets the week and today's PR titles.
+- `data`: the slice of the day your thread needs: your story's PRs and commits, the epics, and the open PRs (in full for `next`; titles only otherwise). The `recap` gets the week, with every PR merged this week in `week.prs`, and today's PR titles.
 - `templates`: each with a description, a schema and an example. `sceneRules`: how to draw a scene.
 
 You return `name` and `shorts`.
@@ -16,9 +16,9 @@ You return `name` and `shorts`.
 - **As few shorts as the story allows, at most `maxShorts`.** Fewer is better: one short that lands beats three that explain. Aim for about 20 seconds a thread; 30 for the day's biggest story.
 - **The first short states the story's point**, the way its title and dek do. A viewer who watches only that one gets the news.
 - **A later short must earn its seconds**: add it only if a teammate would miss it if it were cut. What changed for them, or a risk they should know, earns one; how it works inside rarely does. That detail is in the digest card, one tap away.
-- Don't repeat a picture, a caption, or a point another thread makes.
+- Don't repeat a picture, a caption, or a point another thread makes. A caption adds to its headline and never says it again.
 - A story with nothing to draw still gets its thread: a `title` short with the story's title and dek, and nothing more. The leftovers story ("Also merged") always gets one short.
-- The `recap` thread: open with the week at a glance. `bars` fits, one bar per day from `data.sources.github.week.days`, split by epic. A `closedThisWeek` of null means the progress is unknown; don't show it as zero.
+- The `recap` thread: the week in review. With `themes`, the first short is the week at a glance (one line that names the week's themes, and the days' bars if they fit); then one short per theme, in their order, each showing the theme's one headline change: what is true now that wasn't on Friday, as a before and after or one picture, with at most one number. Never draw a whole theme's PRs; cite them in `refs` (they are in `data.sources.github.week.prs`). The headline and caption say only what the picture shows, in the brief's plain words. `bars` fits, one bar per day from `data.sources.github.week.days`, split by epic. A `closedThisWeek` of null means the progress is unknown; don't show it as zero.
 - The `next` thread: open PRs and epic progress worth knowing about. Cite the open PRs you show, not merged ones. An open PR is a proposal: "would", "proposed", "in review", never as if it shipped. Don't show progress of an epic another thread already covers.
 
 ## Making a short

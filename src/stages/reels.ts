@@ -24,9 +24,10 @@ const words = (t: string) => t.split(/\s+/).filter(Boolean).length;
 // story in the digest's order, then what's coming when anything is open.
 export function plan(stories: Stories, data: Data, max?: number): Planned[] {
   const threads: Planned[] = [];
-  // A story earns about one short per two cards; the leftovers ("other") get one, the week and what's coming two.
+  // A story earns about one short per two cards; the leftovers ("other") get one, the week a glance and one per
+  // theme (two before themes), what's coming two.
   const shortsFor = (s: Section) => max ?? (s.id === "other" ? 1 : Math.min(4, Math.max(1, Math.ceil(s.cards.length / 2))));
-  if (stories.recap) threads.push({ id: "recap", kind: "recap", title: stories.recap.title, maxShorts: max ?? 2 });
+  if (stories.recap) threads.push({ id: "recap", kind: "recap", title: stories.recap.title, maxShorts: max ?? Math.min(4, stories.recap.themes?.length ? stories.recap.themes.length + 1 : 2) });
   for (const s of stories.sections) threads.push({ id: s.id, kind: "story", title: s.title, section: s, maxShorts: shortsFor(s) });
   if (githubOf(data).openPrs.length) threads.push({ id: "next", kind: "next", title: "What's coming", maxShorts: max ?? 2 });
   return threads;

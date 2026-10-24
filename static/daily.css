@@ -444,3 +444,6 @@ button svg { width: 12px; height: 12px; fill: currentColor; }
 .theme p { margin: 0 0 8px; font-size: 14.5px; line-height: 1.45; }
 .theme ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 13.5px; color: var(--muted); }
 .theme li a { font-family: var(--f-mono); margin-right: 6px; }
+.theme details { margin-top: 6px; }
+.theme summary { cursor: pointer; font-size: 13px; color: var(--accent); }
+.theme details ul { margin-top: 6px; }

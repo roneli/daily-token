@@ -15,14 +15,29 @@
     },
     "recap": {
       "type": "object",
-      "description": "Weekly edition only: the seven days ending on the issue, from data.week.",
+      "description": "Weekly edition only: the seven days ending on the issue, from data.week, in 2–4 themes. Issues made before themes have points instead.",
       "additionalProperties": false,
       "required": [
         "title",
-        "dek",
-        "points"
+        "dek"
       ],
       "properties": {
+        "themes": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 3,
+          "description": "The week's threads: what moved, each with the week's PRs it covers (data.week.prs). Three at most: the week's reel thread is a glance and a short per theme, four shorts at most.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["title", "dek", "refs"],
+            "properties": {
+              "title": { "type": "string", "maxLength": 60 },
+              "dek": { "type": "string", "maxLength": 220 },
+              "refs": { "type": "array", "minItems": 1, "maxItems": 10, "items": { "oneOf": [{ "type": "integer" }, { "type": "string", "pattern": "^[\\w.-]+#\\d+$" }] } }
+            }
+          }
+        },
         "title": {
           "type": "string",
           "maxLength": 70
