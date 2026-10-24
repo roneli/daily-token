@@ -56,11 +56,13 @@ dir = "deploy/cloudflare"
 run = "bunx wrangler dev"
 
 [tasks."worker:deploy"]
-description = "Deploy the Worker on WORKER_DOMAIN, readers signed in with the GitHub App GITHUB_CLIENT_ID (from .env)"
+description = "Deploy the Worker on WORKER_DOMAIN (one or more, comma-separated), readers signed in with the GitHub App GITHUB_CLIENT_ID (from .env)"
 dir = "deploy/cloudflare"
 run = """
 : "${WORKER_DOMAIN:?set WORKER_DOMAIN in .env}" "${GITHUB_CLIENT_ID:?set GITHUB_CLIENT_ID in .env}"
-bunx wrangler deploy --domain "$WORKER_DOMAIN" --var "GITHUB_CLIENT_ID:$GITHUB_CLIENT_ID"
+set --
+for d in $(echo "$WORKER_DOMAIN" | tr ',' ' '); do set -- "$@" --domain "$d"; done
+bunx wrangler deploy "$@" --var "GITHUB_CLIENT_ID:$GITHUB_CLIENT_ID" --var "SITE_DOMAIN:${SITE_DOMAIN:-}"
 """
 
 [tasks."worker:secrets"]

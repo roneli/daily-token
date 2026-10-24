@@ -1,7 +1,8 @@
 // The site: every project, each one's latest issue and archive, and the issues, read from the bucket publish writes.
 // Read-only. It runs as the Cloudflare Worker (deploy/cloudflare) or wherever Bun runs (`daily-token serve`); each hands it a Store,
 // and a Door unless the site is open. Without a sign-in, an issue's address answers with its preview and its cover, so a
-// link unfurls wherever it's shared; the rest of a project that isn't public stays shut.
+// link unfurls wherever it's shared; the rest of a project that isn't public stays shut. With a domain, each project
+// also has its own host, <id>.<domain>, which serves that project alone.
 //
 // Bucket layout:
 //   projects.json                          [{ id, name, access }]
@@ -79,14 +80,25 @@ const archive = (project: Listed, entries: Entry[]) =>
     entries.map((e) => `<li><a href="/${project.id}/${e.date}/"><span>${e.date}</span>${e.edition === "weekly" ? " <b>Weekly edition</b>" : ""}<br>${escapeHtml(e.headline)}</a></li>`).join(""),
   );
 
-export async function site(req: Request, store: Store, door?: Door): Promise<Response> {
+export type Options = { door?: Door; domain?: string };
+
+// The project a host is for, as <id>.<domain>; any other host is for every project.
+export function hostProject(hostname: string, domain?: string): string | undefined {
+  if (!domain || !hostname.endsWith(`.${domain}`)) return undefined;
+  return hostname.slice(0, -domain.length - 1);
+}
+
+export async function site(req: Request, store: Store, { door, domain }: Options = {}): Promise<Response> {
   if (req.method !== "GET" && req.method !== "HEAD") return new Response("Method not allowed", { status: 405 });
-  const { pathname } = new URL(req.url);
+  const { pathname, hostname } = new URL(req.url);
+  const own = hostProject(hostname, domain);
   const to = (path: string, status = 302) => Response.redirect(new URL(path, req.url).toString(), status);
   const shut = () => new Response("Forbidden", { status: 403 });
 
   if (pathname.startsWith("/static/")) return serve(store, pathname.slice(1), "public, max-age=31536000, immutable");
-  const projects = await json<Listed[]>(store, "projects.json", []);
+  const listed = await json<Listed[]>(store, "projects.json", []);
+  const projects = own === undefined ? listed : listed.filter((p) => p.id === own);
+  if (own !== undefined && !projects.length) return new Response("Not found", { status: 404 });
   if (pathname.startsWith("/auth/")) return door ? door.auth(req, projects) : new Response("Not found", { status: 404 });
   const reads = async (project: Listed) => !door || (await door.reads(req, project));
   if (pathname === "/") {

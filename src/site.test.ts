@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import type { Door } from "./signin";
-import { rangeOf, type Store, site, span } from "./site";
+import { hostProject, rangeOf, type Store, site, span } from "./site";
 
 const objects: Record<string, string> = {
   "projects.json": JSON.stringify([{ id: "rocket", name: "Rocket" }]),
@@ -55,7 +55,7 @@ const door: Door = {
   reads: async (req, p) => p.access === "public" || req.headers.get("cookie") === "reader",
   auth: async () => new Response("auth"),
 };
-const gated = (path: string, cookie?: string) => site(new Request(`http://site${path}`, { headers: cookie ? { cookie } : {} }), store, door);
+const gated = (path: string, cookie?: string) => site(new Request(`http://site${path}`, { headers: cookie ? { cookie } : {} }), store, { door });
 
 test("without a sign-in, an issue's address shows its preview and cover, and nothing else of it", async () => {
   const preview = await gated("/rocket/2026-01-15/");
@@ -83,5 +83,26 @@ test("the project list shows only what the visitor may read", async () => {
   expect(list).toContain("Open");
   expect(list).not.toContain("Rocket");
   expect(await (await gated("/", "reader")).text()).toContain("Rocket");
+  objects["projects.json"] = JSON.stringify([{ id: "rocket", name: "Rocket" }]);
+});
+
+test("a project's own host serves that project alone", async () => {
+  objects["projects.json"] = JSON.stringify([{ id: "rocket", name: "Rocket" }, { id: "open", name: "Open", access: "public" }]);
+  const at = (host: string, path: string) => site(new Request(`https://${host}${path}`), store, { domain: "digest.test" });
+  expect((await at("rocket.digest.test", "/")).headers.get("location")).toBe("https://rocket.digest.test/rocket/");
+  expect(await (await at("rocket.digest.test", "/rocket/2026-01-15/")).text()).toBe("<h1>Lift-off</h1>");
+  expect((await at("rocket.digest.test", "/open/")).status).toBe(404);
+  expect((await at("nope.digest.test", "/")).status).toBe(404);
+  // Any other host is for every project.
+  expect(await (await at("digest.test", "/")).text()).toContain("Open");
+  expect(hostProject("a.b.digest.test", "digest.test")).toBe("a.b");
+  expect(hostProject("rocket.digest.test")).toBeUndefined();
+  objects["projects.json"] = JSON.stringify([{ id: "rocket", name: "Rocket" }]);
+});
+
+test("a public project reads without a sign-in", async () => {
+  objects["projects.json"] = JSON.stringify([{ id: "rocket", name: "Rocket", access: "public" }]);
+  expect(await (await gated("/rocket/2026-01-15/")).text()).toBe("<h1>Lift-off</h1>");
+  expect(await (await gated("/rocket/2026-01-15/data.json")).text()).toBe("{}");
   objects["projects.json"] = JSON.stringify([{ id: "rocket", name: "Rocket" }]);
 });

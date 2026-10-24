@@ -23,6 +23,14 @@ The site reads the bucket and nothing else. `/` lists the projects (or opens the
 - **`daily-token serve`** (`--port 8787`, `--host 127.0.0.1`): wherever Bun runs, on your laptop, a VM or a container, with the bucket's `S3_*` settings. Without the sign-in settings below it checks no one, so it serves only on this machine.
 - **The Cloudflare Worker** (`deploy/cloudflare`), optional: the bucket bound as R2 (`bucket_name` in `wrangler.toml`).
 
+### Many projects
+
+Several data roots can publish to one bucket, and one site serves them all. With `SITE_DOMAIN` set (e.g. `example.com`), each project also has its own host, `<id>.example.com`, which serves that project alone, so its sign-in is its own. Any other host lists every project the visitor may read. For each project:
+
+1. Its data root publishes to the same bucket, with `SITE_URL=https://<id>.example.com`.
+2. Add `<id>.example.com` to `WORKER_DOMAIN` (comma-separated) and `mise run worker:deploy`.
+3. Add `https://<id>.example.com/auth/callback` to the GitHub App's callback URLs, unless the project is public. An app takes 10.
+
 ## Sign-in
 
 Readers sign in with GitHub. Whoever can see every one of the project's GitHub repos may read it, since a digest tells of all of them; GitHub keeps the list, so there's none to keep here. project.json's `access` names other repos and a role (`{ "github": ["owner/repo"], "role": "push" }`), or makes a project `"public"`.
