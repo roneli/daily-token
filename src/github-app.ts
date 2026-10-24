@@ -29,7 +29,8 @@ const server = Bun.serve({
         callback_urls: [`${site}/auth/callback`, "http://localhost:8787/auth/callback"],
         redirect_url: `${url.origin}/made`,
         hook_attributes: { url: site, active: false },
-        public: false,
+        // A private app signs in only its owner; the repos still decide who reads.
+        public: true,
         default_permissions: { metadata: "read" },
       };
       const to = values.org ? `https://github.com/organizations/${values.org}/settings/apps/new` : "https://github.com/settings/apps/new";
