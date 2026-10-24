@@ -115,6 +115,14 @@ function weekView(gh: GithubDay, date: string) {
 
 const who = (p: PR | Commit) => `${p.author} · ${p.coauthors.length ? p.coauthors.join(" + ") : "solo"}`;
 
+// The issue's tabs, in order, and the line a phone's section menu says about each: the one place they are named.
+export const TABS = [
+  { id: "reels", name: "Digest", line: "Watch today's changes as short stories" },
+  { id: "digest", name: "Ledger", line: "Read what changed, one card at a time" },
+  { id: "blueprint", name: "Blueprint", line: "See where today's changes landed" },
+];
+const MOTION_LINE = "Hear how one part works, start to finish";
+
 export async function renderIssue(issue: Issue, assets: Record<string, string>, files?: MotionFiles) {
   const { data, stories, reels, system } = issue;
   const gh = githubOf(data);
@@ -192,6 +200,7 @@ export async function renderIssue(issue: Issue, assets: Record<string, string>, 
   const byWho = new Map<string, number>();
   for (const p of [...gh.prs, ...(gh.commits ?? [])]) byWho.set(who(p), (byWho.get(who(p)) ?? 0) + 1);
 
+  const motion = motionView(issue, pr, files);
   const html = await engine.renderFile("issue", {
     data,
     github: gh,
@@ -209,7 +218,10 @@ export async function renderIssue(issue: Issue, assets: Record<string, string>, 
     who: [...byWho].sort((a, b) => b[1] - a[1]).map(([label, n]) => ({ label, n })),
     assets,
     total: { prs: gh.prs.length, commits: gh.commits?.length ?? 0 },
-    motion: motionView(issue, pr, files),
+    motion,
+    tabs: [...TABS, ...(motion ? [{ id: "motion", name: MOTION_TAB, line: MOTION_LINE }] : [])],
+    // Each tab's name by its id, for the words that point at a tab.
+    names: Object.fromEntries(TABS.map((t) => [t.id, t.name])),
   });
   return { html, reels: reelViews };
 }

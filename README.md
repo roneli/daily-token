@@ -24,8 +24,8 @@ Not on npm yet: from a clone, `bun install && bun link`, then `bun link daily-to
 
 Each issue has four tabs:
 
-- **Reels**: one thread of 6–12 s animated shorts per story, played like stories on a phone.
-- **Digest**: one card per PR, in plain words, with the technical detail under the hood.
+- **Digest**: one thread of 6–12 s animated shorts per story, played like stories on a phone.
+- **Ledger**: one card per PR, in plain words, with the technical detail under the hood.
 - **Blueprint**: a map of the system, with the parts that changed today lit up.
 - **Cutaway** (optional): a narrated 40–90 s tour of how one part of the system works.
 

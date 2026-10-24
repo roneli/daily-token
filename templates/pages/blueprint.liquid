@@ -64,7 +64,7 @@
             <a class="bp-item" href="{{ c.url }}" target="_blank"><span class="type" style="color:var({{ c.typeColor }})"><i style="background:var({{ c.typeColor }})"></i>{{ c.typeLabel }}</span><span class="h">{{ c.headline }}</span><span class="n">{{ c.ref | ref }}</span></a>
             {%- endfor %}
           </div>
-          <a class="bp-read" href="#d-{{ p.sectionId }}" data-digest="d-{{ p.sectionId }}">Read these in the digest ›</a>
+          <a class="bp-read" href="#d-{{ p.sectionId }}" data-digest="d-{{ p.sectionId }}">Read these in the {{ names.digest }} ›</a>
           <div class="bp-others"><span class="label">Other parts that changed</span>{% for o in bp.lit %}{% if o.id != p.id %}<button class="place" type="button" data-part="{{ o.id }}">{{ o.name }} · {{ o.n }}</button>{% endif %}{% endfor %}</div>
         </div>
         {%- endfor %}

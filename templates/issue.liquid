@@ -17,16 +17,23 @@
 <div class="app" data-edition="{{ data.edition }}">
   <div class="top">
     <div class="topline">
-      <div class="masthead"><button class="ed-open" type="button" data-editions="open" aria-controls="editions" aria-label="Editions">☰</button><div class="issue"><b class="nameplate">The Daily Token</b><span>No. {{ no }}</span><span>{{ project.name }}</span><span>{{ day }}</span>{% if data.edition == "weekly" %}<span class="weekly">Weekly edition</span>{% endif %}<span>{{ total.prs }} PRs{% if total.commits > 0 %} · {{ total.commits }} commits{% endif %} · {{ github.tags.size }} tags</span></div></div>
+      <div class="masthead"><button class="ed-open" type="button" data-editions="open" aria-controls="editions" aria-label="Editions">☰</button><div class="mast-text"><div class="issue"><b class="nameplate">The Daily Token</b><span>No. {{ no }}</span><span>{{ project.name }}</span><span>{{ day }}</span>{% if data.edition == "weekly" %}<span class="weekly">Weekly edition</span>{% endif %}<span>{{ total.prs }} PRs{% if total.commits > 0 %} · {{ total.commits }} commits{% endif %} · {{ github.tags.size }} tags</span></div></div></div>
       <div class="tabs" role="tablist" aria-label="Page">
-        <button role="tab" id="tab-reels" type="button" aria-selected="true">Reels</button>
-        <button role="tab" id="tab-digest" type="button" aria-selected="false">Digest</button>
-        <button role="tab" id="tab-blueprint" type="button" aria-selected="false">Blueprint</button>
-        {%- if motion %}
-        <button role="tab" id="tab-motion" type="button" aria-selected="false">{{ motion.label }}</button>
-        {%- endif %}
+        {%- for t in tabs %}
+        <button role="tab" id="tab-{{ t.id }}" type="button" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">{{ t.name }}</button>
+        {%- endfor %}
+      </div>
+      <button class="section-pill" id="section-pill" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="sections"><span id="section-name">{{ tabs[0].name }}</span><span class="caret" aria-hidden="true">▾</span></button>
+      <div class="sections" id="sections" hidden>
+        {%- for t in tabs %}
+        <button type="button" data-tab="{{ t.id }}"{% if forloop.first %} aria-current="true"{% endif %}>
+          <svg viewBox="0 0 24 24" aria-hidden="true">{% case t.id %}{% when "reels" %}<rect x="5" y="3" width="14" height="18" rx="3"/><path d="M10 9l5 3-5 3z" class="fill"/>{% when "digest" %}<path d="M5 6h14M5 11h14M5 16h9"/>{% when "blueprint" %}<rect x="3" y="4" width="7" height="6" rx="1"/><rect x="14" y="14" width="7" height="6" rx="1"/><path d="M10 7h4v10"/>{% else %}<circle cx="12" cy="12" r="8"/><path d="M12 4v8l5 3"/>{% endcase %}</svg>
+          <b>{{ t.name }}</b><small>{{ t.line }}</small>
+        </button>
+        {%- endfor %}
       </div>
     </div>
+    <p class="issue-line">{{ stories.headline }}</p>
     <div class="pagehead">
       <h1 class="ph-title">{{ stories.headline }}</h1>
       <p class="ph-dek" id="ph-dek">{{ overview }}</p>

@@ -2,7 +2,7 @@ import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { bucket } from "./bucket";
 import { issueArgs, issueDates, loadIssue } from "./issue";
-import { indexOf } from "./render";
+import { indexOf, TABS } from "./render";
 
 // Publish makes the issues bucket match the data root: every issue's JSON and page, the editions list and the shared assets.
 // Pages are rendered again on each publish, so a template or player fix reaches every issue of its format.
@@ -54,6 +54,7 @@ if (!projects.some((p) => p.id === id && p.name === name)) {
   if (!dry) await s3.write("projects.json", JSON.stringify(list, null, 1), { type: "application/json" });
 }
 
+const tabName = (id: string) => TABS.find((t) => t.id === id)?.name ?? id;
 const announce = values.announce as string | undefined;
 const webhook = process.env.SLACK_WEBHOOK_URL;
 const site = process.env.SITE_URL;
@@ -61,7 +62,7 @@ if (announce && webhook && site) {
   const issue = issues.find((i) => i.data.date === announce);
   if (!issue) throw new Error(`no issue ${announce} to announce`);
   const label = issue.data.edition === "weekly" ? "Weekly edition" : "The Daily Token";
-  const text = `🗞️ *${label} · ${name} · ${announce}*\n${issue.stories.headline}\n<${site.replace(/\/$/, "")}/${id}/${announce}/|Watch the reels and read the digest>`;
+  const text = `🗞️ *${label} · ${name} · ${announce}*\n${issue.stories.headline}\n<${site.replace(/\/$/, "")}/${id}/${announce}/|Watch the ${tabName("reels")} and read the ${tabName("digest")}>`;
   console.log(`${dry ? "would post" : "post"} to Slack`);
   if (!dry) {
     const res = await fetch(webhook, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text }) });

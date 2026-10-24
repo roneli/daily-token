@@ -26,7 +26,7 @@
     {%- endfor %}
     {%- if t.section %}{% assign more = t.section.cards.size %}{% assign what = "change" %}{% elsif t.id == "recap" %}{% assign more = stories.recap.points.size %}{% assign what = "point" %}{% else %}{% assign more = openPrs.size %}{% assign what = "open PR" %}{% endif %}
     <button class="read-bar" type="button" data-read><span class="chev" aria-hidden="true"></span><span>Read the story</span><span class="more">{{ more }} {{ what }}{% if more != 1 %}s{% endif %}</span></button>
-    <aside class="sheet" aria-label="The story in the digest" hidden>
+    <aside class="sheet" aria-label="The story in the {{ names.digest }}" hidden>
       <span class="sheet-grab" aria-hidden="true"></span>
       <button class="sheet-close" type="button" data-sheet="close" aria-label="Close">↓ Back to the reel</button>
       {%- if t.section %}

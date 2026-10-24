@@ -422,16 +422,16 @@
   }
 
   // Tabs
-  const DEKS = {
-    reels: document.getElementById("ph-dek").textContent,
-    digest: "Every change in plain words. Open “Under the hood” on a card for the technical detail.",
-    blueprint: `Where today's changes landed. ${matchMedia("(hover: none)").matches ? "Tap" : "Click"} a lit part to see its changes.`,
-  };
-  // The Cutaway tab, when the issue has a motion: its dek is on its page, its video plays only when asked.
+  // The line under the headline: the reels' overview; the other tabs say what they are by their name alone.
+  const DEKS = { reels: document.getElementById("ph-dek").textContent, digest: "", blueprint: "" };
+  // The Cutaway tab, when the issue has a motion: its video plays only when asked.
   const motionPage = document.getElementById("page-motion");
   const video = document.getElementById("motion-video");
-  if (motionPage) DEKS.motion = motionPage.dataset.dek;
+  if (motionPage) DEKS.motion = "";
   const PAGES = Object.keys(DEKS).filter((name) => name !== "reels");
+  // A tab's address is its name ("#ledger"); its id ("#reels", "#motion"), its older address, still opens it.
+  const ADDRESS = Object.fromEntries(Object.keys(DEKS).map((id) => [id, document.getElementById(`tab-${id}`).textContent.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-")]));
+  const tabAt = (h) => Object.keys(ADDRESS).find((id) => ADDRESS[id] === h) ?? (h in DEKS ? h : undefined);
   function showTab(which, anchor) {
     if (which !== "reels") { dropSheet(); setPlaying(false); }
     if (which !== "motion") video?.pause();
@@ -440,15 +440,50 @@
       if (t >= tls[cur].ms) go(cur === pages.length - 1 ? 0 : cur);
     }
     for (const name of Object.keys(DEKS)) document.getElementById(`tab-${name}`).setAttribute("aria-selected", name === which);
+    // The phone's section menu names the same tab.
+    document.getElementById("section-name").textContent = document.getElementById(`tab-${which}`).textContent;
+    for (const b of document.querySelectorAll("#sections [data-tab]")) b.toggleAttribute("aria-current", b.dataset.tab === which);
     for (const name of PAGES) document.getElementById(`page-${name}`).hidden = which !== name;
     app.classList.toggle("on-page", which !== "reels");
     document.getElementById("ph-dek").textContent = DEKS[which];
     const shown = which === "reels" ? book : document.getElementById(`page-${which}`);
     if (!reduced && shown.animate) shown.animate([{ opacity: 0, transform: "translateY(6px)" }, { opacity: 1, transform: "none" }], { duration: 260, easing: "cubic-bezier(.2,.8,.2,1)" });
-    try { history.replaceState(null, "", `#${which}`); } catch {}
+    try { history.replaceState(null, "", `#${ADDRESS[which]}`); } catch {}
     requestAnimationFrame(() => { const el = anchor && document.getElementById(anchor); if (el) el.scrollIntoView({ block: "start" }); else scrollTo(0, 0); });
   }
   for (const name of Object.keys(DEKS)) document.getElementById(`tab-${name}`).addEventListener("click", () => showTab(name));
+
+  // Phones: one pill names the tab you are on and opens the others, each with a line on what it is.
+  const pill = document.getElementById("section-pill");
+  const menu = document.getElementById("sections");
+  // It grows out of the pill, its rows following one after another, and shrinks back into it.
+  const curve = "cubic-bezier(.2,.8,.2,1)";
+  let closing = null;
+  const openSections = (open) => {
+    pill.setAttribute("aria-expanded", open);
+    closing?.cancel();
+    closing = null;
+    if (open) {
+      menu.hidden = false;
+      if (reduced || !menu.animate) return;
+      menu.animate([{ opacity: 0, transform: "translateY(-6px) scale(.94)" }, { opacity: 1, transform: "none" }], { duration: 220, easing: curve });
+      for (const [i, b] of [...menu.children].entries())
+        b.animate([{ opacity: 0, transform: "translateY(-4px)" }, { opacity: 1, transform: "none" }], { duration: 200, delay: 40 + i * 35, easing: curve, fill: "backwards" });
+    } else if (!menu.hidden) {
+      if (reduced || !menu.animate) { menu.hidden = true; return; }
+      closing = menu.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(-4px) scale(.96)" }], { duration: 140, easing: "ease-in" });
+      closing.onfinish = () => { menu.hidden = true; closing = null; };
+    }
+  };
+  pill.addEventListener("click", (e) => { e.stopPropagation(); openSections(menu.hidden); });
+  menu.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-tab]");
+    if (!b) return;
+    openSections(false);
+    showTab(b.dataset.tab);
+  });
+  document.addEventListener("click", (e) => { if (!menu.hidden && !e.target.closest("#sections")) openSections(false); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !menu.hidden) { openSections(false); pill.focus(); } });
   // The narration under the video: a line's time plays from there, and the line being shown is marked.
   if (video) {
     const lines = [...motionPage.querySelectorAll(".narration li")];
@@ -471,8 +506,9 @@
 
   setPlaying(playing);
   go(0);
-  if (PAGES.includes(location.hash.slice(1))) showTab(location.hash.slice(1));
-  addEventListener("hashchange", () => { const h = location.hash.slice(1); if (PAGES.includes(h)) showTab(h); });
+  const opened = tabAt(location.hash.slice(1));
+  if (opened && opened !== "reels") showTab(opened);
+  addEventListener("hashchange", () => { const t = tabAt(location.hash.slice(1)); if (t) showTab(t); });
 
   // Editions: a drawer on small screens, a rail on wide ones. The list comes from the site's index.json,
   // so an old issue still lists the editions published after it.

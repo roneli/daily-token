@@ -376,3 +376,37 @@ button svg { width: 12px; height: 12px; fill: currentColor; }
   .circle .dot { font-size: 14px; }
   .circle .cname { max-width: 50px; font-size: 10px; }
 }
+
+/* The masthead's text, and the phone's section menu in place of the tabs. On a wide screen the tabs stay. */
+.mast-text { display: contents; }
+.issue-line, .section-pill { display: none; }
+.ph-dek:empty { display: none; }
+.sections[hidden] { display: none; }
+@media (max-width: 700px) {
+  .topline { position: relative; flex-wrap: nowrap; gap: 8px; }
+  .masthead { flex: 1; min-width: 0; }
+  .mast-text { display: grid; min-width: 0; }
+  .topline .issue span { display: none; }
+  .issue .nameplate { font-size: 21px; white-space: nowrap; }
+  /* The issue's headline, whole, under the masthead on every tab; the page head's own title isn't repeated. */
+  .issue-line { display: block; margin: 0; font: 700 15.5px/1.25 var(--f-display); color: var(--ink); text-wrap: balance; }
+  .app.on-page .issue-line { padding-bottom: 10px; border-bottom: 1.5px solid var(--ink); }
+  .pagehead { display: none; }
+  .tabs { display: none; }
+  .section-pill { display: inline-flex; align-items: center; gap: 4px; flex: none; padding: 6px 12px; border: 1px solid var(--rule); border-radius: 999px; background: var(--surface); color: var(--ink); font-weight: 600; }
+  .section-pill .caret { color: var(--muted); font-size: 12px; transition: transform .2s cubic-bezier(.2,.8,.2,1); }
+  .section-pill[aria-expanded="true"] .caret { transform: rotate(180deg); }
+  .section-pill:active { transform: scale(.97); }
+  .sections { position: absolute; right: 0; top: calc(100% + 6px); z-index: 60; transform-origin: top right; width: min(290px, calc(100vw - 32px)); display: grid; gap: 2px; padding: 6px;
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; box-shadow: 0 12px 32px rgb(0 0 0 / .16); }
+  .sections button { display: grid; grid-template-columns: 26px 1fr; gap: 1px 10px; align-items: center; padding: 9px 10px; border: 0; border-radius: 10px; background: none; color: var(--ink); text-align: left; }
+  .sections button:active { background: color-mix(in srgb, var(--ink) 6%, transparent); }
+  .sections button[aria-current="true"] { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+  .sections svg { grid-row: span 2; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .sections svg .fill { fill: currentColor; stroke: none; }
+  .sections b { font: 600 14.5px/1.2 var(--f-body); }
+  .sections small { color: var(--muted); font-size: 12.5px; line-height: 1.3; }
+  /* The reel's picture reaches toward the card's edges. */
+  .app:not(.on-page) .page.reel .viz { margin-inline: -12px; }
+}
+@media (prefers-reduced-motion: reduce) { .section-pill .caret { transition: none; } }
