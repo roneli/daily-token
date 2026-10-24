@@ -137,7 +137,7 @@ export function door(env: SignInEnv, ask: Asker = github(env)): Door {
         return page(502, "GitHub didn't answer", "Try again in a moment.", { "set-cookie": done });
       }
       if (!allowed)
-        return page(403, "No access", `Your GitHub account ${escapeHtml(login)} can't see all of this digest's repos. Ask its owner for access, or sign in to GitHub with another account.`, { "set-cookie": done });
+        return page(403, "No access", `GitHub didn't show your account ${escapeHtml(login)} all of this digest's repos. Either the account can't see them, or the sign-in's GitHub App isn't installed on them yet: the repos' owner installs it. Ask the digest's owner, or sign in to GitHub with another account.`, { "set-cookie": done });
       const session = await new SignJWT({}).setProtectedHeader({ alg: "HS256" }).setSubject(login).setIssuer(ISSUER).setAudience(project.id).setIssuedAt().setExpirationTime(`${SESSION_HOURS}h`).sign(key);
       const headers = new Headers({ location: new URL(to, url.origin).toString(), "cache-control": "no-store" });
       headers.append("set-cookie", done);
