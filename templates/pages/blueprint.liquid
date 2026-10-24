@@ -5,7 +5,8 @@
         <div class="legend">{% for l in bp.legend %}<span><span class="swatch" style="background:var({{ l.color }})"></span>{{ l.name }}</span>{% endfor %}</div>
         <span class="clickhint">●<span><span class="verb"></span> a lit part to see its changes</span></span>
       </div>
-      <div class="panel scroll">
+      <div class="panel scroll bp-map">
+        <button class="bp-done" type="button" data-bp="done">✕ Close</button>
         <svg id="map" role="img" aria-label="Map of the system. Parts changed today are outlined in their story's color with a count; dashed parts didn't change." viewBox="0 0 {{ bp.size[0] }} {{ bp.size[1] }}" width="100%">
           <defs><marker id="bp-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker></defs>
           {%- for g in bp.groups %}
@@ -30,8 +31,19 @@
           </g>
           {%- endfor %}
         </svg>
+        <button class="bp-zoom" type="button" data-bp="zoom">⤢ Open the map</button>
       </div>
       <figcaption>Lit parts changed today; the badge is how many changes. Dashed parts didn't change.</figcaption>
+      <div class="bp-cards" aria-label="Changed today">
+        <h3 class="bp-cards-title">Changed today</h3>
+        {%- for p in bp.lit %}
+        <button type="button" class="bp-card" data-open-part="{{ p.id }}" style="--c:var({{ p.color }})">
+          <span class="kicker">{{ p.story }} · {{ p.n }} change{% if p.n != 1 %}s{% endif %} today</span>
+          <b>{{ p.name }}</b>
+          {%- if p.today %}<span class="line">{{ p.today | inline | raw }}</span>{% endif %}
+        </button>
+        {%- endfor %}
+      </div>
       {%- if bp.tags %}
       <h3 class="sub">Today's releases</h3>
       <div class="panel scroll">
