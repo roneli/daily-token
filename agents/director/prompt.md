@@ -12,7 +12,7 @@ You return `name` and `shorts`.
 
 ## The thread
 
-- `name`: 1–2 plain words under the thread's circle ("Ignition", "Countdown", "Coming up"). A newcomer should know what it's about.
+- `name`: 1–2 plain words under the thread's circle, at most 11 characters so a phone shows them whole ("Ignition", "Countdown", "Coming up"). A newcomer should know what it's about.
 - **As few shorts as the story allows, at most `maxShorts`.** Fewer is better: one short that lands beats three that explain. Aim for about 20 seconds a thread; 30 for the day's biggest story.
 - **The first short states the story's point**, the way its title and dek do. A viewer who watches only that one gets the news.
 - **A later short must earn its seconds**: add it only if a teammate would miss it if it were cut. What changed for them, or a risk they should know, earns one; how it works inside rarely does. That detail is in the digest card, one tap away.

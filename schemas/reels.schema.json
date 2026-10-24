@@ -26,8 +26,8 @@
           "name": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 14,
-            "description": "1\u20132 words under the thread's circle."
+            "maxLength": 11,
+            "description": "1\u20132 words under the thread's circle, at most 11 characters so a phone shows them whole."
           },
           "shorts": {
             "type": "array",

@@ -11,7 +11,7 @@
     "headline": {
       "type": "string",
       "minLength": 10,
-      "maxLength": 90
+      "maxLength": 70
     },
     "recap": {
       "type": "object",
