@@ -34,5 +34,5 @@ const store: Store = {
   },
 };
 
-const server = Bun.serve({ port: Number(values.port), hostname: values.host, fetch: (req) => site(req, store, { door: gate, domain: process.env.SITE_DOMAIN || undefined, home: process.env.HOME_KEY || undefined }) });
+const server = Bun.serve({ port: Number(values.port), hostname: values.host, fetch: (req) => site(req, store, { door: gate, domain: process.env.SITE_DOMAIN || undefined, home: process.env.HOME_PROJECT || undefined }) });
 console.log(`serving the bucket on ${server.url}${open ? ", open to anyone on this machine" : ", signed in with GitHub"}`);

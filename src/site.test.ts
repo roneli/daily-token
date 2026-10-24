@@ -110,23 +110,11 @@ test("a public project reads without a sign-in", async () => {
   objects["projects.json"] = JSON.stringify([{ id: "rocket", name: "Rocket" }]);
 });
 
-test("a home page shows at / on a host that isn't a project's, or behind a key only at /<key>/", async () => {
-  objects["home/index.html"] = "<h1>Home</h1>";
-  objects["home/hero.png"] = "png";
-  const at = (path: string, home?: string) => site(new Request(`https://digest.test${path}`), store, { domain: "digest.test", home });
-  expect(await (await at("/")).text()).toBe("<h1>Home</h1>");
-  expect(await (await at("/hero.png")).text()).toBe("png");
-  // A project's own host never shows it.
-  expect((await site(new Request("https://rocket.digest.test/"), store, { domain: "digest.test" })).headers.get("location")).toBe("https://rocket.digest.test/rocket/");
-  const key = "0f1e2d3c";
-  expect((await at("/", key)).status).toBe(404);
-  expect((await at("/hero.png", key)).status).toBe(404);
-  const hidden = await at(`/${key}/`, key);
-  expect(await hidden.text()).toBe("<h1>Home</h1>");
-  expect(hidden.headers.get("x-robots-tag")).toContain("noindex");
-  expect(hidden.headers.get("referrer-policy")).toBe("no-referrer");
-  expect(await (await at(`/${key}/hero.png`, key)).text()).toBe("png");
-  expect((await at(`/${key}/../rocket/`, key)).status).not.toBe(200);
-  delete objects["home/index.html"];
-  delete objects["home/hero.png"];
+test("the bare domain can be one project's own host", async () => {
+  objects["projects.json"] = JSON.stringify([{ id: "rocket", name: "Rocket" }, { id: "open", name: "Open", access: "public" }]);
+  const at = (path: string) => site(new Request(`https://digest.test${path}`), store, { domain: "digest.test", home: "rocket" });
+  expect((await at("/")).headers.get("location")).toBe("https://digest.test/rocket/");
+  expect(await (await at("/rocket/2026-01-15/")).text()).toBe("<h1>Lift-off</h1>");
+  expect((await at("/open/")).status).toBe(404);
+  objects["projects.json"] = JSON.stringify([{ id: "rocket", name: "Rocket" }]);
 });
