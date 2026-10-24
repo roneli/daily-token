@@ -6,8 +6,18 @@
   "required": ["id", "name"],
   "anyOf": [{ "required": ["sources"] }, { "required": ["repos"] }],
   "properties": {
-    "id": { "type": "string", "pattern": "^[a-z0-9-]+$", "not": { "enum": ["static", "archive"] }, "description": "The site path: /<id>/<date>/" },
+    "id": { "type": "string", "pattern": "^[a-z0-9-]+$", "not": { "enum": ["static", "archive", "share"] }, "description": "The site path: /<id>/<date>/" },
     "name": { "type": "string", "maxLength": 32 },
+    "company": { "type": "string", "maxLength": 40, "description": "Who the digest is for, shown on its share cover beside the logo; without it, the project's name." },
+    "cover": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The share cover, the picture a link preview shows. It shows nothing of the work unless headline is true.",
+      "properties": {
+        "logo": { "type": "string", "description": "A logo file in the data root: SVG, PNG, GIF or WebP. An animated one plays on the site; the cover takes a still of it." },
+        "headline": { "type": "boolean", "description": "Put the issue's headline on the cover, so anyone with the share link sees it. Off by default." }
+      }
+    },
     "days": { "type": "array", "uniqueItems": true, "items": { "enum": ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] }, "description": "The days an issue comes out. Each issue covers everything since the previous one; without this, every day." },
     "weekly": { "enum": ["sun", "mon", "tue", "wed", "thu", "fri", "sat"], "description": "The day an issue also looks back at the seven days ending on it. Without this, no weekly edition." },
     "sources": { "type": "object", "minProperties": 1, "description": "Each source's config by name, e.g. \"github\": { \"repos\": [\"owner/name\"] }. Each source checks its own." },

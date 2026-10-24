@@ -62,7 +62,7 @@ if (announce && webhook && site) {
   const issue = issues.find((i) => i.data.date === announce);
   if (!issue) throw new Error(`no issue ${announce} to announce`);
   const label = issue.data.edition === "weekly" ? "Weekly edition" : "The Daily Token";
-  const text = `🗞️ *${label} · ${name} · ${announce}*\n${issue.stories.headline}\n<${site.replace(/\/$/, "")}/${id}/${announce}/|Watch the ${tabName("reels")} and read the ${tabName("digest")}>`;
+  const text = `🗞️ *${label} · ${issues[0].project.company ?? name} · ${announce}*\n${issue.stories.headline}\n<${site.replace(/\/$/, "")}/share/${id}/${announce}/|Watch the ${tabName("reels")} and read the ${tabName("digest")}>`;
   console.log(`${dry ? "would post" : "post"} to Slack`);
   if (!dry) {
     const res = await fetch(webhook, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text }) });

@@ -21,6 +21,9 @@ const PROJECT = /^\/([a-z0-9-]+)(\/.*)?$/;
 const DATE = /^\/(\d{4}-\d{2}-\d{2})(\/.*)?$/;
 // The motion's video and poster are named by their content, so they never change under that name.
 const HASHED = /\/motion\.[0-9a-f]{10}\.(mp4|jpg|json)$/;
+// A share link: an issue's preview page and its cover, the only things the site shows without a sign-in.
+const SHARE = /^\/share\/([a-z0-9-]+)\/(\d{4}-\d{2}-\d{2})\/(cover\.[0-9a-f]{10}\.png)?$/;
+export const isShare = (pathname: string) => SHARE.test(pathname);
 
 const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
@@ -80,6 +83,9 @@ export async function site(req: Request, store: Store): Promise<Response> {
   const to = (path: string, status = 302) => Response.redirect(new URL(path, req.url).toString(), status);
 
   if (pathname.startsWith("/static/")) return serve(store, pathname.slice(1), "public, max-age=31536000, immutable");
+  const share = SHARE.exec(pathname);
+  if (share) return serve(store, `${share[1]}/issues/${share[2]}/${share[3] ?? "share.html"}`, share[3] ? "public, max-age=31536000, immutable" : "public, max-age=300");
+  if (pathname.startsWith("/share/")) return new Response("Not found", { status: 404 });
   if (pathname === "/") {
     const projects = await json<Project[]>(store, "projects.json", []);
     return projects.length === 1 ? to(`/${projects[0].id}/`) : projectList(projects);

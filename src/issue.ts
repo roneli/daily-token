@@ -7,6 +7,10 @@ import type { Storyboard } from "./motion";
 export type Project = {
   id: string;
   name: string;
+  // Who the digest is for, on the share cover; else the name
+  company?: string;
+  // The share cover: a logo in the data root, and whether the headline shows
+  cover?: { logo?: string; headline?: boolean };
   // Each source's config, by source name: "github": { "repos": [...] }
   sources?: Record<string, unknown>;
   // Before sources: the GitHub repos, the first being home

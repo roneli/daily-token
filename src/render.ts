@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { Liquid } from "liquidjs";
 import { type Commit, commitRef, ENGINE, FORMAT, type GithubDay, githubOf, type Issue, issueArgs, issueDates, loadIssue, type PR, type Project, type Ref, refLabel, refOf, repoName, reposOf, shortsOf, writeJson } from "./issue";
+import { coverFiles, shooter } from "./cover";
 import { estimated, linesOf, lookOf, MOTION_TAB, type MotionFiles, motionFiles, refsOf, startsOf, timeline } from "./motion";
 import { kokoro, voiceOf } from "./voice";
 
@@ -239,7 +240,8 @@ export async function renderIssue(issue: Issue, assets: Record<string, string>, 
     // Each tab's name by its id, for the words that point at a tab.
     names: Object.fromEntries(TABS.map((t) => [t.id, t.name])),
   });
-  return { html, reels: reelViews };
+  // The threads' colours, for the share cover's rings.
+  return { html, reels: reelViews, rings: threads.map((t) => t.color) };
 }
 
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
@@ -339,16 +341,19 @@ if (import.meta.main) {
   }
 
   const assets = await pinAssets(out);
+  const shoot = shooter();
   for (const issue of byFormat.get(FORMAT) ?? []) {
     const dir = join(out, issue.project.id, issue.data.date);
     // The motion's files are named by everything that changes them, so only a new storyboard, look or voice renders
     // again; an issue without one keeps none.
     const props = issue.motion && { storyboard: issue.motion, system: issue.system, look: lookOf(issue.project.name, issue.data.date), voice: voiceOf(issue.project.pipeline?.motion) };
-    const { html } = await renderIssue(issue, assets, await motionFiles(props, dir, kokoro));
+    const { html, rings } = await renderIssue(issue, assets, await motionFiles(props, dir, kokoro));
     const path = join(dir, "index.html");
     await Bun.write(path, html);
+    await coverFiles(issue, rings, dir, shoot);
     console.log(`rendered ${path}`);
   }
+  await shoot.close();
   // The same shape publish keeps in R2, so the editions list works in preview too. It lists every issue in the root,
   // not only the ones rendered now.
   const project = issues[0].project.id;

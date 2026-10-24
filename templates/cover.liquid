@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>{{ fonts | raw }}</style>
+<style>{{ css | raw }}</style>
+<style>
+html, body { margin: 0; background: var(--bg); }
+.cv-cover { width: 1200px; height: 630px; box-sizing: border-box; padding: 60px 76px; display: grid; grid-template-rows: auto 1fr auto; gap: 20px; background: var(--bg); color: var(--ink); position: relative; overflow: hidden; }
+.cv-cover::before { content: ""; position: absolute; inset: 24px; border: 1.5px solid var(--ink); border-radius: 18px; opacity: .12; }
+.cv-top { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding-bottom: 18px; border-bottom: 2px solid var(--ink); }
+.cv-np { font: 400 66px/1 var(--f-mast); }
+.cv-who { display: flex; align-items: center; gap: 16px; font: 600 30px/1 var(--f-body); }
+.cv-who img { height: 64px; width: auto; max-width: 220px; object-fit: contain; }
+.cv-mid { display: grid; align-content: center; gap: 14px; }
+.cv-dateline { font: 500 24px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.cv-dateline b { color: var(--core); font-weight: 500; }
+.cv-cover h1 { margin: 0; font: 700 60px/1.08 var(--f-display); letter-spacing: -.015em; text-wrap: balance; max-width: 1040px; }
+.cv-counts { margin: 0; font: 500 30px/1.3 var(--f-body); color: var(--muted); }
+.cv-foot { display: flex; justify-content: space-between; align-items: center; }
+.cv-rings { display: flex; gap: 18px; }
+.cv-rings i { width: 54px; height: 54px; border-radius: 50%; box-sizing: border-box; padding: 5px; background: conic-gradient(var(--c), var(--accent), var(--c)); }
+.cv-rings i::after { content: ""; display: block; width: 100%; height: 100%; border-radius: 50%; border: 3px solid var(--bg); box-sizing: border-box; background: var(--surface); }
+.cv-tabs { font: 500 19px/1 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="cv-cover">
+  <div class="cv-top">
+    <span class="cv-np">The Daily Token</span>
+    <span class="cv-who">{% if logo %}<img src="{{ logo }}" alt="">{% endif %}{{ company }}</span>
+  </div>
+  <div class="cv-mid">
+    <div class="cv-dateline">No. {{ no }} · {{ day }}{% if weekly %} · <b>Weekly edition</b>{% endif %}</div>
+    {%- if headline %}
+    <h1>{{ headline }}</h1>
+    {%- else %}
+    <h1>{% if weekly %}The week in review{% else %}Today's changes{% endif %}</h1>
+    {%- endif %}
+    <p class="cv-counts">{{ counts }}</p>
+  </div>
+  <div class="cv-foot">
+    <div class="cv-rings">{% for c in rings %}<i style="--c:var({{ c }})"></i>{% endfor %}</div>
+    <span class="cv-tabs">{{ tabs }}</span>
+  </div>
+</div>
+</body>
+</html>
