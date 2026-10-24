@@ -5,7 +5,7 @@
 import { site, type Store } from "../../../src/site";
 import { door, type SignInEnv } from "../../../src/signin";
 
-type Env = SignInEnv & { ISSUES: R2Bucket; SITE_DOMAIN?: string };
+type Env = SignInEnv & { ISSUES: R2Bucket; SITE_DOMAIN?: string; HOME_KEY?: string };
 
 const LOCAL = new Set(["localhost", "127.0.0.1"]);
 
@@ -20,6 +20,6 @@ export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     // `wrangler dev` without a GitHub App is open; deployed, the Worker answers only for its domain, never localhost.
     const open = LOCAL.has(new URL(req.url).hostname) && !env.GITHUB_CLIENT_ID;
-    return site(req, r2(env.ISSUES), { door: open ? undefined : door(env), domain: env.SITE_DOMAIN || undefined });
+    return site(req, r2(env.ISSUES), { door: open ? undefined : door(env), domain: env.SITE_DOMAIN || undefined, home: env.HOME_KEY || undefined });
   },
 };

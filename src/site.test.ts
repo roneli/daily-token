@@ -108,3 +108,23 @@ test("a public project reads without a sign-in", async () => {
   expect(await (await gated("/rocket/2026-01-15/data.json")).text()).toBe("{}");
   objects["projects.json"] = JSON.stringify([{ id: "rocket", name: "Rocket" }]);
 });
+
+test("a home page shows at / on a host that isn't a project's, or behind a key only at /<key>/", async () => {
+  objects["home/index.html"] = "<h1>Home</h1>";
+  objects["home/hero.png"] = "png";
+  const at = (path: string, home?: string) => site(new Request(`https://digest.test${path}`), store, { domain: "digest.test", home });
+  expect(await (await at("/")).text()).toBe("<h1>Home</h1>");
+  expect(await (await at("/hero.png")).text()).toBe("png");
+  // A project's own host never shows it.
+  expect((await site(new Request("https://rocket.digest.test/"), store, { domain: "digest.test" })).headers.get("location")).toBe("https://rocket.digest.test/rocket/");
+  const key = "0f1e2d3c";
+  expect((await at("/", key)).status).toBe(404);
+  expect((await at("/hero.png", key)).status).toBe(404);
+  const hidden = await at(`/${key}/`, key);
+  expect(await hidden.text()).toBe("<h1>Home</h1>");
+  expect(hidden.headers.get("x-robots-tag")).toContain("noindex");
+  expect(await (await at(`/${key}/hero.png`, key)).text()).toBe("png");
+  expect((await at(`/${key}/../rocket/`, key)).status).not.toBe(200);
+  delete objects["home/index.html"];
+  delete objects["home/hero.png"];
+});

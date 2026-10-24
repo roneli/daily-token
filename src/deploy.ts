@@ -13,6 +13,7 @@ import { ENGINE } from "./issue";
 //   SITE_DOMAIN           optional: gives each project its own host, <id>.<SITE_DOMAIN>
 //   S3_BUCKET             the bucket publish writes, bound to the Worker (default daily-token)
 //   GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, SESSION_SECRET   the sign-in, from `daily-token github-app`
+//   HOME_KEY              optional: the home page (`daily-token home`) shows only at /<HOME_KEY>/, until you're ready
 
 const WRANGLER = "wrangler@4.147.0";
 const { values } = parseArgs({
@@ -70,7 +71,8 @@ try {
       workers_dev: false,
       preview_urls: false,
       r2_buckets: [{ binding: "ISSUES", bucket_name: bucket }],
-      vars: { GITHUB_CLIENT_ID: env.GITHUB_CLIENT_ID ?? "", SITE_DOMAIN: env.SITE_DOMAIN ?? "" },
+      // Each deploy sets them all, so an emptied HOME_KEY opens the home page at / again.
+      vars: { GITHUB_CLIENT_ID: env.GITHUB_CLIENT_ID ?? "", SITE_DOMAIN: env.SITE_DOMAIN ?? "", HOME_KEY: env.HOME_KEY ?? "" },
       observability: { enabled: true },
     }),
   );

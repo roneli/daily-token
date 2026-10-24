@@ -2,7 +2,8 @@
 // Read-only. It runs as the Cloudflare Worker (deploy/cloudflare) or wherever Bun runs (`daily-token serve`); each hands it a Store,
 // and a Door unless the site is open. Without a sign-in, an issue's address answers with its preview and its cover, so a
 // link unfurls wherever it's shared; the rest of a project that isn't public stays shut. With a domain, each project
-// also has its own host, <id>.<domain>, which serves that project alone.
+// also has its own host, <id>.<domain>, which serves that project alone. Any other host serves the bucket's home page
+// (home/), when it has one, at / or, with a key, only at /<key>/.
 //
 // Bucket layout:
 //   projects.json                          [{ id, name, access }]
@@ -12,6 +13,7 @@
 //   <project>/issues/<date>/*.json         its data, stories, reels, motion
 //   <project>/issues/<date>/motion.<hash>.* the Cutaway's video, poster and timing
 //   static/<name>.<hash>.<ext>             pinned assets, shared, never overwritten
+//   home/index.html, home/<file>           optional: the site's own home page, from `daily-token home`
 
 import { type Door, type Listed, signInPath } from "./signin";
 
@@ -26,6 +28,8 @@ const PROJECT = /^\/([a-z0-9-]+)(\/.*)?$/;
 const DATE = /^\/(\d{4}-\d{2}-\d{2})(\/.*)?$/;
 // The motion's video and poster are named by their content, so they never change under that name.
 const HASHED = /\/motion\.[0-9a-f]{10}\.(mp4|jpg|json)$/;
+// A home page's file: one name with a dot, which no project id has.
+const HOME_FILE = /^\/([\w-]+\.[\w.]+)$/;
 const COVER = /^\/cover\.[0-9a-f]{10}\.png$/;
 
 const escapeHtml = (s: string) =>
@@ -80,7 +84,7 @@ const archive = (project: Listed, entries: Entry[]) =>
     entries.map((e) => `<li><a href="/${project.id}/${e.date}/"><span>${e.date}</span>${e.edition === "weekly" ? " <b>Weekly edition</b>" : ""}<br>${escapeHtml(e.headline)}</a></li>`).join(""),
   );
 
-export type Options = { door?: Door; domain?: string };
+export type Options = { door?: Door; domain?: string; home?: string };
 
 // The project a host is for, as <id>.<domain>; any other host is for every project. A name may end in a dot.
 export function hostProject(hostname: string, domain?: string): string | undefined {
@@ -89,7 +93,21 @@ export function hostProject(hostname: string, domain?: string): string | undefin
   return host.slice(0, -domain.length - 1);
 }
 
-export async function site(req: Request, store: Store, { door, domain }: Options = {}): Promise<Response> {
+// The home page and its files, at / or under /<key>/; null when this isn't one of them or the bucket has none.
+async function homePage(store: Store, pathname: string, key?: string): Promise<Response | null> {
+  const base = key ? `/${key}` : "";
+  if (!pathname.startsWith(`${base}/`)) return null;
+  const rest = pathname.slice(base.length);
+  const file = rest === "/" ? "index.html" : HOME_FILE.exec(rest)?.[1];
+  if (!file) return null;
+  const res = await serve(store, `home/${file}`, "no-cache");
+  if (!res.ok) return null;
+  // Not for search engines while it hides behind a key.
+  if (key) res.headers.set("x-robots-tag", "noindex, nofollow");
+  return res;
+}
+
+export async function site(req: Request, store: Store, { door, domain, home }: Options = {}): Promise<Response> {
   if (req.method !== "GET" && req.method !== "HEAD") return new Response("Method not allowed", { status: 405 });
   const url = new URL(req.url);
   const { pathname, hostname } = url;
@@ -103,6 +121,12 @@ export async function site(req: Request, store: Store, { door, domain }: Options
   const shut = () => new Response("Forbidden", { status: 403 });
 
   if (pathname.startsWith("/static/")) return serve(store, pathname.slice(1), "public, max-age=31536000, immutable");
+  if (own === undefined) {
+    const shown = await homePage(store, pathname, home);
+    if (shown) return shown;
+    // Behind a key, the home page's host shows nothing else at its root.
+    if (home && pathname === "/" && (await store.get("home/index.html"))) return new Response("Not found", { status: 404 });
+  }
   const listed = await json<Listed[]>(store, "projects.json", []);
   const projects = own === undefined ? listed : listed.filter((p) => p.id === own);
   if (own !== undefined && !projects.length) return new Response("Not found", { status: 404 });

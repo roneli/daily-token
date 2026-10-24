@@ -17,6 +17,7 @@ preview   render every issue and serve out/ on :5173
 serve     [--port 8787] [--host 127.0.0.1]: the site, from the issues bucket
 github-app [--site URL] [--org NAME]: make the GitHub App readers sign in with, its keys into .env
 deploy    [--dry-run]: the bucket and the site on Cloudflare, from .env
+home      DIR [--dry-run]: the folder's index.html and files as the site's home page
 doctor    is the data root ready
 migrate   [--dry-run]: bring a data root to the current format
 ```

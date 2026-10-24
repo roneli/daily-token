@@ -23,6 +23,10 @@ The site reads the bucket and nothing else. `/` lists the projects (or opens the
 - **`daily-token serve`** (`--port 8787`, `--host 127.0.0.1`): wherever Bun runs, on your laptop, a VM or a container, with the bucket's `S3_*` settings. Without the sign-in settings below it checks no one, so it serves only on this machine.
 - **The Cloudflare Worker** (`deploy/cloudflare`), optional. `daily-token deploy` puts it up from `.env`: it signs in to Cloudflare if it must (`wrangler login`), makes the bucket `S3_BUCKET` in R2 if it isn't there, deploys the Worker on the host of `SITE_URL` (or `WORKER_DOMAIN`, in a zone of the same account) and stores the sign-in's secrets. Run it again after any change. Publishing to R2 also needs an S3 key: R2 → Manage API tokens → Object Read & Write on the bucket, into `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY`, with `S3_ENDPOINT` `https://<account>.r2.cloudflarestorage.com`.
 
+### A home page
+
+`daily-token home DIR` uploads a folder (`index.html` and the files beside it) as the site's home page. Any host that isn't a project's own shows it at `/`, the bare `SITE_DOMAIN` for one. With `HOME_KEY` set when you deploy, it shows only at `/<HOME_KEY>/`, unindexed, and `/` answers 404: a page to share before it's public. Empty `HOME_KEY` and deploy again to open it.
+
 ### Many projects
 
 Several data roots can publish to one bucket, and one site serves them all. With `SITE_DOMAIN` set (e.g. `example.com`), each project also has its own host, `<id>.example.com`, which serves that project alone, so its sign-in is its own. Any other host lists every project the visitor may read. For each project:
