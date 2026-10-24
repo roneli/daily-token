@@ -350,7 +350,7 @@ if (import.meta.main) {
     const { html, rings } = await renderIssue(issue, assets, await motionFiles(props, dir, kokoro));
     const path = join(dir, "index.html");
     await Bun.write(path, html);
-    await coverFiles(issue, rings, dir, shoot);
+    await coverFiles(issue, rings, dir, shoot, assets.css);
     console.log(`rendered ${path}`);
   }
   await shoot.close();

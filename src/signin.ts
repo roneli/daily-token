@@ -123,12 +123,15 @@ export function door(env: SignInEnv, ask: Asker = github(env)): Door {
         login = await ask.login(token);
         const access = project.access as Exclude<Access, "public"> | undefined;
         for (const repo of access?.github ?? []) {
-          if ((await ask.permissions(token, repo))?.[access?.role ?? "pull"]) {
+          const permissions = await ask.permissions(token, repo);
+          if (permissions?.[access?.role ?? "pull"]) {
             allowed = true;
             break;
           }
+          console.log(`sign-in: ${login} on ${repo}: ${permissions ? JSON.stringify(permissions) : "can't see it"}`);
         }
-      } catch {
+      } catch (e) {
+        console.error(`sign-in: ${e instanceof Error ? e.message : e}`);
         return page(502, "GitHub didn't answer", "Try again in a moment.", { "set-cookie": done });
       }
       if (!allowed)

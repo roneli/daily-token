@@ -2,7 +2,8 @@ import { randomBytes } from "node:crypto";
 import { parseArgs } from "node:util";
 
 // Makes the GitHub App readers sign in with, from a manifest: GitHub shows the app filled in, you press Create, and
-// its Client ID and secret land in .env with a new SESSION_SECRET. The app asks for no permissions and has no webhook.
+// its Client ID and secret land in .env with a new SESSION_SECRET. It reads only Metadata, the least a repo can be
+// installed with, and has no webhook.
 const { values } = parseArgs({
   args: process.argv.slice(2),
   // --root comes from the CLI with every script; the app is the site's, not a project's.
@@ -10,7 +11,6 @@ const { values } = parseArgs({
 });
 const site = values.site?.replace(/\/$/, "");
 if (!site) throw new Error("--site https://digest.example.com, or SITE_URL in .env: the site readers sign in to");
-const host = new URL(site).host;
 
 const state = randomBytes(16).toString("hex");
 let done: (app: { slug: string; client_id: string; client_secret: string; html_url: string }) => void;
@@ -25,12 +25,12 @@ const server = Bun.serve({
       const manifest = {
         name: "The Daily Token",
         url: site,
-        description: `Sign in to read ${host}. It reads nothing: GitHub tells it only whether you can see the digest's repos.`,
+        description: "Sign in to read The Daily Token. It reads only whether you can see the digest's repos.",
         callback_urls: [`${site}/auth/callback`, "http://localhost:8787/auth/callback"],
         redirect_url: `${url.origin}/made`,
         hook_attributes: { url: site, active: false },
         public: false,
-        default_permissions: {},
+        default_permissions: { metadata: "read" },
       };
       const to = values.org ? `https://github.com/organizations/${values.org}/settings/apps/new` : "https://github.com/settings/apps/new";
       const json = JSON.stringify(manifest).replaceAll("&", "&amp;").replaceAll('"', "&quot;");

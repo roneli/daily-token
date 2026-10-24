@@ -10,7 +10,7 @@ import { TABS } from "./render";
 import { signInPath } from "./signin";
 
 // The share cover: a still picture of an issue for link previews (1200×630), and preview.html, what the issue's
-// address shows without a sign-in: the preview tags, the cover and a way to sign in. Anyone with the link sees the
+// address shows without a sign-in: the preview tags, and the same card with a way to sign in. Anyone with the link sees the
 // cover, so by default it shows nothing of the work: the nameplate, the company and its logo, the issue's number,
 // day and edition, and counts. project.json's cover.headline adds the headline.
 
@@ -35,7 +35,7 @@ export type Shooter = ReturnType<typeof shooter>;
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
-export async function coverFiles(issue: Issue, rings: string[], dir: string, shoot: Shooter) {
+export async function coverFiles(issue: Issue, rings: string[], dir: string, shoot: Shooter, css: string) {
   const { project, data, stories } = issue;
   const gh = githubOf(data);
   const weekly = data.edition === "weekly";
@@ -59,19 +59,13 @@ export async function coverFiles(issue: Issue, rings: string[], dir: string, sho
   }
 
   const liquid = new Liquid({ root: [join(ENGINE, "templates")], extname: ".liquid", outputEscape: "escape" });
+  // What the cover and the preview page both show. Liquid counts an empty string as true: none is null.
+  const card = { company, logo: logo || null, no, day, weekly, headline: headline || null, counts, rings: rings.slice(0, 8) };
   const html = await liquid.renderFile("cover", {
     fonts: (await fontFaces()).css,
     // The site's light tokens only: its rules are for the page, and a preview is drawn light.
     css: (await Bun.file(join(ENGINE, "static", "daily.css")).text()).match(/:root\s*\{[^}]*\}/)?.[0] ?? "",
-    company,
-    // Liquid counts an empty string as true: none is null.
-    logo: logo || null,
-    no,
-    day,
-    weekly,
-    headline: headline || null,
-    counts,
-    rings: rings.slice(0, 8),
+    ...card,
     tabs: [...TABS.map((t) => t.name), ...(issue.motion ? [MOTION_TAB] : [])].join(" · "),
   });
   // Named by what it shows, so an unchanged cover isn't drawn again; an older one goes.
@@ -85,6 +79,8 @@ export async function coverFiles(issue: Issue, rings: string[], dir: string, sho
   await Bun.write(
     join(dir, "preview.html"),
     await liquid.renderFile("preview", {
+      ...card,
+      css,
       title,
       description: headline || `${day} · ${counts}`,
       url: site ? `${site}${issueAt}` : null,

@@ -31,7 +31,7 @@ Without a sign-in, an issue's address shows only its preview: the share cover, w
 
 Set it up once:
 
-1. `daily-token github-app` (`--org NAME` for an organization's): it opens GitHub with the app filled in, from `SITE_URL`. Press **Create**. Its Client ID and secret go into `.env` as `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`, with a new `SESSION_SECRET`. The app asks for no permissions and has no webhook.
+1. `daily-token github-app` (`--org NAME` for an organization's): it opens GitHub with the app filled in, from `SITE_URL`. Press **Create**. Its Client ID and secret go into `.env` as `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`, with a new `SESSION_SECRET`. The app reads only repository Metadata, the least it can be installed on repos with, and has no webhook.
 2. **Install** it on the project's repos, on the page GitHub opens next. A reader's sign-in reaches only the repos it's installed on.
 3. `mise run worker:secrets`, then publish (it writes who may read into the bucket), then `mise run worker:deploy`. For `serve`, the same three in its env.
 

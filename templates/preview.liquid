@@ -19,17 +19,52 @@
 <meta name="twitter:title" content="{{ title }}">
 <meta name="twitter:description" content="{{ description }}">
 <meta name="twitter:image" content="{{ image }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=IBM+Plex+Sans:wght@500;600&family=IBM+Plex+Mono:wght@500&family=UnifrakturMaguntia&display=swap">
+<link rel="stylesheet" href="{{ css }}">
 <style>
-:root { color-scheme: light dark; }
-body { font: 16px/1.5 system-ui, sans-serif; max-width: 720px; margin: 0 auto; padding: 32px 16px; text-align: center; }
-img { width: 100%; height: auto; border-radius: 12px; border: 1px solid #8884; }
-a { display: inline-block; margin-top: 20px; padding: 12px 22px; border-radius: 10px; background: #1f2328; color: #fff; text-decoration: none; font-weight: 600; }
-p { opacity: .7; }
+body { margin: 0; min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; box-sizing: border-box; }
+.cv-card { width: 100%; max-width: 720px; box-sizing: border-box; padding: clamp(22px, 5vw, 40px); display: grid; gap: clamp(18px, 4vw, 28px); background: var(--surface); border: 1px solid var(--rule); border-radius: 18px; }
+.cv-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-bottom: 14px; border-bottom: 2px solid var(--ink); }
+.cv-np { font: 400 clamp(24px, 6.4vw, 44px)/1 var(--f-mast); white-space: nowrap; }
+.cv-who { display: flex; align-items: center; gap: 10px; font: 600 clamp(15px, 3.6vw, 20px)/1 var(--f-body); }
+.cv-who img { height: clamp(28px, 7vw, 42px); width: auto; max-width: 140px; object-fit: contain; }
+.cv-mid { display: grid; gap: 10px; }
+.cv-dateline { font: 500 clamp(11px, 2.8vw, 14px)/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.cv-dateline b { color: var(--core); font-weight: 500; }
+.cv-card h1 { margin: 0; font: 700 clamp(28px, 7vw, 42px)/1.08 var(--f-display); letter-spacing: -.015em; text-wrap: balance; }
+.cv-counts { margin: 0; font: 500 clamp(15px, 3.8vw, 19px)/1.3 var(--f-body); color: var(--muted); }
+.cv-rings { display: flex; flex-wrap: wrap; gap: 10px; }
+.cv-rings i { width: 30px; height: 30px; border-radius: 50%; box-sizing: border-box; padding: 3px; background: conic-gradient(var(--c), var(--accent), var(--c)); }
+.cv-rings i::after { content: ""; display: block; width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--surface); box-sizing: border-box; background: var(--bg); }
+.cv-signin { display: grid; gap: 12px; padding-top: 18px; border-top: 1px solid var(--rule); }
+.cv-gh { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 20px; border-radius: 10px; background: var(--ink); color: var(--surface); font: 600 16px/1 var(--f-body); text-decoration: none; }
+.cv-gh svg { width: 20px; height: 20px; fill: currentColor; }
+.cv-gh:hover { opacity: .9; }
+.cv-note { display: flex; align-items: flex-start; gap: 8px; margin: 0; padding: 10px 12px; border-radius: 8px; background: var(--core-bg); color: var(--ink); font: 500 14px/1.4 var(--f-body); }
+.cv-note svg { flex: none; width: 16px; height: 16px; margin-top: 2px; fill: var(--core); }
 </style>
 </head>
 <body>
-<img src="{{ image }}" alt="{{ title }}">
-<a href="{{ signin }}">Sign in with GitHub to read</a>
-<p>Anyone who can see the project's repo on GitHub can read it.</p>
+<main class="cv-card">
+  <div class="cv-top">
+    <span class="cv-np">The Daily Token</span>
+    <span class="cv-who">{% if logo %}<img src="{{ logo }}" alt="">{% endif %}{{ company }}</span>
+  </div>
+  <div class="cv-mid">
+    <div class="cv-dateline">No. {{ no }} · {{ day }}{% if weekly %} · <b>Weekly edition</b>{% endif %}</div>
+    {%- if headline %}
+    <h1>{{ headline }}</h1>
+    {%- else %}
+    <h1>{% if weekly %}The week in review{% else %}Today's changes{% endif %}</h1>
+    {%- endif %}
+    <p class="cv-counts">{{ counts }}</p>
+  </div>
+  <div class="cv-rings">{% for c in rings %}<i style="--c:var({{ c }})"></i>{% endfor %}</div>
+  <div class="cv-signin">
+    <a class="cv-gh" href="{{ signin }}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg>Sign in with GitHub to read</a>
+    <p class="cv-note"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"/></svg>Anyone who can access the repo can read it.</p>
+  </div>
+</main>
 </body>
 </html>
