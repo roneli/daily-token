@@ -430,3 +430,7 @@ button svg { width: 12px; height: 12px; fill: currentColor; }
 .end-card div { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 8px; }
 .end-card button { padding: 9px 16px; border: 1px solid var(--rule); border-radius: 999px; background: var(--surface); color: var(--ink); font-weight: 600; }
 .end-card button[data-end="replay"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+/* A newer issue than the one open: a pill under the masthead. */
+.new-issue { justify-self: start; display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: var(--accent); color: var(--bg); text-decoration: none; font-size: 13.5px; animation: tap-in 300ms ease-out; }
+.new-issue span { opacity: .9; }

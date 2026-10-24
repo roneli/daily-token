@@ -585,6 +585,15 @@
       nodes.push(item(e));
     }
     list.replaceChildren(...nodes);
+    // A newer issue than this one: a pill under the masthead leads to it, so a refresh finds the latest.
+    const newest = entries.reduce((a, e) => (e.date > a.date ? e : a), entries[0]);
+    if (newest && newest.date > current) {
+      const pill = document.createElement("a");
+      pill.className = "new-issue";
+      pill.href = `../${newest.date}/`;
+      pill.innerHTML = `<b>New issue</b><span>${fmt(newest.date, { weekday: "short", day: "numeric", month: "short" })} ›</span>`;
+      document.querySelector(".topline").after(pill);
+    }
   }).catch((err) => console.warn("[daily] editions list unavailable:", err));
   requestAnimationFrame((now) => { last = now; frame(now); });
 })();
