@@ -432,10 +432,17 @@
   // A tab's address is its name ("#ledger"); its id ("#reels", "#motion"), its older address, still opens it.
   const ADDRESS = Object.fromEntries(Object.keys(DEKS).map((id) => [id, document.getElementById(`tab-${id}`).textContent.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-")]));
   const tabAt = (h) => Object.keys(ADDRESS).find((id) => ADDRESS[id] === h) ?? (h in DEKS ? h : undefined);
+  // The reels pause while another tab is open, and play on when you come back, if they were playing.
+  let resumeReels = false;
   function showTab(which, anchor) {
-    if (which !== "reels") { dropSheet(); setPlaying(false); }
+    const wasReels = !app.classList.contains("on-page");
+    if (which !== "reels") {
+      if (wasReels) resumeReels = playing;
+      dropSheet();
+      setPlaying(false);
+    }
     if (which !== "motion") video?.pause();
-    else if (!reduced && !playing) {
+    if (which === "reels" && !wasReels && resumeReels && !reduced) {
       setPlaying(true);
       if (t >= tls[cur].ms) go(cur === pages.length - 1 ? 0 : cur);
     }
