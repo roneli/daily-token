@@ -94,13 +94,13 @@ export function hostProject(hostname: string, domain?: string): string | undefin
 }
 
 // The home page and its files, at / or under /<key>/; null when this isn't one of them or the bucket has none.
-async function homePage(store: Store, pathname: string, key?: string): Promise<Response | null> {
+async function homePage(req: Request, store: Store, pathname: string, key?: string): Promise<Response | null> {
   const base = key ? `/${key}` : "";
   if (!pathname.startsWith(`${base}/`)) return null;
   const rest = pathname.slice(base.length);
   const file = rest === "/" ? "index.html" : HOME_FILE.exec(rest)?.[1];
   if (!file) return null;
-  const res = await serve(store, `home/${file}`, "no-cache");
+  const res = await serve(store, `home/${file}`, "no-cache", req);
   if (!res.ok) return null;
   // While it hides behind a key: not for search engines, and links out don't carry the key.
   if (key) {
@@ -125,7 +125,7 @@ export async function site(req: Request, store: Store, { door, domain, home }: O
 
   if (pathname.startsWith("/static/")) return serve(store, pathname.slice(1), "public, max-age=31536000, immutable");
   if (own === undefined) {
-    const shown = await homePage(store, pathname, home);
+    const shown = await homePage(req, store, pathname, home);
     if (shown) return shown;
     // Behind a key, the home page's host shows nothing else at its root.
     if (home && pathname === "/" && (await store.get("home/index.html"))) return new Response("Not found", { status: 404 });
