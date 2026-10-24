@@ -4,6 +4,8 @@
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const phone = matchMedia("(max-width: 700px)");
   const app = document.querySelector(".app");
+  // Shown when the last story ends; made further down.
+  let endCard = null;
   const book = document.getElementById("book");
   const pages = [...document.querySelectorAll(".reel")];
   const ease = (f) => 1 - (1 - f) ** 3;
@@ -163,6 +165,7 @@
     if (threadOf[next] !== from && next > cur) markSeen(from);
     const moved = next !== cur;
     cur = next;
+    if (endCard) endCard.hidden = true;
     dropSheet();
     place();
     pages.forEach((p, k) => { if (threadOf[k] === tNow()) p.hidden = k !== cur; });
@@ -180,6 +183,7 @@
   function setPlaying(p) {
     playing = p;
     app.classList.toggle("paused", !p);
+    if (p && endCard) endCard.hidden = true;
     const done = cur === pages.length - 1 && t >= tls[cur].ms;
     document.getElementById("play-label").textContent = p ? "Pause" : done ? "Replay" : "Play";
     document.getElementById("play-icon").setAttribute("d", p ? "M2 1 H5 V11 H2 Z M7 1 H10 V11 H7 Z" : "M2 1 L11 6 L2 11 Z");
@@ -192,7 +196,7 @@
       seek(tls[cur], t);
       if (t >= tls[cur].ms) {
         if (cur < pages.length - 1) go(cur + 1);
-        else { t = tls[cur].ms; markSeen(tNow()); setPlaying(false); }
+        else { t = tls[cur].ms; markSeen(tNow()); setPlaying(false); threads[tNow()].append(endCard); endCard.hidden = false; }
       }
       paint();
     }
@@ -407,7 +411,23 @@
   addEventListener("resize", fitShown);
   document.fonts?.ready.then(fitShown);
 
-  // Phones have no play button, so a paused reel shows one over its picture: one tap plays it on.
+  // The last story ends on a card, as stories apps say you're up to date: play the issue again, or read the Ledger.
+  endCard = document.createElement("div");
+  endCard.className = "end-card";
+  endCard.hidden = true;
+  endCard.innerHTML = `<b>You're up to date</b><span>That's every story in this issue.</span><div><button type="button" data-end="replay">↺ Play again</button><button type="button" data-end="read">Read the ${document.getElementById("tab-digest").textContent.trim()}</button></div>`;
+  endCard.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-end]");
+    if (!b) return;
+    e.stopPropagation();
+    endCard.hidden = true;
+    if (b.dataset.end === "read") return showTab("digest");
+    // Playing first, so the first story starts from its beginning, not its end.
+    setPlaying(true);
+    goThread(0);
+  });
+
+  // People who asked their phone for less motion get no autoplay, so a paused reel shows them a play button.
   for (const viz of document.querySelectorAll(".reel .viz")) {
     const b = document.createElement("button");
     b.type = "button";
@@ -419,6 +439,7 @@
   }
 
   app.classList.toggle("paused", !playing);
+  app.classList.toggle("reduced", reduced);
 
   // The first reel on a phone shows once where to tap, until the first tap or a few seconds.
   const hintKey = "daily-token:tap-hint";

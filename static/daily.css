@@ -411,11 +411,21 @@ button svg { width: 12px; height: 12px; fill: currentColor; }
 }
 @media (prefers-reduced-motion: reduce) { .section-pill .caret { transition: none; } }
 
-/* Phones: a paused reel's play button, over the middle of its picture. */
+/* Phones set to reduce motion: a paused reel's play button, over the middle of its picture. Others hold to pause. */
 .resume { display: none; }
 @media (max-width: 700px) {
   .reel .viz { position: relative; }
-  .app.paused:not(.on-page) .thread.cur .resume { display: grid; place-items: center; position: absolute; left: 50%; top: 50%; width: 56px; height: 56px; margin: -28px 0 0 -28px; padding: 0; z-index: 2;
+  .app.reduced.paused:not(.on-page) .thread.cur .resume { display: grid; place-items: center; position: absolute; left: 50%; top: 50%; width: 56px; height: 56px; margin: -28px 0 0 -28px; padding: 0; z-index: 2;
     border: 0; border-radius: 50%; background: color-mix(in srgb, var(--ink) 72%, transparent); color: var(--bg); box-shadow: 0 4px 16px rgb(0 0 0 / .2); animation: tap-in 200ms ease-out; }
   .resume svg { width: 26px; height: 26px; margin-left: 3px; fill: currentColor; }
 }
+
+/* The end of the issue's last story. */
+.end-card { position: absolute; inset: 0; z-index: 4; display: grid; place-content: center; justify-items: center; gap: 8px; padding: 24px; text-align: center;
+  border-radius: inherit; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(3px); animation: tap-in 260ms ease-out; }
+.end-card[hidden] { display: none; }
+.end-card b { font: 700 24px/1.15 var(--f-display); }
+.end-card span { color: var(--muted); }
+.end-card div { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 8px; }
+.end-card button { padding: 9px 16px; border: 1px solid var(--rule); border-radius: 999px; background: var(--surface); color: var(--ink); font-weight: 600; }
+.end-card button[data-end="replay"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
