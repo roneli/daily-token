@@ -10,7 +10,7 @@
     "name": { "type": "string", "maxLength": 32 },
     "company": { "type": "string", "maxLength": 40, "description": "Who the digest is for, shown on its share cover beside the logo; without it, the project's name." },
     "access": {
-      "description": "Who may read on the site. \"public\": anyone. Else the GitHub repos whose readers sign in, with at least the role (GitHub's: pull, triage, push, maintain, admin). Without it, anyone who can see the GitHub source's repos.",
+      "description": "Who may read on the site. \"public\": anyone. Else the GitHub repos a reader must see, every one, with at least the role (GitHub's: pull, triage, push, maintain, admin). Without it, anyone who can see all of the GitHub source's repos.",
       "oneOf": [
         { "const": "public" },
         {

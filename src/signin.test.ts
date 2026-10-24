@@ -12,7 +12,8 @@ const [rocket, probe, open] = projects;
 
 // GitHub as the tests see it: each code a user, each user's permissions per repo.
 const seen: Record<string, Record<string, { pull?: boolean; push?: boolean }>> = {
-  crew: { "acme/pad": { pull: true } },
+  crew: { "acme/rocket": { pull: true }, "acme/pad": { pull: true } },
+  half: { "acme/pad": { pull: true } },
   reader: { "acme/probe": { pull: true } },
   stranger: {},
 };
@@ -54,7 +55,7 @@ describe("sign-in", () => {
     expect(res.headers.get("set-cookie")).toContain("Secure");
   });
 
-  test("lets in someone who can see any of the project's repos, for that project only", async () => {
+  test("lets in someone who can see all of the project's repos, for that project only", async () => {
     const res = await signIn("crew");
     expect(res.status).toBe(302);
     expect(res.headers.get("location")).toBe("https://site/rocket/2026-01-15/");
@@ -63,8 +64,8 @@ describe("sign-in", () => {
     expect(await gate.reads(request("/probe/", cookie.replace(sessionCookie("rocket"), sessionCookie("probe"))), probe)).toBe(false);
   });
 
-  test("refuses someone who can't see the repos, or hasn't the role", async () => {
-    for (const [who, to] of [["stranger", "/rocket/"], ["reader", "/probe/"]]) {
+  test("refuses someone who can't see every repo, or hasn't the role", async () => {
+    for (const [who, to] of [["stranger", "/rocket/"], ["half", "/rocket/"], ["reader", "/probe/"]]) {
       const res = await signIn(who, to);
       expect(res.status).toBe(403);
       expect(cookies(res).some((c) => c.startsWith("dt-") && !c.startsWith("dt-state="))).toBe(false);

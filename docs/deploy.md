@@ -25,7 +25,7 @@ The site reads the bucket and nothing else. `/` lists the projects (or opens the
 
 ## Sign-in
 
-Readers sign in with GitHub. Whoever can see one of the project's GitHub repos may read it; GitHub keeps the list, so there's none to keep here. project.json's `access` names other repos and a role (`{ "github": ["owner/repo"], "role": "push" }`), or makes a project `"public"`.
+Readers sign in with GitHub. Whoever can see every one of the project's GitHub repos may read it, since a digest tells of all of them; GitHub keeps the list, so there's none to keep here. project.json's `access` names other repos and a role (`{ "github": ["owner/repo"], "role": "push" }`), or makes a project `"public"`.
 
 Without a sign-in, an issue's address shows only its preview: the share cover, which shows nothing of the work unless `cover.headline` is on, and a button to sign in. So a link to an issue unfurls in Slack or a chat app, and sharing from a phone works. Everything else of a project stays shut.
 

@@ -1,12 +1,13 @@
 import { GitHub, generateState } from "arctic";
 import { jwtVerify, SignJWT } from "jose";
 
-// Sign-in with GitHub. A reader gets into a project when their GitHub account can see one of its repos with at least
-// its role. GitHub is asked once, at sign-in, with a GitHub App's user token, which reaches only the repos the app is
-// installed on and asks for no scopes. The answer is kept in a signed cookie per project, for SESSION_HOURS.
+// Sign-in with GitHub. A reader gets into a project when their GitHub account can see every one of its repos with at
+// least its role: a digest tells of all of them. GitHub is asked once, at sign-in, with a GitHub App's user token,
+// which reaches only the repos the app is installed on and reads only their Metadata. The answer is kept in a signed
+// cookie per project, for SESSION_HOURS.
 
 export type Role = "pull" | "triage" | "push" | "maintain" | "admin";
-// "public": no sign-in. Else the repos whose readers get in; publish fills it from the project's GitHub source.
+// "public": no sign-in. Else the repos a reader must see, all of them; publish fills it from the project's GitHub source.
 export type Access = "public" | { github: string[]; role?: Role };
 export type Listed = { id: string; name: string; access?: Access };
 
@@ -122,20 +123,21 @@ export function door(env: SignInEnv, ask: Asker = github(env)): Door {
         const token = await ask.token(code, redirect);
         login = await ask.login(token);
         const access = project.access as Exclude<Access, "public"> | undefined;
+        const role = access?.role ?? "pull";
+        allowed = Boolean(access?.github.length);
         for (const repo of access?.github ?? []) {
           const permissions = await ask.permissions(token, repo);
-          if (permissions?.[access?.role ?? "pull"]) {
-            allowed = true;
-            break;
-          }
+          if (permissions?.[role]) continue;
           console.log(`sign-in: ${login} on ${repo}: ${permissions ? JSON.stringify(permissions) : "can't see it"}`);
+          allowed = false;
+          break;
         }
       } catch (e) {
         console.error(`sign-in: ${e instanceof Error ? e.message : e}`);
         return page(502, "GitHub didn't answer", "Try again in a moment.", { "set-cookie": done });
       }
       if (!allowed)
-        return page(403, "No access", `Your GitHub account ${escapeHtml(login)} can't see this digest's repos. Ask its owner for access, or sign in to GitHub with another account.`, { "set-cookie": done });
+        return page(403, "No access", `Your GitHub account ${escapeHtml(login)} can't see all of this digest's repos. Ask its owner for access, or sign in to GitHub with another account.`, { "set-cookie": done });
       const session = await new SignJWT({}).setProtectedHeader({ alg: "HS256" }).setSubject(login).setIssuer(ISSUER).setAudience(project.id).setIssuedAt().setExpirationTime(`${SESSION_HOURS}h`).sign(key);
       const headers = new Headers({ location: new URL(to, url.origin).toString(), "cache-control": "no-store" });
       headers.append("set-cookie", done);

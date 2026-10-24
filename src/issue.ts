@@ -12,7 +12,7 @@ export type Project = {
   company?: string;
   // The share cover: a logo in the data root, and whether the headline shows
   cover?: { logo?: string; headline?: boolean };
-  // Who may read on the site: "public", or the repos whose readers sign in; else the GitHub source's repos
+  // Who may read on the site: "public", or the repos a reader must all see; else the GitHub source's repos
   access?: Access;
   // Each source's config, by source name: "github": { "repos": [...] }
   sources?: Record<string, unknown>;
