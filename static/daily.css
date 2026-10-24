@@ -332,7 +332,9 @@ button svg { width: 12px; height: 12px; fill: currentColor; }
   .circle .ring { width: 46px; height: 46px; }
   .circle .dot { font-size: 16px; }
   .app:not(.on-page) .book { display: block; height: 100%; }
-  .app:not(.on-page) .thread { height: 100%; padding: 10px 12px; }
+  /* The card reaches a little into the page's margin, and the picture a little into the card's, for a bigger reel. */
+  .app:not(.on-page) .book { margin-inline: -8px; }
+  .app:not(.on-page) .thread { height: 100%; padding: 10px 8px; }
   .thread.side-prev:not(.peek, .leaving), .thread.side-next:not(.peek, .leaving), .thread.far-prev, .thread.far-next { display: none; }
   /* A story left by a tap or at its end stays under the arriving one while it slides away. */
   .thread.leaving { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
