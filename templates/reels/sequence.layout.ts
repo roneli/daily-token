@@ -1,4 +1,8 @@
 // Positions and timing for the sequence reel. The template only places what this returns.
+// Type is as large as the messages allow: the largest size at which every label wraps and every row fits, down to
+// the 12px face it had before (fit.ts).
+
+import { fit, MONO, SANS } from "./fit";
 
 type Tone = "ink" | "secret" | "bad" | "good";
 type Mark = { text: string; tone: "bad" | "good" };
@@ -16,10 +20,9 @@ type Msg = {
   flash?: { actor: number; tone: "bad" | "good" };
 };
 
-const CW = 7.2; // advance of the 12px mono face
-const LINE = 15; // line pitch of the 12px face
-const TOP = 62; // below the actor boxes
+const BOX_Y = 18;
 const BOTTOM = 322; // above the note
+const SIZES = [18, 17, 16, 15, 14, 13, 12];
 const SEND = 600;
 const STEP = 1100;
 const STRIKE = 800;
@@ -40,12 +43,12 @@ export function wrap(text: string, max: number): string[] {
 }
 
 // A result sits past the arrowhead, on the side away from the arrow; with no room there, under the arrow's end.
-function resultAt(x1: number, x2: number, y: number, text: string) {
+function resultAt(x1: number, x2: number, y: number, text: string, CW: number) {
   const w = text.length * CW;
   if (x2 > x1 && x2 + 12 + w <= 632) return { x: x2 + 12, y: y + 4, anchor: "start", below: false };
   if (x2 < x1 && x2 - 12 - w >= 8) return { x: x2 - 12, y: y + 4, anchor: "end", below: false };
   // Under the arrow itself, clear of the lifeline it points at.
-  return x2 > x1 ? { x: x2 - 10, y: y + 18, anchor: "end", below: true } : { x: x2 + 10, y: y + 18, anchor: "start", below: true };
+  return x2 > x1 ? { x: x2 - 10, y: y + 6 + CW * 2, anchor: "end", below: true } : { x: x2 + 10, y: y + 6 + CW * 2, anchor: "start", below: true };
 }
 
 export function layout(raw: Record<string, unknown>) {
@@ -58,24 +61,39 @@ export function layout(raw: Record<string, unknown>) {
     if (m.flash && !(m.flash.actor in X)) throw new Error(`sequence: message "${m.label}" flashes actor ${m.flash.actor}`);
   }
 
-  // Each message's text block: label lines then label2 lines, wrapped to the gap between its two lifelines.
-  const blocks = msgs.map((m) => {
-    const max = Math.max(10, Math.floor((Math.abs(X[m.to] - X[m.from]) - 24) / CW));
-    const label = wrap(m.label, max).map((text) => ({ text, tone: m.tone as string, struck: !!m.struck }));
-    const label2 = m.label2 ? wrap(m.label2, max).map((text) => ({ text, tone: m.label2Tone ?? "", struck: false })) : [];
-    // A tag ("before", "now") heads the block, so it never sits on another arrow.
-    const tag = m.tag ? [{ text: m.tag, tone: m.tone as string, struck: false }] : [];
-    return [...tag, ...label, ...label2];
-  });
-  // Rows grow to what they hold: text above the arrow, a result below it.
-  const rowOf: number[] = [];
-  for (const [i, m] of msgs.entries()) rowOf.push(i === 0 || !m.same ? (rowOf.at(-1) ?? -1) + 1 : (rowOf.at(-1) as number));
-  const rowCount = (rowOf.at(-1) ?? 0) + 1;
-  const above = Array.from({ length: rowCount }, (_, r) => Math.max(...msgs.map((_, i) => (rowOf[i] === r ? blocks[i].length * LINE + 6 : 0))));
-  const below = Array.from({ length: rowCount }, (_, r) =>
-    Math.max(8, ...msgs.map((m, i) => (rowOf[i] === r && m.result && resultAt(X[m.from], X[m.to], 0, m.result.text).below ? 24 : 8))),
-  );
-  const need = above.reduce((a, b) => a + b, 0) + below.reduce((a, b) => a + b, 0);
+  // The actors' names, as large as the longest fits its box; the boxes grow with them.
+  const nameSize = fit(actors.map((a) => a.name), 90, 20, 14, SANS);
+  const boxH = nameSize + 24;
+  const TOP = BOX_Y + boxH + 6;
+
+  // Each size in turn, largest first: wrap every block, then see if the rows fit the height.
+  const arrange = (size: number) => {
+    const CW = size * MONO;
+    const LINE = Math.round(size * 1.25);
+    // Each message's text block: label lines then label2 lines, wrapped to the gap between its two lifelines.
+    const blocks = msgs.map((m) => {
+      const max = Math.max(10, Math.floor((Math.abs(X[m.to] - X[m.from]) - 24) / CW));
+      const label = wrap(m.label, max).map((text) => ({ text, tone: m.tone as string, struck: !!m.struck }));
+      const label2 = m.label2 ? wrap(m.label2, max).map((text) => ({ text, tone: m.label2Tone ?? "", struck: false })) : [];
+      // A tag ("before", "now") heads the block, so it never sits on another arrow.
+      const tag = m.tag ? [{ text: m.tag, tone: m.tone as string, struck: false }] : [];
+      return [...tag, ...label, ...label2];
+    });
+    // A line that still runs past its gap after wrapping doesn't fit at this size.
+    const tooWide = msgs.some((m, i) => blocks[i].some((l) => l.text.length * CW > Math.abs(X[m.to] - X[m.from]) - 8));
+    // Rows grow to what they hold: text above the arrow, a result below it.
+    const rowOf: number[] = [];
+    for (const [i, m] of msgs.entries()) rowOf.push(i === 0 || !m.same ? (rowOf.at(-1) ?? -1) + 1 : (rowOf.at(-1) as number));
+    const rowCount = (rowOf.at(-1) ?? 0) + 1;
+    const above = Array.from({ length: rowCount }, (_, r) => Math.max(...msgs.map((_, i) => (rowOf[i] === r ? blocks[i].length * LINE + 6 : 0))));
+    const below = Array.from({ length: rowCount }, (_, r) =>
+      Math.max(8, ...msgs.map((m, i) => (rowOf[i] === r && m.result && resultAt(X[m.from], X[m.to], 0, m.result.text, CW).below ? Math.round(size * 2) : 8))),
+    );
+    const need = above.reduce((a, b) => a + b, 0) + below.reduce((a, b) => a + b, 0);
+    return { size, CW, LINE, blocks, rowOf, rowCount, above, below, need, fits: !tooWide && TOP + need <= BOTTOM };
+  };
+  const chosen = SIZES.map(arrange).find((a) => a.fits) ?? arrange(12);
+  const { size, CW, LINE, blocks, rowCount, above, below, need } = chosen;
   if (TOP + need > BOTTOM) throw new Error(`sequence: the messages need ${need} px of height and ${BOTTOM - TOP} fit; shorten labels or use fewer rows`);
   const slack = Math.min(28, (BOTTOM - TOP - need) / rowCount);
   const rowY: number[] = [];
@@ -113,7 +131,7 @@ export function layout(raw: Record<string, unknown>) {
       lines,
       at: t + 450,
       markAt: t + 620,
-      resultPos: m.result ? resultAt(x1, x2, y, m.result.text) : null,
+      resultPos: m.result ? resultAt(x1, x2, y, m.result.text, CW) : null,
       strikes: [] as { x1: number; x2: number; y1: number; y2: number; at: number }[],
     };
     if (m.flash) {
@@ -135,7 +153,11 @@ export function layout(raw: Record<string, unknown>) {
   cues.push({ el: "tok", kind: "out", at: t });
   const noteAt = t + 300;
   return {
-    fields: { actors: laidActors, messages: laid, note: raw.note ?? "", noteAt, tok: { x: X[msgs[0].from], y: Math.round(rowY[0]) }, moves, cues },
+    fields: {
+      actors: laidActors, messages: laid, note: raw.note ?? "", noteAt, tok: { x: X[msgs[0].from], y: Math.round(rowY[0]) }, moves, cues,
+      size, nameSize, box: { y: BOX_Y, h: boxH, nameY: BOX_Y + boxH / 2 + nameSize * 0.35, bottom: BOX_Y + boxH },
+      noteSize: fit([String(raw.note ?? "")], 600, 17, 12),
+    },
     ms: Math.round(noteAt + 900),
   };
 }

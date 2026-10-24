@@ -1,31 +1,31 @@
 <svg class="scene" viewBox="0 0 640 360" role="img" aria-label="{{ reel.headline }}">
   <defs><marker id="{{ reel.id }}-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted);fill:context-stroke"/></marker></defs>
-  <text id="{{ reel.id }}-cap" x="320" y="44" text-anchor="middle" class="ink" style="font-size:13px">{{ f.caption }}</text>
+  <text id="{{ reel.id }}-cap" x="320" y="44" text-anchor="middle" class="ink" style="font-size:{{ f.size.caption }}px">{{ f.caption }}</text>
   {%- for b in f.boxes %}
-  <g class="box" id="{{ reel.id }}-s-{{ b.id }}"><rect x="{{ b.x }}" y="{{ b.y }}" width="{{ b.w }}" height="{{ b.h }}" rx="6"/><text class="tb" x="{{ b.cx }}" y="{{ b.y | plus: 21 }}" text-anchor="middle">{{ b.name }}</text><text x="{{ b.cx }}" y="{{ b.y | plus: 38 }}" text-anchor="middle" style="font-size:11px">{{ b.sub }}</text></g>
+  <g class="box" id="{{ reel.id }}-s-{{ b.id }}"><rect x="{{ b.x }}" y="{{ b.y }}" width="{{ b.w }}" height="{{ b.h }}" rx="6"/><text class="tb" x="{{ b.cx }}" y="{{ b.y | plus: f.size.nameY }}" text-anchor="middle" style="font-size:{{ f.size.name }}px">{{ b.name }}</text><text x="{{ b.cx }}" y="{{ b.y | plus: f.size.subY }}" text-anchor="middle" style="font-size:{{ f.size.sub }}px">{{ b.sub }}</text></g>
   {%- unless forloop.last %}
   <line x1="{{ b.ax1 }}" x2="{{ b.ax2 }}" y1="{{ b.cy }}" y2="{{ b.cy }}" class="line" marker-end="url(#{{ reel.id }}-ah)"/>
   {%- endunless %}
   {%- endfor %}
   {%- if f.branch %}
-  <g class="box" id="{{ reel.id }}-s-{{ f.branch.id }}"><rect x="{{ f.branch.x }}" y="{{ f.branch.y }}" width="{{ f.branch.w }}" height="{{ f.branch.h }}" rx="6"/><text class="tb" x="{{ f.branch.cx }}" y="{{ f.branch.y | plus: 18 }}" text-anchor="middle">{{ f.branch.name }}</text><text x="{{ f.branch.cx }}" y="{{ f.branch.y | plus: 34 }}" text-anchor="middle" style="font-size:11px">{{ f.branch.sub }}</text></g>
+  <g class="box" id="{{ reel.id }}-s-{{ f.branch.id }}"><rect x="{{ f.branch.x }}" y="{{ f.branch.y }}" width="{{ f.branch.w }}" height="{{ f.branch.h }}" rx="6"/><text class="tb" x="{{ f.branch.cx }}" y="{{ f.branch.y | plus: f.size.nameY }}" text-anchor="middle" style="font-size:{{ f.size.name }}px">{{ f.branch.name }}</text><text x="{{ f.branch.cx }}" y="{{ f.branch.y | plus: f.size.subY }}" text-anchor="middle" style="font-size:{{ f.size.sub }}px">{{ f.branch.sub }}</text></g>
   <line x1="{{ f.branch.cx }}" x2="{{ f.branch.cx }}" y1="{{ f.branch.ay1 }}" y2="{{ f.branch.ay2 }}" class="line" marker-end="url(#{{ reel.id }}-ah)"/>
   {%- if f.branch.label %}
-  <text x="{{ f.branch.lx }}" y="{{ f.branch.ly }}">{{ f.branch.label }}</text>
+  <text x="{{ f.branch.lx }}" y="{{ f.branch.ly }}" style="font-size:{{ f.size.label }}px">{{ f.branch.label }}</text>
   {%- endif %}
   {%- endif %}
   {%- if f.loop %}
   <path d="{{ f.loop.d }}" class="line" style="stroke-dasharray:3 3" marker-end="url(#{{ reel.id }}-ah)"/>
-  <text x="{{ f.loop.lx }}" y="{{ f.loop.ly }}" text-anchor="{{ f.loop.anchor }}">{{ f.loop.label }}</text>
+  <text x="{{ f.loop.lx }}" y="{{ f.loop.ly }}" text-anchor="{{ f.loop.anchor }}" style="font-size:{{ f.size.label }}px">{{ f.loop.label }}</text>
   {%- endif %}
   {%- for n in f.notes %}
-  <text x="{{ n.x }}" y="{{ n.y }}" text-anchor="{{ n.anchor }}" class="{{ n.tone }}" data-anim="fade" data-at="{{ n.at }}">{{ n.text }}</text>
+  <text x="{{ n.x }}" y="{{ n.y }}" text-anchor="{{ n.anchor }}" class="{{ n.tone }}" data-anim="fade" data-at="{{ n.at }}" style="font-size:{{ f.size.label }}px">{{ n.text }}</text>
   {%- endfor %}
   <circle id="{{ reel.id }}-tok" class="tok" cx="{{ f.tok.x }}" cy="{{ f.tok.y }}" r="8" style="fill:var({{ color }})"/>
-  <rect x="20" y="268" width="600" height="46" rx="6" style="fill:var(--bg);stroke:var(--rule)"/>
-  <text x="34" y="296">{{ f.status }}</text>
-  <text id="{{ reel.id }}-st" x="215" y="296" class="ink" style="font-weight:500">{{ f.start.state }}</text>
-  <text id="{{ reel.id }}-line" x="315" y="296">{{ f.start.line }}</text>
+  <rect x="20" y="{{ f.row.y }}" width="600" height="{{ f.row.h }}" rx="6" style="fill:var(--bg);stroke:var(--rule)"/>
+  <text x="{{ f.row.labelX }}" y="{{ f.row.textY }}" style="font-size:{{ f.size.status }}px">{{ f.status }}</text>
+  <text id="{{ reel.id }}-st" x="{{ f.row.stateX }}" y="{{ f.row.textY }}" class="ink" style="font-weight:500;font-size:{{ f.size.status }}px">{{ f.start.state }}</text>
+  <text id="{{ reel.id }}-line" x="{{ f.row.lineX }}" y="{{ f.row.textY }}" style="font-size:{{ f.size.status }}px">{{ f.start.line }}</text>
   {%- for m in f.moves %}
   <g data-cue="move" data-el="{{ reel.id }}-tok" data-at="{{ m.at }}" data-ms="{{ m.ms }}" data-x="{{ m.x }}" data-y="{{ m.y }}"></g>
   {%- endfor %}

@@ -1,18 +1,18 @@
 <svg class="scene" viewBox="0 0 640 360" role="img" aria-label="{{ reel.headline }}">
   <defs><marker id="{{ reel.id }}-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted);fill:context-stroke"/></marker></defs>
   {%- for a in f.actors %}
-  <g class="box" id="{{ reel.id }}-a{{ forloop.index0 }}"><rect x="{{ a.x }}" y="18" width="100" height="38" rx="6"/><text class="tb" x="{{ a.cx }}" y="42" text-anchor="middle">{{ a.name }}</text></g>
-  <line x1="{{ a.cx }}" x2="{{ a.cx }}" y1="56" y2="320" class="life" data-look="behind"/>
+  <g class="box" id="{{ reel.id }}-a{{ forloop.index0 }}"><rect x="{{ a.x }}" y="{{ f.box.y }}" width="100" height="{{ f.box.h }}" rx="6"/><text class="tb" x="{{ a.cx }}" y="{{ f.box.nameY }}" text-anchor="middle" style="font-size:{{ f.nameSize }}px">{{ a.name }}</text></g>
+  <line x1="{{ a.cx }}" x2="{{ a.cx }}" y1="{{ f.box.bottom }}" y2="320" class="life" data-look="behind"/>
   {%- endfor %}
   {%- for m in f.messages %}
   <g id="{{ reel.id }}-m{{ m.i }}" data-anim="fade" data-at="{{ m.at }}">
     <line x1="{{ m.x1 }}" x2="{{ m.x2 }}" y1="{{ m.y }}" y2="{{ m.y }}" class="msg" style="stroke:var({% if m.tone == 'ink' %}--muted{% else %}--{{ m.tone }}{% endif %})" marker-end="url(#{{ reel.id }}-ah)"/>
     {%- for l in m.lines %}
-    <text x="{{ m.mid }}" y="{{ l.y }}" text-anchor="middle"{% if l.tone != "" %} class="{{ l.tone }}"{% endif %}>{{ l.text }}</text>
+    <text x="{{ m.mid }}" y="{{ l.y }}" text-anchor="middle"{% if l.tone != "" %} class="{{ l.tone }}"{% endif %} style="font-size:{{ f.size }}px">{{ l.text }}</text>
     {%- endfor %}
   </g>
   {%- if m.result %}
-  <text x="{{ m.resultPos.x }}" y="{{ m.resultPos.y }}" text-anchor="{{ m.resultPos.anchor }}" class="{{ m.result.tone }}" data-anim="fade" data-at="{{ m.markAt }}">{{ m.result.text }}</text>
+  <text x="{{ m.resultPos.x }}" y="{{ m.resultPos.y }}" text-anchor="{{ m.resultPos.anchor }}" class="{{ m.result.tone }}" data-anim="fade" data-at="{{ m.markAt }}" style="font-size:{{ f.size }}px">{{ m.result.text }}</text>
   {%- endif %}
   {%- for s in m.strikes %}
   <line x1="{{ s.x1 }}" x2="{{ s.x2 }}" y1="{{ s.y1 }}" y2="{{ s.y2 }}" style="stroke:var(--bad);stroke-width:2.5;stroke-linecap:round" data-anim="draw" data-at="{{ s.at }}" data-ms="250" data-look="behind"/>
@@ -20,7 +20,7 @@
   {%- endfor %}
   <circle id="{{ reel.id }}-tok" cx="{{ f.tok.x }}" cy="{{ f.tok.y }}" r="6" class="tok" style="fill:var({{ color }})"/>
   {%- if f.note %}
-  <text x="320" y="345" text-anchor="middle" class="ink" data-anim="fade" data-at="{{ f.noteAt }}">{{ f.note }}</text>
+  <text x="320" y="345" text-anchor="middle" class="ink" data-anim="fade" data-at="{{ f.noteAt }}" style="font-size:{{ f.noteSize }}px">{{ f.note }}</text>
   {%- endif %}
   {%- for m in f.moves %}
   <g data-cue="move" data-el="{{ reel.id }}-tok" data-at="{{ m.at }}" data-ms="{{ m.ms }}" data-x="{{ m.x }}" data-y="{{ m.y }}"></g>
