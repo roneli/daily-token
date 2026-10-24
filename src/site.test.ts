@@ -123,6 +123,7 @@ test("a home page shows at / on a host that isn't a project's, or behind a key o
   const hidden = await at(`/${key}/`, key);
   expect(await hidden.text()).toBe("<h1>Home</h1>");
   expect(hidden.headers.get("x-robots-tag")).toContain("noindex");
+  expect(hidden.headers.get("referrer-policy")).toBe("no-referrer");
   expect(await (await at(`/${key}/hero.png`, key)).text()).toBe("png");
   expect((await at(`/${key}/../rocket/`, key)).status).not.toBe(200);
   delete objects["home/index.html"];

@@ -102,8 +102,11 @@ async function homePage(store: Store, pathname: string, key?: string): Promise<R
   if (!file) return null;
   const res = await serve(store, `home/${file}`, "no-cache");
   if (!res.ok) return null;
-  // Not for search engines while it hides behind a key.
-  if (key) res.headers.set("x-robots-tag", "noindex, nofollow");
+  // While it hides behind a key: not for search engines, and links out don't carry the key.
+  if (key) {
+    res.headers.set("x-robots-tag", "noindex, nofollow");
+    res.headers.set("referrer-policy", "no-referrer");
+  }
   return res;
 }
 
