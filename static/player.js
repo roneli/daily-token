@@ -179,6 +179,7 @@
 
   function setPlaying(p) {
     playing = p;
+    app.classList.toggle("paused", !p);
     const done = cur === pages.length - 1 && t >= tls[cur].ms;
     document.getElementById("play-label").textContent = p ? "Pause" : done ? "Replay" : "Play";
     document.getElementById("play-icon").setAttribute("d", p ? "M2 1 H5 V11 H2 Z M7 1 H10 V11 H7 Z" : "M2 1 L11 6 L2 11 Z");
@@ -405,6 +406,19 @@
 
   addEventListener("resize", fitShown);
   document.fonts?.ready.then(fitShown);
+
+  // Phones have no play button, so a paused reel shows one over its picture: one tap plays it on.
+  for (const viz of document.querySelectorAll(".reel .viz")) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "resume";
+    b.setAttribute("aria-label", "Play");
+    b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg>';
+    b.addEventListener("click", (e) => { e.stopPropagation(); document.getElementById("play").click(); });
+    viz.append(b);
+  }
+
+  app.classList.toggle("paused", !playing);
 
   // The first reel on a phone shows once where to tap, until the first tap or a few seconds.
   const hintKey = "daily-token:tap-hint";
