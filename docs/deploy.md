@@ -21,14 +21,14 @@ Publishing is optional. Without it, `preview` renders every issue and serves it 
 The site reads the bucket and nothing else. `/` lists the projects (or opens the only one), `/<project>/` is its latest issue, `/<project>/<date>/` an issue, `/<project>/archive` all of them, `/static/*` the pinned assets every project shares. The routes live in `src/site.ts`, and two hosts serve them:
 
 - **`daily-token serve`** (`--port 8787`, `--host 127.0.0.1`): wherever Bun runs, on your laptop, a VM or a container, with the bucket's `S3_*` settings. Without the sign-in settings below it checks no one, so it serves only on this machine.
-- **The Cloudflare Worker** (`deploy/cloudflare`), optional: the bucket bound as R2 (`bucket_name` in `wrangler.toml`).
+- **The Cloudflare Worker** (`deploy/cloudflare`), optional. `daily-token deploy` puts it up from `.env`: it signs in to Cloudflare if it must (`wrangler login`), makes the bucket `S3_BUCKET` in R2 if it isn't there, deploys the Worker on the host of `SITE_URL` (or `WORKER_DOMAIN`, in a zone of the same account) and stores the sign-in's secrets. Run it again after any change. Publishing to R2 also needs an S3 key: R2 → Manage API tokens → Object Read & Write on the bucket, into `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY`, with `S3_ENDPOINT` `https://<account>.r2.cloudflarestorage.com`.
 
 ### Many projects
 
 Several data roots can publish to one bucket, and one site serves them all. With `SITE_DOMAIN` set (e.g. `example.com`), each project also has its own host, `<id>.example.com`, which serves that project alone, so its sign-in is its own. Any other host lists every project the visitor may read. For each project:
 
 1. Its data root publishes to the same bucket, with `SITE_URL=https://<id>.example.com`.
-2. Add `<id>.example.com` to `WORKER_DOMAIN` (comma-separated) and `mise run worker:deploy`.
+2. Add `<id>.example.com` to `WORKER_DOMAIN` (comma-separated) and `daily-token deploy`. A deploy sets the Worker's whole list of domains, so `WORKER_DOMAIN` names every project's host, wherever you deploy from.
 3. Add `https://<id>.example.com/auth/callback` to the GitHub App's callback URLs, unless the project is public. An app takes 10.
 
 ## Sign-in
@@ -41,6 +41,6 @@ Set it up once:
 
 1. `daily-token github-app` (`--org NAME` for an organization's): it opens GitHub with the app filled in, from `SITE_URL`. Press **Create**. Its Client ID and secret go into `.env` as `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`, with a new `SESSION_SECRET`. The app reads only repository Metadata, the least it can be installed on repos with, and has no webhook.
 2. **Install** it on the project's repos, on the page GitHub opens next. A reader's sign-in reaches only the repos it's installed on.
-3. `mise run worker:secrets`, then publish (it writes who may read into the bucket), then `mise run worker:deploy`. For `serve`, the same three in its env.
+3. `daily-token deploy`, then publish: it writes who may read into the bucket. For `serve`, the same three in its env.
 
 A session lasts 12 hours, then the reader signs in again, which takes no click while they're signed in to GitHub. So someone who loses access to the repos loses the digest within 12 hours. Rotating `SESSION_SECRET` signs everyone out. Without the three settings no one signs in, and only public projects and previews show; `wrangler dev` on localhost without them is open.

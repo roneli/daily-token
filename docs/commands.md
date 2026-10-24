@@ -3,7 +3,7 @@
 `daily-token <command>` (`bun src/cli.ts` in this repo; `daily-token help` lists them):
 
 ```
-init      [DIR] [--yes --name --repos a/b,c/d --tz --cutoff --days --model --publish none|r2]
+init      [DIR] [--yes --name --repos a/b,c/d --tz --cutoff --days --model --publish none|s3]
 run       [--date D] [--from STAGE] [--to STAGE] [--rounds N] [--set stage.key=value] [--motion | --no-motion]
 cutaway   "TOPIC" [--date D] [--force]: the Cutaway alone on the latest issue, touring that topic
 replay    STAGE --date D [--set stage.key=value]
@@ -15,6 +15,8 @@ check     [--date D] [--look]
 publish   [--announce D] [--dry-run]
 preview   render every issue and serve out/ on :5173
 serve     [--port 8787] [--host 127.0.0.1]: the site, from the issues bucket
+github-app [--site URL] [--org NAME]: make the GitHub App readers sign in with, its keys into .env
+deploy    [--dry-run]: the bucket and the site on Cloudflare, from .env
 doctor    is the data root ready
 migrate   [--dry-run]: bring a data root to the current format
 ```

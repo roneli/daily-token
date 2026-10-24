@@ -8,7 +8,8 @@ import { ENGINE } from "./issue";
 // if it isn't there, deploys the Worker on its domains and stores the sign-in's secrets. Run it again after a change.
 //
 //   SITE_URL              the site's address; its host is the Worker's domain unless WORKER_DOMAIN says otherwise
-//   WORKER_DOMAIN         optional: the Worker's domains, comma-separated, each in a zone of this Cloudflare account
+//   WORKER_DOMAIN         optional: the Worker's domains, comma-separated, each in a zone of this Cloudflare account;
+//                         a deploy sets the whole list, so with several projects on one Worker it names them all
 //   SITE_DOMAIN           optional: gives each project its own host, <id>.<SITE_DOMAIN>
 //   S3_BUCKET             the bucket publish writes, bound to the Worker (default daily-token)
 //   GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, SESSION_SECRET   the sign-in, from `daily-token github-app`
