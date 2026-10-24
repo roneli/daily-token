@@ -95,8 +95,9 @@ test("a project's own host serves that project alone", async () => {
   expect((await at("rocket.digest.test.", "/rocket/2026-01-15/?x=1")).headers.get("location")).toBe("https://rocket.digest.test/rocket/2026-01-15/?x=1");
   expect((await at("ROCKET.digest.test", "/open/")).status).toBe(404);
   expect((await at("nope.digest.test", "/")).status).toBe(404);
-  // Any other host is for every project.
+  // Any other host is for every project; the bare domain sends a project's path to its own host.
   expect(await (await at("digest.test", "/")).text()).toContain("Open");
+  expect((await at("digest.test", "/rocket/2026-01-15/")).headers.get("location")).toBe("https://rocket.digest.test/rocket/2026-01-15/");
   expect(hostProject("a.b.digest.test", "digest.test")).toBe("a.b");
   expect(hostProject("rocket.digest.test")).toBeUndefined();
   objects["projects.json"] = JSON.stringify([{ id: "rocket", name: "Rocket" }]);

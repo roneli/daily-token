@@ -146,6 +146,8 @@ export async function site(req: Request, store: Store, { door, domain, home }: O
   if (!p) return new Response("Not found", { status: 404 });
   const project = projects.find((x) => x.id === p[1]);
   if (!project) return new Response("Not found", { status: 404 });
+  // With projects on their own hosts, the bare domain sends a project's path there: one address, one sign-in.
+  if (domain && own === undefined && hostname.toLowerCase() === domain) return Response.redirect(`${url.protocol}//${project.id}.${domain}${pathname}${url.search}`, 301);
   const rest = p[2] ?? "";
   const open = await reads(project);
 
