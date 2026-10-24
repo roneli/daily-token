@@ -32,7 +32,8 @@ export type Door = {
 export const SESSION_HOURS = 12;
 const STATE = "dt-state";
 const ISSUER = "daily-token";
-// Where sign-in may send a reader on to: a project, an issue or the archive, so it can't be sent off the site.
+// Where sign-in may send a reader on to: a project, an issue or the archive, so it can't be sent off the site; or /,
+// on a host that serves one project.
 const TO = /^\/([a-z0-9-]+)\/(\d{4}-\d{2}-\d{2}\/|archive)?$/;
 
 export const sessionCookie = (project: string) => `dt-${project}`;
@@ -110,7 +111,7 @@ export function door(env: SignInEnv, ask: Asker = github(env)): Door {
     const redirect = `${url.origin}/auth/callback`;
     const projectOf = (to: string) => {
       const m = TO.exec(to);
-      const project = m && projects.find((p) => p.id === m[1]);
+      const project = to === "/" && projects.length === 1 ? projects[0] : m && projects.find((p) => p.id === m[1]);
       return project && project.access !== "public" ? project : undefined;
     };
 

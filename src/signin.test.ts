@@ -88,6 +88,12 @@ describe("sign-in", () => {
     expect((await gate.auth(request("/auth/callback?code=crew&state=forged"), projects)).status).toBe(400);
   });
 
+  test("sends a reader back to / on a host that serves one project", async () => {
+    const res = await gate.auth(request("/auth/github?to=%2F"), [rocket]);
+    expect(res.status).toBe(302);
+    expect((await gate.auth(request("/auth/github?to=%2F"), projects)).status).toBe(400);
+  });
+
   test("sends a reader on only to a digest on this site", async () => {
     for (const to of ["//evil.test/", "https://evil.test/rocket/", "/rocket/../x", "/nope/", "/open/", "/rocket/2026-01-15/data.json"])
       expect((await gate.auth(request(`/auth/github?to=${encodeURIComponent(to)}`), projects)).status).toBe(400);

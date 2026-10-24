@@ -31,7 +31,7 @@ Several data roots can publish to one bucket, and one site serves them all. With
 2. Add `<id>.example.com` to `WORKER_DOMAIN` (comma-separated) and `daily-token deploy`. A deploy sets the Worker's whole list of domains, so `WORKER_DOMAIN` names every project's host, wherever you deploy from.
 3. Add `https://<id>.example.com/auth/callback` to the GitHub App's callback URLs, unless the project is public. An app takes 10.
 
-`HOME_PROJECT=<id>` makes the bare `example.com` that project's own host too, as a front page; its callback URL is `https://example.com/auth/callback`.
+`HOME_PROJECT=<id>` makes the bare `example.com` that project's own host too; its callback URL is `https://example.com/auth/callback`. `daily-token home DIR` then puts a front page of your own at `/` (a folder with `index.html` and its files), for whoever may read that project; the project's issues stay at `/<id>/`.
 
 ## Sign-in
 

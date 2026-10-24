@@ -2,7 +2,8 @@
 // Read-only. It runs as the Cloudflare Worker (deploy/cloudflare) or wherever Bun runs (`daily-token serve`); each hands it a Store,
 // and a Door unless the site is open. Without a sign-in, an issue's address answers with its preview and its cover, so a
 // link unfurls wherever it's shared; the rest of a project that isn't public stays shut. With a domain, each project
-// also has its own host, <id>.<domain>, which serves that project alone; the bare domain may be one project's too.
+// also has its own host, <id>.<domain>, which serves that project alone; the bare domain may be one project's too, and
+// then shows the bucket's home page (home/, from `daily-token home`) at /, to whoever may read that project.
 //
 // Bucket layout:
 //   projects.json                          [{ id, name, access }]
@@ -12,6 +13,7 @@
 //   <project>/issues/<date>/*.json         its data, stories, reels, motion
 //   <project>/issues/<date>/motion.<hash>.* the Cutaway's video, poster and timing
 //   static/<name>.<hash>.<ext>             pinned assets, shared, never overwritten
+//   home/index.html, home/<file>           optional: the bare domain's front page
 
 import { type Door, type Listed, signInPath } from "./signin";
 
@@ -26,6 +28,8 @@ const PROJECT = /^\/([a-z0-9-]+)(\/.*)?$/;
 const DATE = /^\/(\d{4}-\d{2}-\d{2})(\/.*)?$/;
 // The motion's video and poster are named by their content, so they never change under that name.
 const HASHED = /\/motion\.[0-9a-f]{10}\.(mp4|jpg|json)$/;
+// A front page's file: one name with a dot, which no project id has.
+const HOME_FILE = /^\/([\w-]+\.[\w.]+)$/;
 const COVER = /^\/cover\.[0-9a-f]{10}\.png$/;
 
 const escapeHtml = (s: string) =>
@@ -109,6 +113,15 @@ export async function site(req: Request, store: Store, { door, domain, home }: O
   if (own !== undefined && !projects.length) return new Response("Not found", { status: 404 });
   if (pathname.startsWith("/auth/")) return door ? door.auth(req, projects) : new Response("Not found", { status: 404 });
   const reads = async (project: Listed) => !door || (await door.reads(req, project));
+  // The bare domain's front page, read like its project: anyone else is sent to sign in, and comes back here.
+  if (home && own === home && hostname.toLowerCase() === domain) {
+    const file = pathname === "/" ? "index.html" : HOME_FILE.exec(pathname)?.[1];
+    if (file && (await store.get("home/index.html"))) {
+      if (!(await reads(projects[0]))) return pathname === "/" ? to(signInPath("/")) : shut();
+      const page = await serve(store, `home/${file}`, "no-cache", req);
+      if (page.ok) return page;
+    }
+  }
   if (pathname === "/") {
     if (projects.length === 1) return to(`/${projects[0].id}/`);
     const shown = [];

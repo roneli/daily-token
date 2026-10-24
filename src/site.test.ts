@@ -118,3 +118,18 @@ test("the bare domain can be one project's own host", async () => {
   expect((await at("/open/")).status).toBe(404);
   objects["projects.json"] = JSON.stringify([{ id: "rocket", name: "Rocket" }]);
 });
+
+test("with a home page, the bare domain shows it at / to whoever may read its project", async () => {
+  objects["home/index.html"] = "<h1>Home</h1>";
+  objects["home/reel.png"] = "png";
+  const at = (path: string, cookie?: string) => site(new Request(`https://digest.test${path}`, { headers: cookie ? { cookie } : {} }), store, { domain: "digest.test", home: "rocket", door });
+  expect(await (await at("/", "reader")).text()).toBe("<h1>Home</h1>");
+  expect(await (await at("/reel.png", "reader")).text()).toBe("png");
+  expect((await at("/")).headers.get("location")).toBe("https://digest.test/auth/github?to=%2F");
+  expect((await at("/reel.png")).status).toBe(403);
+  // The project's issues stay where they were, and a project's own host never shows the home page.
+  expect(await (await at("/rocket/2026-01-15/", "reader")).text()).toBe("<h1>Lift-off</h1>");
+  expect((await site(new Request("https://rocket.digest.test/"), store, { domain: "digest.test", home: "rocket", door })).headers.get("location")).toBe("https://rocket.digest.test/rocket/");
+  delete objects["home/index.html"];
+  delete objects["home/reel.png"];
+});
