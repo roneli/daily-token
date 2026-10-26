@@ -4,3 +4,10 @@ out/
 .wrangler/
 .claude/worktrees/
 .idea/
+# Tools installed into the checkout, and their local state; not the engine's.
+.claude/
+.github/agents/
+.github/hooks/
+.github/skills/
+skills-lock.json
+.impeccable/
