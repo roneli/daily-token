@@ -9,7 +9,8 @@ import { bucket } from "./bucket";
 const { values, positionals } = parseArgs({ args: process.argv.slice(2), allowPositionals: true, options: { root: { type: "string" }, "dry-run": { type: "boolean", default: false } } });
 const dir = positionals[0];
 if (!dir) throw new Error("daily-token home DIR: the folder with index.html");
-const names = (await readdir(dir, { withFileTypes: true })).filter((e) => e.isFile() && /^[\w-]+\.[\w.]+$/.test(e.name)).map((e) => e.name);
+// The page's own files: notes beside it (README.md, a design record) stay out.
+const names = (await readdir(dir, { withFileTypes: true })).filter((e) => e.isFile() && /^[\w-]+\.[\w.]+$/.test(e.name) && !e.name.endsWith(".md")).map((e) => e.name);
 if (!names.includes("index.html")) throw new Error(`${dir} has no index.html`);
 const dry = values["dry-run"] as boolean;
 const s3 = bucket();
