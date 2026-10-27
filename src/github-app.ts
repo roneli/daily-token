@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { parseArgs } from "node:util";
+import { setEnv } from "./setup";
 
 // Makes the GitHub App readers sign in with, from a manifest: GitHub shows the app filled in, you press Create, and
 // its Client ID and secret land in .env with a new SESSION_SECRET. It reads only Metadata, the least a repo can be
@@ -60,10 +61,7 @@ server.stop();
 const file = Bun.file(values.env);
 let text = (await file.exists()) ? await file.text() : "";
 const set = (key: string, value: string, keep = false) => {
-  const line = new RegExp(`^${key}=(.*)$`, "m");
-  const had = line.exec(text);
-  if (had && keep && had[1]) return;
-  text = had ? text.replace(line, `${key}=${value}`) : `${text}${text.endsWith("\n") || !text ? "" : "\n"}${key}=${value}\n`;
+  text = setEnv(text, key, value, keep);
 };
 set("GITHUB_CLIENT_ID", app.client_id);
 set("GITHUB_CLIENT_SECRET", app.client_secret);

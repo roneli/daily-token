@@ -3,7 +3,7 @@
 `daily-token <command>` (`bun src/cli.ts` in this repo; `daily-token help` lists them):
 
 ```
-init      [DIR] [--yes --name --repos a/b,c/d --tz --cutoff --days --stories N --model --publish none|s3]
+init      [DIR] [--yes --name --repos a/b,c/d --tz --cutoff --days --stories N --model --motion | --no-motion --access repos|public --company NAME --publish none|s3 --site URL] [--dry-run]
 run       [--date D] [--from STAGE] [--to STAGE] [--rounds N] [--set stage.key=value] [--motion | --no-motion]
 cutaway   "TOPIC" [--date D] [--force]: the Cutaway alone on the latest issue, touring that topic
 replay    STAGE --date D [--set stage.key=value]

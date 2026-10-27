@@ -8,6 +8,8 @@ export type Option<T extends string> = { value: T; label: string; hint?: string 
 export type Prompter = {
   text(q: { id: string; message: string; initial?: string; placeholder?: string; validate?: (v: string) => string | undefined }): Promise<string>;
   confirm(q: { id: string; message: string; initial?: boolean }): Promise<boolean>;
+  // Text read hidden, for a token or key; empty skips it.
+  secret(q: { id: string; message: string }): Promise<string>;
   select<T extends string>(q: { id: string; message: string; options: Option<T>[]; initial?: T }): Promise<T>;
   multiselect<T extends string>(q: { id: string; message: string; options: Option<T>[]; initial?: T[] }): Promise<T[]>;
   note(message: string, title?: string): void;

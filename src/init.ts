@@ -62,6 +62,20 @@ export async function ask(dir: string, p: Prompter): Promise<Plan> {
   const weekly = await p.select({ id: "weekly", message: "Which day also looks back at the week?", options: [{ value: "none", label: "none" }, ...DAYS.map((d) => ({ value: d, label: d }))], initial: current?.weekly ?? "none" });
   const stories = await p.text({ id: "stories", message: "How many stories may an issue have at most? A small day has fewer", initial: String(maxStories(current?.pipeline)), validate: (v) => (/^\d+$/.test(v) && +v >= 1 && +v <= STORIES_CEILING ? undefined : `a whole number from 1 to ${STORIES_CEILING}`) });
   const model = await p.select({ id: "model", message: "Which model do the agents use?", options: [{ value: "opus", label: "opus", hint: "best writing and judgment" }, { value: "sonnet", label: "sonnet", hint: "cheaper" }], initial: "opus" });
+  // A queued topic turns the Cutaway on either way; this makes one in every issue.
+  const motion = await p.confirm({ id: "motion", message: "Make a Cutaway, the narrated video tour, in every issue? Without it, one is made only when a topic is queued", initial: current?.pipeline?.motion?.enabled ?? false });
+  const custom = typeof current?.access === "object";
+  const access = await p.select({
+    id: "access",
+    message: "Who may read the digest?",
+    options: [
+      { value: "repos", label: "Anyone who can see the repos", hint: "they sign in with GitHub" },
+      { value: "public", label: "Anyone" },
+      ...(custom ? [{ value: "custom", label: "Who project.json's access names now" }] : []),
+    ],
+    initial: custom ? "custom" : current?.access === "public" ? "public" : "repos",
+  });
+  const company = await p.text({ id: "company", message: "The company or team on the share cover (empty for the project's name)", initial: current?.company ?? "", validate: (v) => (v.trim().length <= 40 ? undefined : "at most 40 characters") });
   const publish = await p.select({ id: "publish", message: "Where do issues go?", options: [{ value: "none", label: "Nowhere yet", hint: "render and preview locally" }, { value: "s3", label: "An S3-compatible bucket", hint: "AWS S3, Cloudflare R2, MinIO; with an optional Slack post" }], initial: "none" });
 
   const site =
@@ -79,11 +93,18 @@ export async function ask(dir: string, p: Prompter): Promise<Plan> {
   const project: Project = { ...current, id, name, sources, ...(all ? {} : { days }), ...(weekly === "none" ? {} : { weekly: weekly as Day }) };
   if (all) delete project.days;
   if (weekly === "none") delete project.weekly;
+  if (company.trim()) project.company = company.trim();
+  else delete project.company;
+  if (access === "public") project.access = "public";
+  else if (access === "repos") delete project.access;
   // The default stays out of project.json, so a later engine's default reaches it.
   const { stories: was, ...stages } = current?.pipeline ?? {};
   const { maxStories: _m, ...kept } = was ?? {};
   const storiesStage = { ...kept, ...(+stories === MAX_STORIES ? {} : { maxStories: +stories }) };
-  const pipeline = { ...stages, ...(Object.keys(storiesStage).length ? { stories: storiesStage } : {}) };
+  const { motion: wasMotion, ...rest } = stages;
+  const { enabled: _e, ...motionKept } = wasMotion ?? {};
+  const motionStage = { ...motionKept, ...(motion ? { enabled: true } : {}) };
+  const pipeline = { ...rest, ...(Object.keys(storiesStage).length ? { stories: storiesStage } : {}), ...(Object.keys(motionStage).length ? { motion: motionStage } : {}) };
   if (Object.keys(pipeline).length) project.pipeline = pipeline;
   else delete project.pipeline;
   delete project.repos;
@@ -158,13 +179,19 @@ export function cron(tz: string, cutoff: string, days?: readonly string[]) {
   return `${minute} ${list(hours)} * * ${utcDays.size === 7 ? "*" : list(utcDays)}`;
 }
 
-// What's left for the person: the secrets and variables the workflows need, and the first commands.
-export function nextSteps(plan: Plan) {
+// What's left for the person: the secrets and variables the workflows need, less those set already, and the first commands.
+export function nextSteps(plan: Plan, done: string[] = []) {
+  const secrets = plan.secrets.filter((s) => !done.includes(s.name));
+  const vars = Object.entries(plan.vars).filter(([k]) => !done.includes(k));
   const lines = [
-    "In the data repo's GitHub settings (Settings → Secrets and variables → Actions):",
-    ...plan.secrets.map((s) => `  secret   ${s.name}: ${s.why}`),
-    ...Object.entries(plan.vars).map(([k, v]) => `  variable ${k}${v ? ` = ${v}` : ""}`),
-    "",
+    ...(secrets.length || vars.length
+      ? [
+          "In the data repo's GitHub settings (Settings → Secrets and variables → Actions), docs/deploy.md says where each comes from:",
+          ...secrets.map((s) => `  secret   ${s.name}: ${s.why}`),
+          ...vars.map(([k, v]) => `  variable ${k}${v ? ` = ${v}` : ""}`),
+          "",
+        ]
+      : []),
     `Then: cd ${plan.dir}`,
     "  bunx daily-token doctor                      check the setup",
     "  bunx daily-token project cartographer        draw the project's map; look, then run it again with --accept",

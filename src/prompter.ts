@@ -13,6 +13,7 @@ function answered<T>(v: T | symbol): T {
 export const terminal: Prompter = {
   text: async (q) => answered<string>(await clack.text({ message: q.message, initialValue: q.initial, placeholder: q.placeholder, validate: q.validate ? (v) => q.validate?.(v ?? "") : undefined })),
   confirm: async (q) => answered<boolean>(await clack.confirm({ message: q.message, initialValue: q.initial })),
+  secret: async (q) => answered<string>(await clack.password({ message: q.message })) ?? "",
   select: async (q) => answered(await clack.select({ message: q.message, options: q.options as never, initialValue: q.initial as never })) as never,
   multiselect: async (q) => answered(await clack.multiselect({ message: q.message, options: q.options as never, initialValues: q.initial as never, required: true })) as never,
   note: (message, title) => clack.note(message, title),
@@ -32,6 +33,7 @@ export function answering(answers: Record<string, string | boolean | string[]>):
       return v;
     },
     confirm: async (q) => (get(q.id) as boolean | undefined) ?? q.initial ?? missing(q.id),
+    secret: async (q) => (get(q.id) as string | undefined) ?? "",
     async select(q) {
       const v = (get(q.id) as string | undefined) ?? q.initial ?? missing(q.id);
       if (!q.options.some((o) => o.value === v)) throw new Error(`${q.id} is one of ${q.options.map((o) => o.value).join(", ")}`);

@@ -2,7 +2,7 @@
 
 Publishing is optional. Without it, `preview` renders every issue and serves it on your machine. To share issues, `publish` uploads them to an **issues bucket**: any S3-compatible store (AWS S3, Cloudflare R2, MinIO, Backblaze B2). Only what changed is uploaded.
 
-`init` writes the data repo's workflows. `.github/workflows/daily.yml` makes the issue at `CUTOFF` in `DIGEST_TZ` on the project's issue days: `make` (collect and the agents), render, `check`, publish, and a commit of the issue folder to the data repo. GitHub's cron is UTC, so it fires at both possible UTC hours and runs only the one in the cutoff's local hour. Run it by hand with a date, `from` and `dry_run` (on by default: make and check, no publish or commit). `.github/workflows/publish.yml` publishes the whole archive when the engine is upgraded, the project or its map changes, or by hand. Both need the `publish` environment:
+`init` writes the data repo's workflows. `.github/workflows/daily.yml` makes the issue at `CUTOFF` in `DIGEST_TZ` on the project's issue days: `make` (collect and the agents), render, `check`, publish, and a commit of the issue folder to the data repo. GitHub's cron is UTC, so it fires at both possible UTC hours and runs only the one in the cutoff's local hour. Run it by hand with a date, `from` and `dry_run` (on by default: make and check, no publish or commit). `.github/workflows/publish.yml` publishes the whole archive when the engine is upgraded, the project or its map changes, or by hand. Both read the data repo's own Actions secrets and variables (Settings → Secrets and variables → Actions), with no environment. Run in a terminal, `init` offers to make the data repo (private, with `gh repo create`) and to set them with `gh`, a secret on stdin, never in a command line; `init --dry-run` prints those commands, values hidden, and runs none:
 
 | Name | Kind | What |
 |---|---|---|
@@ -15,6 +15,13 @@ Publishing is optional. Without it, `preview` renders every issue and serves it 
 | `DIGEST_TZ`, `CUTOFF` | variable | the window's time zone and cutoff, e.g. `Europe/Berlin`, `18:00` (daily) |
 | `SOURCE_TOKEN` | secret | read-only on the project's repos: contents, pull requests, issues (daily) |
 | `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN` | secret | for the agents; the CLI is pinned to Claude Code 2.1.289 (daily) |
+
+### Where each key comes from
+
+- **`SOURCE_TOKEN`**: a [fine-grained personal access token](https://github.com/settings/personal-access-tokens/new). Resource owner: the repos' owner. Repository access: only the project's repos. Repository permissions: Contents, Pull requests and Issues, each Read-only. Locally the same token goes in `.env` as `GH_TOKEN`.
+- **`CLAUDE_CODE_OAUTH_TOKEN`**: run `claude setup-token`, which signs in with your Claude subscription and prints a token. Or **`ANTHROPIC_API_KEY`** instead: a key from the [Anthropic Console](https://console.anthropic.com/settings/keys), billed per use. Locally the agents use your Claude login.
+- **`S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_ENDPOINT`**: on Cloudflare, the dashboard → R2 → Manage API tokens → Create API token, with **Object Read & Write** applied to the bucket ([R2 tokens](https://developers.cloudflare.com/r2/api/tokens/)). It shows the key, its secret and the endpoint, `https://<account>.r2.cloudflarestorage.com`. Another store: a key that may read and write the bucket. They go in `.env` too, for `publish` from your machine.
+- **`SLACK_WEBHOOK_URL`**: optional. [api.slack.com/apps](https://api.slack.com/apps) → your app → Incoming Webhooks → Add New Webhook, for the channel.
 
 ## The site
 

@@ -38,7 +38,7 @@ The npm package isn't published yet. Until it is, run the engine from a checkout
 
 ```sh
 daily-token preview                       # the made-up sample issue on :5173
-daily-token init my-digest                # asks for repos, time zone, cutoff, issue days, stories
+daily-token init my-digest                # asks about the project, then offers to make its GitHub repo and set its keys
 cd my-digest && export GH_TOKEN=...       # read-only token for those repos
 daily-token project cartographer          # proposes a map of the system
 daily-token project cartographer --accept # keeps it
@@ -48,6 +48,8 @@ daily-token preview                       # read it on :5173
 ```
 
 `project brief` writes a proposal first; run it without `--accept` to read or edit it before you keep it.
+
+`init` asks for the repos, time zone, cutoff, issue days, stories, the Cutaway, who may read and the name on the share cover. In a terminal it then offers, step by step and each skippable, to make the digest's private repo on GitHub, set its Actions secrets and variables with `gh` (it says where each key comes from), and put the site online. `init --dry-run` prints those commands, values hidden, and runs none.
 
 Hosting is optional. To share issues, `daily-token github-app` makes the GitHub App readers sign in with, and `daily-token deploy` puts the bucket and the site on Cloudflare. Readers sign in with GitHub, and whoever can see every one of the project's repos may read it. `init` also writes a GitHub Action that makes the issue every issue day. Any S3-compatible bucket with `daily-token serve` works too. See [docs/deploy.md](docs/deploy.md).
 

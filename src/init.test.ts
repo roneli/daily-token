@@ -78,3 +78,51 @@ test("init asks how many stories an issue may have: the default stays out of pro
   expect((await Bun.file(join(dir, "project.json")).json()).pipeline).toEqual({ stories: { rounds: 2 } });
   expect(init(dir, answering({ ...ANSWERS, stories: String(STORIES_CEILING + 1) }))).rejects.toThrow(`a whole number from 1 to ${STORIES_CEILING}`);
 });
+
+test("init asks for the Cutaway, who may read and the cover's name; the defaults stay out of project.json", async () => {
+  const dir = join(await mkdtemp(join(tmpdir(), "init-")), "cover");
+  await init(dir, answering(ANSWERS));
+  const plain = await Bun.file(join(dir, "project.json")).json();
+  expect([plain.pipeline, plain.access, plain.company]).toEqual([undefined, undefined, undefined]);
+
+  await init(dir, answering({ ...ANSWERS, motion: true, access: "public", company: " Acme Space " }));
+  const set = await Bun.file(join(dir, "project.json")).json();
+  expect(set).toMatchObject({ pipeline: { motion: { enabled: true } }, access: "public", company: "Acme Space" });
+
+  // Asked again, each offers what's there; taking the defaults removes them and keeps the stage's other settings.
+  await Bun.write(join(dir, "project.json"), JSON.stringify({ ...set, pipeline: { motion: { enabled: true, topics: ["a flow"] } } }));
+  const again = await init(dir, answering({ ...ANSWERS }));
+  expect(again.plan.project).toMatchObject({ pipeline: { motion: { enabled: true, topics: ["a flow"] } }, access: "public", company: "Acme Space" });
+  await init(dir, answering({ ...ANSWERS, motion: false, access: "repos", company: "" }));
+  const off = await Bun.file(join(dir, "project.json")).json();
+  expect([off.pipeline, off.access, off.company]).toEqual([{ motion: { topics: ["a flow"] } }, undefined, undefined]);
+
+  // An access that names repos is kept unless another answer replaces it.
+  const custom = { github: ["acme/rocket"], role: "push" };
+  await Bun.write(join(dir, "project.json"), JSON.stringify({ ...off, access: custom }));
+  await init(dir, answering({ ...ANSWERS }));
+  expect((await Bun.file(join(dir, "project.json")).json()).access).toEqual(custom);
+  expect(init(dir, answering({ ...ANSWERS, access: "everyone" }))).rejects.toThrow("access is one of repos, public, custom");
+  expect(init(dir, answering({ ...ANSWERS, company: "x".repeat(41) }))).rejects.toThrow("at most 40 characters");
+});
+
+test("init --yes reads --motion, --access and --company", async () => {
+  const dir = join(await mkdtemp(join(tmpdir(), "init-")), "flags");
+  const r = Bun.spawnSync(
+    ["bun", join(ENGINE, "src", "cli.ts"), "init", dir, "--yes", "--no-install", "--name", "Rocket", "--repos", "acme/rocket", "--tz", "UTC", "--motion", "--access", "public", "--company", "Acme"],
+    { stdout: "pipe", stderr: "pipe" },
+  );
+  expect(r.stderr.toString()).toBe("");
+  expect(await Bun.file(join(dir, "project.json")).json()).toMatchObject({ pipeline: { motion: { enabled: true } }, access: "public", company: "Acme" });
+});
+
+test("next steps leave out what init already set on the repo", async () => {
+  const dir = join(await mkdtemp(join(tmpdir(), "init-")), "done");
+  const { plan } = await init(dir, answering(ANSWERS));
+  const steps = nextSteps(plan, ["SOURCE_TOKEN", "DIGEST_TZ"]);
+  expect(steps).not.toContain("SOURCE_TOKEN");
+  expect(steps).not.toContain("variable DIGEST_TZ");
+  expect(steps).toContain("secret   S3_ACCESS_KEY_ID");
+  const all = [...plan.secrets.map((s) => s.name), ...Object.keys(plan.vars)];
+  expect(nextSteps(plan, all)).not.toContain("Secrets and variables");
+});

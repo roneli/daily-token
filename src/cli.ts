@@ -23,7 +23,10 @@ const HELP = `daily-token <command> [options]
   render    Render issues to out/ (--all, --dates a,b)
   check     Validate an issue (--look measures it in a browser)
   init      Set up a data root here or in DIR, or bring one up to date; --yes takes flags instead of questions:
-            --name --id --sources github --repos a/b,c/d --tz --cutoff --days mon,tue --weekly fri --stories 6 --model --publish none|s3
+            --name --id --sources github --repos a/b,c/d --tz --cutoff --days mon,tue --weekly fri --stories 6 --model
+            --motion / --no-motion  --access repos|public  --company NAME  --publish none|s3  --site URL
+            In a terminal it then offers to make the data repo on GitHub, set its secrets and put the site online;
+            --dry-run prints those commands, values hidden, and runs none
   migrate   Bring a data root to the current format; the words don't change (--dry-run lists the files)
   doctor    Check that the data root, its sources, the claude CLI and publishing are ready
   publish   Make the issues bucket match the data root and out/ (--announce DATE, --dry-run)
@@ -144,7 +147,9 @@ export async function runInit(argv: string[]) {
       yes: { type: "boolean", default: false },
       install: { type: "boolean", default: true },
       "gh-token": { type: "boolean", default: false },
-      ...Object.fromEntries(["name", "id", "sources", "repos", "tz", "cutoff", "days", "weekly", "stories", "model", "publish", "site"].map((k) => [k, { type: "string" as const }])),
+      "dry-run": { type: "boolean", default: false },
+      motion: { type: "boolean" },
+      ...Object.fromEntries(["name", "id", "sources", "repos", "tz", "cutoff", "days", "weekly", "stories", "model", "access", "company", "publish", "site"].map((k) => [k, { type: "string" as const }])),
     },
   });
   const dir = positionals[0] ?? ".";
@@ -154,7 +159,8 @@ export async function runInit(argv: string[]) {
   if (values.yes) {
     const { answering } = await import("./prompter");
     const answers: Record<string, string | boolean> = { migrate: true, "github.useGhToken": values["gh-token"] as boolean };
-    for (const k of ["name", "id", "sources", "tz", "cutoff", "days", "weekly", "stories", "model", "publish", "site"]) if (typeof flags[k] === "string") answers[k] = flags[k];
+    for (const k of ["name", "id", "sources", "tz", "cutoff", "days", "weekly", "stories", "model", "access", "company", "publish", "site"]) if (typeof flags[k] === "string") answers[k] = flags[k];
+    if (typeof values.motion === "boolean") answers.motion = values.motion;
     if (typeof flags.repos === "string") answers["github.repos"] = flags.repos;
     p = answering(answers);
   } else {
@@ -168,20 +174,13 @@ export async function runInit(argv: string[]) {
     const r = Bun.spawnSync(["bun", "install"], { cwd: dir, stdout: "inherit", stderr: "inherit" });
     if (!r.success) console.log("bun install failed; run it in the data root before the commands below");
   }
-  console.log(`\n${nextSteps(plan)}`);
-  // Asked, the site goes online now: the GitHub App in the browser, then the Worker. Each reads the data root's .env.
-  if (!values.yes && plan.vars.SITE_URL) {
-    const clack = await import("@clack/prompts");
-    const now = await clack.confirm({ message: `Put the site online at ${plan.vars.SITE_URL} now? This makes a GitHub App for the sign-in, then deploys to Cloudflare`, initialValue: true });
-    if (now === true)
-      for (const command of ["github-app", "deploy"]) {
-        const r = Bun.spawnSync(["bun", join(ENGINE, "src", "cli.ts"), command], { cwd: dir, stdio: ["inherit", "inherit", "inherit"] });
-        if (!r.success) {
-          console.log(`${command} stopped; run \`daily-token ${command}\` in the data root to try again`);
-          break;
-        }
-      }
+  // In a terminal, init goes on: the repo on GitHub, its secrets, then the site online. Each step can be skipped.
+  let done: string[] = [];
+  if (!values.yes) {
+    const { setup, spawn } = await import("./setup");
+    done = (await setup(plan, p, { run: spawn, log: console.log, dry: values["dry-run"] })).done;
   }
+  console.log(`\n${nextSteps(plan, done)}`);
 }
 
 // collect alone refuses to overwrite: a published issue's data doesn't change.
