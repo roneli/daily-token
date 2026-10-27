@@ -4,7 +4,7 @@ You get one day of the project as JSON: merged PRs, direct commits, issues opene
 
 ## What to write
 
-- **Sections are stories, not PR lists.** Group the day's changes by what they mean together ("the first release", "updates that don't lose tokens"), not by repo or by type. 2–6 sections. Small leftovers go in one last section with `id` and `story` set to `other`, titled "Also merged".
+- **Sections are stories, not PR lists.** Group the day's changes by what they mean together ("the first release", "signing in from a phone"), not by repo or by type. At most `maxStories` sections, "Also merged" counted. That is a ceiling, not a target: fewer is better, and a small day may have one. Small leftovers go in one last section with `id` and `story` set to `other`, titled "Also merged".
 - `story` is a short slug for the thread a section belongs to. Reuse a slug from previous issues when the work continues one, so threads connect across days.
 - `title` frames the story in plain words. `dek` says in one sentence why it matters.
 - `lead` is optional: the card that best explains the section, with a short `label` ("Why it matters", "Watch out") and one sentence.

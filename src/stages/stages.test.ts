@@ -106,3 +106,18 @@ test("a story gets about one short per two cards, the leftovers one", async () =
   expect(plan(stories, data).map((t) => [t.id, t.maxShorts])).toEqual([["recap", 2], ["launch", 2], ["other", 1], ["next", 2]]);
   expect(plan(stories, data, 5).every((t) => t.maxShorts === 5)).toBe(true);
 });
+
+test("the Writer and Editor see the stories' cap, and a digest past it goes back to the Writer", async () => {
+  const root = await mkdtemp(join(tmpdir(), "stages-"));
+  await cp(join(ENGINE, "fixtures", "sample"), root, { recursive: true });
+  const stories = await Bun.file(join(root, "issues", DATE, "stories.json")).json() as Stories;
+  const [first, ...rest] = stories.sections;
+  const folded: Stories = { ...stories, sections: [{ ...first, cards: [first, ...rest].flatMap((s) => s.cards) }] };
+  const model = scripted({ writer: [stories, folded], editor: [grade(EDITOR, 5)] });
+  const ctx = await createCtx({ root, date: DATE, tz: "UTC", cutoff: "00:00", model, set: { stories: { maxStories: 1 } } });
+  await run(ctx, daily, { from: "stories", to: "stories" });
+  expect(model.sent.writer[0]).toContain('"maxStories": 1');
+  expect(model.sent.writer[1]).toContain(`${stories.sections.length} stories; this issue gets at most 1`);
+  expect(model.sent.editor[0]).toContain('"maxStories": 1');
+  expect((await Bun.file(join(root, "issues", DATE, "stories.json")).json()).sections).toHaveLength(1);
+});

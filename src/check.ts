@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { readBrief } from "./brief";
 import { errorsOf, load } from "./harness/schema";
-import { commitRef, type Data, type DataV1, ENGINE, githubOf, type Issue, issueArgs, issueDates, loadIssue, type Reels, type Ref, readJson, refLabel, refOf, repoName, reposOf, shortsOf } from "./issue";
+import { commitRef, type Data, type DataV1, ENGINE, githubOf, type Issue, issueArgs, issueDates, loadIssue, maxStories, type Reels, type Ref, readJson, refLabel, refOf, repoName, reposOf, shortsOf } from "./issue";
 import { meaningOf } from "./layout";
 import { estimated, INSIDE, lengthErrors, type Move, moveOf, type Stop, type Storyboard, timeline } from "./motion";
 import { renderIssue } from "./render";
@@ -9,9 +9,9 @@ import { scene } from "./scene";
 import { voiceOf } from "./voice";
 
 const MAX_SHORT_MS = 12000;
-// Viewers skip whole threads, so the issue has no cap; a thread past this, or this many threads, is long.
+// Viewers skip whole threads, so the issue has no cap; a thread past this is long, and so is a day with more
+// threads than its stories' cap and the week's and what's coming.
 const LONG_THREAD_MS = 45000;
-const MANY_THREADS = 8;
 
 // What an issue may cite: today's PRs and commits (prs), and what its words may mention besides (known):
 // earlier issues' PRs, epics, issues, open PRs and what they close. `bodies` holds each citable PR's or commit's
@@ -161,7 +161,8 @@ export async function check(issue: Issue, stage: "stories" | "thread" | "all" = 
     for (const m of r.svg.matchAll(/data-el="([^"]+)"/g)) if (!r.svg.includes(`id="${m[1]}"`)) errors.push(`reel ${r.id} cues #${m[1]}, which isn't drawn`);
   }
   for (const [t, ms] of long) if (ms > LONG_THREAD_MS) warnings.push(`thread ${t} runs ${ms} ms; past ${LONG_THREAD_MS / 1000} s each short must earn its place`);
-  if (reels.threads.length > MANY_THREADS) warnings.push(`${reels.threads.length} threads; past ${MANY_THREADS} the day reads long, so fold small stories together`);
+  const many = maxStories(project.pipeline) + 2;
+  if (reels.threads.length > many) warnings.push(`${reels.threads.length} threads; past ${many} the day reads long, so fold small stories together`);
   return { errors, warnings };
 }
 

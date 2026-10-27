@@ -63,7 +63,8 @@
           "topic": { "type": "string", "minLength": 1, "maxLength": 200, "description": "motion: the flow or question the Explainer must tour, e.g. set for one run with --set motion.topic=\"...\"." },
           "topics": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 200 }, "description": "motion: a queue of topics. A run without a topic of its own tours the first one no issue's Cutaway has toured, and a topic waiting turns the Cutaway on." },
           "voiceover": { "type": "boolean", "description": "motion: speak the narration (true). Off, the video is silent and each line is timed by its length." },
-          "maxShorts": { "type": "integer", "minimum": 1, "maximum": 5, "description": "reels: the most shorts any thread may have. Unset, a story gets one per two cards, up to 4." }
+          "maxShorts": { "type": "integer", "minimum": 1, "maximum": 5, "description": "reels: the most shorts any thread may have. Unset, a story gets one per two cards, up to 4." },
+          "maxStories": { "type": "integer", "minimum": 1, "maximum": 12, "description": "stories: the most stories an issue may have, \"Also merged\" counted (6). A ceiling, not a target: a small day has fewer. At most 12: each story is a thread of reels with its own Director and Readers, so cost grows with it, and twelve threads of about 20 s are already four minutes for a digest meant to take two." }
         }
       }
     }

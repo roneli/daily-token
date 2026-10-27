@@ -23,8 +23,14 @@ export type Project = {
   weekly?: "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat";
   // Per stage: rounds, budget, and which reviewers and gates run
   brief?: { docs?: string[] };
-  pipeline?: Record<string, { enabled?: boolean; rounds?: number; budgetUsd?: number; reviewers?: string[]; gates?: string[]; parallel?: number; maxShorts?: number; voice?: string; voiceover?: boolean; speed?: number; topic?: string; topics?: string[] }>;
+  pipeline?: Record<string, { enabled?: boolean; rounds?: number; budgetUsd?: number; reviewers?: string[]; gates?: string[]; parallel?: number; maxShorts?: number; maxStories?: number; voice?: string; voiceover?: boolean; speed?: number; topic?: string; topics?: string[] }>;
 };
+
+// The most stories an issue may have, "Also merged" counted, unless pipeline.stories.maxStories says otherwise.
+export const MAX_STORIES = 6;
+// The most a project may set, as schemas/project.schema.json says and why.
+export const STORIES_CEILING = 12;
+export const maxStories = (pipeline: Project["pipeline"]) => pipeline?.stories?.maxStories ?? MAX_STORIES;
 
 // A PR or issue as stories and reels cite it: 123 in the home repo, "name#123" in any other.
 // A direct commit: "abc1234" in the home repo, "name@abc1234" in any other.

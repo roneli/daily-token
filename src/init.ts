@@ -1,7 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
 import type { Prompter } from "./harness/plugin";
-import { ENGINE, engineVersion, type Project, readJson, reposOf, writeJson } from "./issue";
+import { ENGINE, engineVersion, MAX_STORIES, maxStories, type Project, STORIES_CEILING, readJson, reposOf, writeJson } from "./issue";
 import { migrate } from "./migrate";
 import { configured, SOURCES } from "./sources";
 import { zoned } from "./time";
@@ -60,6 +60,7 @@ export async function ask(dir: string, p: Prompter): Promise<Plan> {
   const cutoff = await p.text({ id: "cutoff", message: "When does the day end? An issue covers everything since the last cutoff", initial: process.env.CUTOFF ?? "18:00", validate: (v) => (/^([01]\d|2[0-3]):[0-5]\d$/.test(v) ? undefined : "HH:MM, 24-hour") });
   const days = await p.multiselect<Day>({ id: "days", message: "Which days does an issue come out?", options: DAYS.map((d) => ({ value: d, label: d })), initial: current?.days ?? ["mon", "tue", "wed", "thu", "fri"] });
   const weekly = await p.select({ id: "weekly", message: "Which day also looks back at the week?", options: [{ value: "none", label: "none" }, ...DAYS.map((d) => ({ value: d, label: d }))], initial: current?.weekly ?? "none" });
+  const stories = await p.text({ id: "stories", message: "How many stories may an issue have at most? A small day has fewer", initial: String(maxStories(current?.pipeline)), validate: (v) => (/^\d+$/.test(v) && +v >= 1 && +v <= STORIES_CEILING ? undefined : `a whole number from 1 to ${STORIES_CEILING}`) });
   const model = await p.select({ id: "model", message: "Which model do the agents use?", options: [{ value: "opus", label: "opus", hint: "best writing and judgment" }, { value: "sonnet", label: "sonnet", hint: "cheaper" }], initial: "opus" });
   const publish = await p.select({ id: "publish", message: "Where do issues go?", options: [{ value: "none", label: "Nowhere yet", hint: "render and preview locally" }, { value: "s3", label: "An S3-compatible bucket", hint: "AWS S3, Cloudflare R2, MinIO; with an optional Slack post" }], initial: "none" });
 
@@ -78,6 +79,13 @@ export async function ask(dir: string, p: Prompter): Promise<Plan> {
   const project: Project = { ...current, id, name, sources, ...(all ? {} : { days }), ...(weekly === "none" ? {} : { weekly: weekly as Day }) };
   if (all) delete project.days;
   if (weekly === "none") delete project.weekly;
+  // The default stays out of project.json, so a later engine's default reaches it.
+  const { stories: was, ...stages } = current?.pipeline ?? {};
+  const { maxStories: _m, ...kept } = was ?? {};
+  const storiesStage = { ...kept, ...(+stories === MAX_STORIES ? {} : { maxStories: +stories }) };
+  const pipeline = { ...stages, ...(Object.keys(storiesStage).length ? { stories: storiesStage } : {}) };
+  if (Object.keys(pipeline).length) project.pipeline = pipeline;
+  else delete project.pipeline;
   delete project.repos;
   // Everything to run it locally goes in one .env, to fill in: the bucket's keys and the site's address with it.
   const publishing: Record<string, string> = publish === "s3" ? { S3_ENDPOINT: "", S3_BUCKET: "daily-token", S3_ACCESS_KEY_ID: "", S3_SECRET_ACCESS_KEY: "", SITE_URL: site.replace(/\/$/, "") } : {};

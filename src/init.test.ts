@@ -4,10 +4,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { doctor } from "./doctor";
 import { cron, init, nextSteps } from "./init";
-import { ENGINE } from "./issue";
+import { ENGINE, MAX_STORIES, STORIES_CEILING } from "./issue";
 import { answering } from "./prompter";
 
-const ANSWERS = { name: "Rocket", sources: "github", "github.repos": "acme/rocket, acme/ground", "github.useGhToken": false, tz: "Europe/Berlin", cutoff: "18:30", days: "mon,tue,wed,thu,fri", weekly: "fri", model: "sonnet", publish: "s3" };
+const ANSWERS = { name: "Rocket", sources: "github", "github.repos": "acme/rocket, acme/ground", "github.useGhToken": false, tz: "Europe/Berlin", cutoff: "18:30", days: "mon,tue,wed,thu,fri", weekly: "fri", model: "sonnet", publish: "s3", site: "" };
 
 test("init writes a data root from the answers, and doctor accepts it", async () => {
   const dir = join(await mkdtemp(join(tmpdir(), "init-")), "rocket");
@@ -63,4 +63,18 @@ test("without publishing, the daily workflow has no publish step and there is no
   const daily = await Bun.file(join(dir, ".github", "workflows", "daily.yml")).text();
   expect(daily).not.toContain("publish --announce");
   expect(daily).toContain("Commit the issue");
+});
+
+test("init asks how many stories an issue may have: the default stays out of project.json, another is kept", async () => {
+  const dir = join(await mkdtemp(join(tmpdir(), "init-")), "many");
+  await init(dir, answering({ ...ANSWERS, stories: "9" }));
+  const written = await Bun.file(join(dir, "project.json")).json();
+  expect(written.pipeline).toEqual({ stories: { maxStories: 9 } });
+  // Asked again, it offers what's there; the default takes it out and leaves the stage's other settings.
+  await Bun.write(join(dir, "project.json"), JSON.stringify({ ...written, pipeline: { stories: { maxStories: 9, rounds: 2 } } }));
+  await init(dir, answering({ ...ANSWERS, stories: undefined as never }));
+  expect((await Bun.file(join(dir, "project.json")).json()).pipeline).toEqual({ stories: { maxStories: 9, rounds: 2 } });
+  await init(dir, answering({ ...ANSWERS, stories: String(MAX_STORIES) }));
+  expect((await Bun.file(join(dir, "project.json")).json()).pipeline).toEqual({ stories: { rounds: 2 } });
+  expect(init(dir, answering({ ...ANSWERS, stories: String(STORIES_CEILING + 1) }))).rejects.toThrow(`a whole number from 1 to ${STORIES_CEILING}`);
 });
