@@ -34,7 +34,7 @@ Your digest is its own repo, the **data root**: `project.json`, a map of the sys
 
 ## Get started
 
-The npm package isn't published yet. Until it is, run the engine from a checkout: clone this repo, `bun install`, and type `bun src/cli.ts` wherever this README says `daily-token`. Point it at your digest with `--root DIR` or `DATA_DIR`. Or run `bun link` in the clone and `bun link daily-token` in your digest folder to get the `daily-token` command.
+With [Bun](https://bun.sh) installed, run any command as `bunx daily-token …`, or install it once with `bun add -g daily-token`. A digest made by `init` pins the engine in its own `package.json`. To work on the engine itself, clone this repo, `bun install`, and use `bun src/cli.ts` wherever this README says `daily-token`.
 
 ```sh
 daily-token preview                       # the made-up sample issue on :5173
